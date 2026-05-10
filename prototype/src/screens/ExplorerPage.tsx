@@ -14,6 +14,7 @@ import StatsPanel from '../components/explorer/StatsPanel';
 import FilterPanel from '../components/explorer/FilterPanel';
 import Masthead from '../components/Masthead';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { Link } from 'react-router-dom';
 
 function defaultConfig(d: Dataset): ChartConfig {
   const num = d.attributes.filter((a) => a.kind === 'numeric');
@@ -68,7 +69,18 @@ export default function ExplorerPage() {
       <Masthead
         section={dataset.name}
         eyebrow="Dataset Explorer"
-        right={<DatasetPicker datasetId={datasetId} onChange={handleDatasetChange} />}
+        right={
+          <div className="flex items-center gap-3">
+            <Link
+              to={`/datasets/${datasetId}/dictionary`}
+              className="text-xs eyebrow text-brand-700 hover:text-accent-700 hover:underline whitespace-nowrap"
+              title="What every column means"
+            >
+              Data dictionary →
+            </Link>
+            <DatasetPicker datasetId={datasetId} onChange={handleDatasetChange} />
+          </div>
+        }
       />
 
       {/* Body: 3-column layout */}

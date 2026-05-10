@@ -143,6 +143,12 @@ export default function DatasetStory() {
             Open in the Explorer <span aria-hidden>→</span>
           </Link>
           <Link
+            to={`/datasets/${dataset.id}/dictionary`}
+            className="px-5 py-3 rounded-md bg-surface-raised border border-surface-line text-ink-soft font-semibold hover:bg-surface-subtle transition"
+          >
+            Data dictionary
+          </Link>
+          <Link
             to="/datasets"
             className="px-5 py-3 rounded-md bg-surface-raised border border-surface-line text-ink-soft font-semibold hover:bg-surface-subtle transition"
           >

@@ -7,6 +7,7 @@ import CensusPyramidPage from './screens/CensusPyramidPage';
 import ExplorerPage from './screens/ExplorerPage';
 import DatasetsHub from './screens/datasets/DatasetsHub';
 import DatasetStory from './screens/datasets/DatasetStory';
+import DatasetDictionary from './screens/datasets/DatasetDictionary';
 import LessonsHub from './screens/lessons/LessonsHub';
 import SliderOfLies from './screens/lessons/SliderOfLies';
 import WalkIntoABar from './screens/lessons/WalkIntoABar';
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/datasets" element={<DatasetsHub />} />
         <Route path="/datasets/:id" element={<DatasetStory />} />
+        <Route path="/datasets/:id/dictionary" element={<DatasetDictionary />} />
         <Route path="/lessons" element={<LessonsHub />} />
         <Route path="/lessons/slider-of-lies" element={<SliderOfLies />} />
         <Route path="/lessons/walk-into-a-bar" element={<WalkIntoABar />} />
