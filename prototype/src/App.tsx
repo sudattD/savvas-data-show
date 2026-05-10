@@ -3,6 +3,7 @@ import HomePage from './screens/HomePage';
 import WindTurbinePage from './screens/WindTurbinePage';
 import VoiceDNAPage from './screens/VoiceDNAPage';
 import ReactionTimePage from './screens/ReactionTimePage';
+import CensusPyramidPage from './screens/CensusPyramidPage';
 import ExplorerPage from './screens/ExplorerPage';
 import DatasetsHub from './screens/datasets/DatasetsHub';
 import DatasetStory from './screens/datasets/DatasetStory';
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/wind-turbine" element={<WindTurbinePage />} />
         <Route path="/voice-dna" element={<VoiceDNAPage />} />
         <Route path="/reaction-time" element={<ReactionTimePage />} />
+        <Route path="/census-pyramid" element={<CensusPyramidPage />} />
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/datasets" element={<DatasetsHub />} />
         <Route path="/datasets/:id" element={<DatasetStory />} />

@@ -83,16 +83,16 @@ export default function HomePage() {
               Two structural options. One product.
             </h2>
             <p className="mt-3 text-ink-soft max-w-2xl">
-              Each chapter ships an activity. Here are two prototypes — one
-              that slots into Savvas's existing 3-Act framework, one that
-              shows what's possible if we reimagine.
+              Each chapter ships an activity. The same 3-Act bones; the Act-1
+              commitment changes shape per activity — predict a number,
+              compare two snapshots, discover a pattern.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <FeatureCard
               to="/wind-turbine"
-              option="Slot into existing 3-Act"
+              option="Predict · slot into 3-Act"
               title="Wind Power Curve"
               body="Real SCADA data from a 1.5 MW turbine. Slider-fit a quadratic."
               tags={['Alg 1 · T8', 'Quadratics']}
@@ -109,7 +109,7 @@ export default function HomePage() {
             />
             <FeatureCard
               to="/voice-dna"
-              option="Sensor + new formula"
+              option="Explore · sensor + new formula"
               title="Voice DNA"
               body="Speak into your phone, watch the spectrogram. Discover your unique formants."
               tags={['Alg 2 · T7', 'Trig']}
@@ -122,7 +122,7 @@ export default function HomePage() {
             />
             <FeatureCard
               to="/reaction-time"
-              option="Gameplay · self-generated data"
+              option="Predict · gameplay data"
               title="Reaction Time Arena"
               body="Press SPACE the moment the screen turns green. Play 10 trials. Build your own distribution."
               tags={['Alg 1 · T11', 'Statistics']}
@@ -134,6 +134,31 @@ export default function HomePage() {
                       <line key={i} x1={x} y1={70} x2={x} y2={70 - (12 + Math.abs(x - 240) / 3)} />
                     ))}
                     <line x1="40" y1="70" x2="380" y2="70" />
+                  </g>
+                </svg>
+              }
+            />
+            <FeatureCard
+              to="/census-pyramid"
+              option="Compare · two snapshots"
+              title="120 Years of America"
+              body="Same country, 1900 vs 2020. Predict which group changed share more, then see."
+              tags={['Alg 1 · T12', 'Distributions']}
+              accent="rose"
+              decoration={
+                <svg viewBox="0 0 400 96" preserveAspectRatio="none" className="w-full h-full">
+                  <g stroke="currentColor" strokeWidth="1.2" fill="currentColor">
+                    {/* mini pyramid silhouette */}
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
+                      const y = 12 + i * 9;
+                      const w = 90 - i * 11;
+                      return (
+                        <g key={i}>
+                          <rect x={200 - w} y={y} width={w} height={6} opacity={0.7} />
+                          <rect x={200} y={y} width={w * 0.95} height={6} opacity={0.5} />
+                        </g>
+                      );
+                    })}
                   </g>
                 </svg>
               }
@@ -189,11 +214,12 @@ function Pillar({
 
 function FeatureCard({
   to, option, title, body, tags, accent, decoration,
-}: { to: string; option: string; title: string; body: string; tags: string[]; accent: 'brand' | 'accent' | 'emerald'; decoration?: React.ReactNode }) {
+}: { to: string; option: string; title: string; body: string; tags: string[]; accent: 'brand' | 'accent' | 'emerald' | 'rose'; decoration?: React.ReactNode }) {
   const styles = {
     brand: { decoBg: 'bg-brand-100', decoText: 'text-brand-400', kicker: 'text-brand-700', tagBg: 'bg-brand-50 text-brand-800' },
     accent: { decoBg: 'bg-accent-100', decoText: 'text-accent-400', kicker: 'text-accent-700', tagBg: 'bg-accent-50 text-accent-800' },
     emerald: { decoBg: 'bg-emerald-100', decoText: 'text-emerald-400', kicker: 'text-emerald-700', tagBg: 'bg-emerald-50 text-emerald-800' },
+    rose: { decoBg: 'bg-rose-100', decoText: 'text-rose-400', kicker: 'text-rose-700', tagBg: 'bg-rose-50 text-rose-800' },
   }[accent];
   return (
     <Link
