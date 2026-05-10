@@ -1478,11 +1478,11 @@ export const BABY_NAMES_DATASET: Dataset = {
     { heading: 'Why it makes great math', body: 'Each name has a rise, a peak, and a fall — often roughly bell-shaped. The shapes invite questions about exponential growth, exponential decay, and the social processes that create them.' },
   ],
   attributes: [
-    { key: 'name', label: 'Name', kind: 'categorical' },
-    { key: 'sex', label: 'Sex', kind: 'categorical' },
-    { key: 'decade', label: 'Decade', kind: 'categorical' },
-    { key: 'year', label: 'Year', kind: 'numeric' },
-    { key: 'percent', label: 'Popularity', kind: 'numeric', unit: '% of births' },
+    { key: 'name', label: 'Name', kind: 'categorical', description: 'Given name as recorded on a US Social Security card application. The SSA only releases names with at least 5 occurrences in a given year/sex; rarer names are omitted.' },
+    { key: 'sex', label: 'Sex', kind: 'categorical', description: 'Sex recorded at birth (M / F). Same name on each side counts as a separate row.' },
+    { key: 'decade', label: 'Decade', kind: 'categorical', description: 'Decade label for the year (1950s, 1960s, …). A coarser grouping if year produces too many points.' },
+    { key: 'year', label: 'Year', kind: 'numeric', description: 'Year of birth, 1950 through 2008. Plot on the X axis to see a name\'s popularity rise and fall over time.' },
+    { key: 'percent', label: 'Popularity', kind: 'numeric', unit: '% of births', description: 'Share of births of the given sex in that year that received this name, expressed as a percentage. 1.0 % means roughly 1 in 100 babies of that sex got this name.' },
   ],
   featured: { x: 'year', y: 'percent', color: 'name' },
   rows: RAW.map((r) => ({

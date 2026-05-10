@@ -418,12 +418,12 @@ export const TIDES_DATASET: Dataset = {
     { heading: 'For students who don\u2019t live near a coast', body: 'NOAA runs hundreds of these gauges, from Anchorage to Honolulu to Key West. Plug a different station number into the API and the same shape repeats — different amplitudes, different phases, same math.' },
   ],
   attributes: [
-    { key: 't', label: 'Timestamp', kind: 'categorical' },
-    { key: 'date', label: 'Date', kind: 'categorical' },
-    { key: 'weekday', label: 'Day of week', kind: 'categorical' },
-    { key: 'hours', label: 'Hours since start', kind: 'numeric', unit: 'h' },
-    { key: 'hour', label: 'Hour of day', kind: 'numeric' },
-    { key: 'height', label: 'Water level', kind: 'numeric', unit: 'ft' },
+    { key: 't', label: 'Timestamp', kind: 'categorical', description: 'ISO-8601 timestamp of the 6-minute reading, in local Pacific time at the SF gauge.' },
+    { key: 'date', label: 'Date', kind: 'categorical', description: 'Calendar date (YYYY-MM-DD) of the reading.' },
+    { key: 'weekday', label: 'Day of week', kind: 'categorical', description: 'Day of the week the reading was taken (Mon … Sun).' },
+    { key: 'hours', label: 'Hours since start', kind: 'numeric', unit: 'h', description: 'Hours elapsed since the first reading in the dataset. A continuous numeric x-axis for plotting the whole multi-day series.' },
+    { key: 'hour', label: 'Hour of day', kind: 'numeric', description: 'Hour of the day (0–23, with fractional values for the 6-minute samples). Useful for stacking multiple days on top of each other to see the daily tidal cycle.' },
+    { key: 'height', label: 'Water level', kind: 'numeric', unit: 'ft', description: 'Verified water level above MLLW (Mean Lower-Low Water datum) in feet, reported by NOAA Tides & Currents. Higher = higher tide.' },
   ],
   featured: { x: 'hour', y: 'height' },
   rows: RAW.map((r) => ({

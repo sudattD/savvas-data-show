@@ -39,9 +39,9 @@ export const WIND_TURBINE_DATASET: Dataset = {
     { heading: 'A useful caveat', body: 'This is one turbine on one day. Different makes and sites would give different curves. That\'s the rule for any dataset: ask what would change if you collected it somewhere else.' },
   ],
   attributes: [
-    { key: 'windSpeed', label: 'Wind speed', kind: 'numeric', unit: 'm/s' },
-    { key: 'power', label: 'Power output', kind: 'numeric', unit: 'kW' },
-    { key: 'regime', label: 'Regime', kind: 'categorical' },
+    { key: 'windSpeed', label: 'Wind speed', kind: 'numeric', unit: 'm/s', description: 'Wind speed at hub height in metres per second, averaged over a 10-minute SCADA interval. Cut-in is around 3 m/s; cut-out (turbine shuts down for safety) around 25 m/s.' },
+    { key: 'power', label: 'Power output', kind: 'numeric', unit: 'kW', description: 'Electrical power generated during the same 10-minute interval, in kilowatts. Caps near the rated output of the turbine (~1500 kW) once wind speed exceeds rated speed.' },
+    { key: 'regime', label: 'Regime', kind: 'categorical', description: 'Operating zone derived from wind speed: below cut-in (no power), ramp (cubic), rated (capped at nameplate), or shutdown.' },
   ],
   featured: { x: 'windSpeed', y: 'power' },
   rows: WIND_DATA.map((d) => ({

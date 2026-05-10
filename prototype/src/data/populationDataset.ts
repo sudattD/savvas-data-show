@@ -449,11 +449,11 @@ export const POPULATION_DATASET: Dataset = {
     { heading: 'Why students should see this', body: 'Two charts of the same country in the same database tell the story of public health, family planning, immigration, and economic transformation — without anyone having to write an essay. The shape is the lesson.' },
   ],
   attributes: [
-    { key: 'sex', label: 'Sex', kind: 'categorical' },
-    { key: 'ageGroup', label: 'Age group', kind: 'categorical' },
-    { key: 'year', label: 'Year', kind: 'numeric' },
-    { key: 'age', label: 'Age', kind: 'numeric' },
-    { key: 'population', label: 'Population', kind: 'numeric' },
+    { key: 'sex', label: 'Sex', kind: 'categorical', description: 'Sex recorded by the US Census (Male / Female). Use as the color split when plotting age vs population.' },
+    { key: 'ageGroup', label: 'Age group', kind: 'categorical', description: 'Five-year age band (0–4, 5–9, …, 85+). The standard reporting unit for census population pyramids.' },
+    { key: 'year', label: 'Year', kind: 'numeric', description: 'Census year — 1900 or 2020. Two snapshots, 120 years apart, of the same country.' },
+    { key: 'age', label: 'Age', kind: 'numeric', description: 'Numeric midpoint of the age band (2.5 for 0–4, 7.5 for 5–9, …). Use as the Y axis when drawing a pyramid horizontally.' },
+    { key: 'population', label: 'Population', kind: 'numeric', description: 'Number of people recorded in this age × sex × year cell. The bar length on a pyramid.' },
   ],
   featured: { x: 'age', y: 'population', color: 'sex' },
   rows: RAW.map((r) => ({

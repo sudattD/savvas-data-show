@@ -857,11 +857,11 @@ export const CO2_DATASET: Dataset = {
     { heading: 'Why every classroom should see it', body: 'It is the cleanest example anywhere of a linear trend plus a sinusoidal cycle. It is also a real-time record of how a single planet-wide variable has been changed by human action.' },
   ],
   attributes: [
-    { key: 'year', label: 'Year', kind: 'numeric' },
-    { key: 'month', label: 'Month #', kind: 'numeric' },
-    { key: 'monthName', label: 'Month', kind: 'categorical' },
-    { key: 'decYear', label: 'Decimal year', kind: 'numeric' },
-    { key: 'co2', label: 'CO2', kind: 'numeric', unit: 'ppm' },
+    { key: 'year', label: 'Year', kind: 'numeric', description: 'Calendar year of the monthly measurement (1958 – present).' },
+    { key: 'month', label: 'Month #', kind: 'numeric', description: 'Month of the year as a number, 1 (January) through 12 (December). Useful for plotting the seasonal cycle on a numeric x-axis.' },
+    { key: 'monthName', label: 'Month', kind: 'categorical', description: 'Month name (Jan…Dec). The same information as Month #, but treated as a category — handy for color-grouping points by month of year.' },
+    { key: 'decYear', label: 'Decimal year', kind: 'numeric', description: 'Year expressed as a decimal — e.g. 1958.04 for early January 1958, 2025.96 for late December 2025. Use this on the X axis to plot the full time series with smooth spacing.' },
+    { key: 'co2', label: 'CO2', kind: 'numeric', unit: 'ppm', description: 'Atmospheric CO₂ concentration in parts per million by mole fraction (dry air). Measured by infrared absorption on air samples drawn at the Mauna Loa Observatory, 11,135 ft elevation. The seasonal sawtooth is northern-hemisphere plant respiration.' },
   ],
   featured: { x: 'decYear', y: 'co2' },
   rows: RAW.map((r) => ({
