@@ -1,0 +1,40 @@
+import type { ReactNode } from 'react';
+import Masthead from './Masthead';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
+
+interface LessonShellProps {
+  number: string;
+  family: string;
+  title: string;
+  concept: string;
+  children: ReactNode;
+  accent?: string;
+}
+
+const SPINE: Record<string, string> = {
+  rose: 'bg-rose-500', amber: 'bg-accent-500', emerald: 'bg-emerald-500',
+  sky: 'bg-sky-500', violet: 'bg-violet-500',
+};
+
+const FAMILY_TONE: Record<string, string> = {
+  'VISUAL DECEPTION': 'text-rose-700',
+  'STATISTICAL THINKING': 'text-accent-700',
+  'DATA HYGIENE': 'text-emerald-700',
+};
+
+export default function LessonShell({ number, family, title, concept, children, accent = 'sky' }: LessonShellProps) {
+  useDocumentTitle(title);
+  return (
+    <div className="min-h-screen">
+      <Masthead section={title} eyebrow={`Lesson ${number} · ${concept}`} />
+      <div className={`h-1 ${SPINE[accent] ?? 'bg-brand-500'}`} />
+      <main className="max-w-4xl mx-auto px-6 py-10">
+        <div className="mb-6 eyebrow flex items-center gap-3">
+          <span className="font-mono text-ink-muted">{number}</span>
+          <span className={FAMILY_TONE[family] ?? 'text-brand-700'}>{family}</span>
+        </div>
+        {children}
+      </main>
+    </div>
+  );
+}

@@ -1,0 +1,224 @@
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { DATASETS } from '../../data/registry';
+import type { Provenance, StoryBeat } from '../../lib/dataset';
+import Masthead from '../../components/Masthead';
+import { useDocumentTitle } from '../../lib/useDocumentTitle';
+
+const ACCENT_BAR: Record<string, string> = {
+  sky: 'bg-sky-500', emerald: 'bg-emerald-500', cyan: 'bg-cyan-500', amber: 'bg-accent-500',
+  rose: 'bg-rose-500', violet: 'bg-violet-500', indigo: 'bg-indigo-500', pink: 'bg-pink-500',
+  orange: 'bg-orange-500', teal: 'bg-teal-500', slate: 'bg-brand-700',
+};
+
+const ACCENT_HIGHLIGHT: Record<string, string> = {
+  sky: 'bg-sky-50 text-sky-900 border-sky-200',
+  emerald: 'bg-emerald-50 text-emerald-900 border-emerald-200',
+  cyan: 'bg-cyan-50 text-cyan-900 border-cyan-200',
+  amber: 'bg-accent-50 text-accent-900 border-accent-200',
+  rose: 'bg-rose-50 text-rose-900 border-rose-200',
+  violet: 'bg-violet-50 text-violet-900 border-violet-200',
+  indigo: 'bg-indigo-50 text-indigo-900 border-indigo-200',
+  pink: 'bg-pink-50 text-pink-900 border-pink-200',
+  orange: 'bg-orange-50 text-orange-900 border-orange-200',
+  teal: 'bg-teal-50 text-teal-900 border-teal-200',
+  slate: 'bg-brand-50 text-brand-900 border-brand-200',
+};
+
+export default function DatasetStory() {
+  const { id } = useParams<{ id: string }>();
+  const dataset = DATASETS.find((d) => d.id === id);
+  const [step, setStep] = useState(0);
+  useDocumentTitle(dataset ? dataset.name : 'Dataset');
+
+  if (!dataset) {
+    return (
+      <div className="min-h-screen">
+        <Masthead />
+        <div className="max-w-2xl mx-auto px-6 py-24 text-center">
+          <div className="font-display text-2xl font-bold text-brand-900 mb-2">Dataset not found</div>
+          <Link to="/datasets" className="text-accent-700 underline font-semibold">Back to library</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const accent = dataset.accent ?? 'sky';
+  const story = dataset.story ?? [];
+  const totalSteps = story.length;
+  const visibleBeats = story.slice(0, step + 1);
+  const moreToShow = step < totalSteps - 1;
+  const numericAttrs = dataset.attributes.filter((x) => x.kind === 'numeric');
+  const catAttrs = dataset.attributes.filter((x) => x.kind === 'categorical');
+
+  return (
+    <div className="min-h-screen">
+      <Masthead section={dataset.name} eyebrow="Dataset story" />
+
+      {/* Hero — editorial */}
+      <section className="border-b border-surface-line bg-surface relative overflow-hidden">
+        <div className={`absolute inset-x-0 top-0 h-1 ${ACCENT_BAR[accent]}`} />
+        <div className="max-w-4xl mx-auto px-6 pt-14 pb-12">
+          <div className="eyebrow text-accent-600 mb-4">Dataset · #{String(DATASETS.findIndex((d) => d.id === dataset.id) + 1).padStart(2, '0')}</div>
+          <h1 className="editorial-hero text-4xl md:text-6xl text-brand-900 mb-5">
+            {dataset.name}
+          </h1>
+          <p className="text-lg md:text-xl text-ink-soft max-w-prose leading-relaxed mb-8">
+            {dataset.description}
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-2xl">
+            <Stat label="Rows" value={dataset.rows.length.toLocaleString()} mono />
+            <Stat label="Numeric" value={numericAttrs.length} mono />
+            <Stat label="Categorical" value={catAttrs.length} mono />
+            <Stat label="Source" value={dataset.provenance.primarySource.split('—')[0].trim()} />
+          </div>
+        </div>
+      </section>
+
+      <main className="max-w-4xl mx-auto px-6 py-12 space-y-10">
+        {/* Story beats */}
+        {story.length > 0 && (
+          <section>
+            <div className="flex items-baseline justify-between mb-6">
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-brand-900">The story</h2>
+              <div className="font-mono text-xs text-ink-muted">{Math.min(step + 1, totalSteps)} / {totalSteps}</div>
+            </div>
+            <div className="space-y-5">
+              {visibleBeats.map((b, i) => <Beat key={i} beat={b} accent={accent} />)}
+            </div>
+            {moreToShow ? (
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={() => setStep((s) => Math.min(s + 1, totalSteps - 1))}
+                  className="px-6 py-2.5 rounded-md bg-brand-900 text-white font-semibold text-sm hover:bg-brand-700 transition flex items-center gap-2"
+                >
+                  Continue <span aria-hidden>→</span>
+                </button>
+              </div>
+            ) : (
+              <div className="mt-6 text-center text-xs eyebrow text-ink-muted">End of story · provenance below</div>
+            )}
+          </section>
+        )}
+
+        {/* Provenance */}
+        <ProvenanceCard provenance={dataset.provenance} />
+
+        {/* Attributes */}
+        <section className="bg-surface-raised border border-surface-line rounded-lg overflow-hidden">
+          <div className="px-5 py-3 border-b border-surface-line bg-surface-subtle/40">
+            <div className="eyebrow text-ink-muted">Shape of the data</div>
+            <div className="font-display text-lg font-bold text-brand-900 mt-0.5">{dataset.attributes.length} columns × {dataset.rows.length.toLocaleString()} rows</div>
+          </div>
+          <table className="w-full text-sm">
+            <thead className="border-b border-surface-line">
+              <tr>
+                <th className="text-left eyebrow text-ink-muted px-5 py-2">Column</th>
+                <th className="text-left eyebrow text-ink-muted px-5 py-2">Kind</th>
+                <th className="text-left eyebrow text-ink-muted px-5 py-2">Unit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dataset.attributes.map((attr) => (
+                <tr key={attr.key} className="border-b border-surface-line last:border-0">
+                  <td className="px-5 py-2 font-semibold text-ink">{attr.label}</td>
+                  <td className="px-5 py-2">
+                    <span className={`text-[10px] eyebrow px-2 py-0.5 rounded ${attr.kind === 'numeric' ? 'bg-brand-50 text-brand-700' : 'bg-accent-50 text-accent-700'}`}>
+                      {attr.kind === 'numeric' ? 'numeric' : 'category'}
+                    </span>
+                  </td>
+                  <td className="px-5 py-2 text-ink-muted font-mono text-xs">{attr.unit ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        {/* Action */}
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+          <Link
+            to={`/explorer?dataset=${dataset.id}`}
+            className="px-7 py-3 rounded-md bg-brand-900 text-white font-semibold shadow-editorial hover:bg-brand-700 transition flex items-center gap-2"
+          >
+            Open in the Explorer <span aria-hidden>→</span>
+          </Link>
+          <Link
+            to="/datasets"
+            className="px-5 py-3 rounded-md bg-surface-raised border border-surface-line text-ink-soft font-semibold hover:bg-surface-subtle transition"
+          >
+            Back to library
+          </Link>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function Stat({ label, value, mono }: { label: string; value: string | number; mono?: boolean }) {
+  return (
+    <div className="bg-surface-raised border border-surface-line rounded-lg px-3 py-2.5">
+      <div className="eyebrow text-ink-muted text-[9px] mb-1">{label}</div>
+      <div className={`font-display font-bold text-brand-900 ${mono ? 'tabular-nums text-xl' : 'text-sm leading-tight'}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function Beat({ beat, accent }: { beat: StoryBeat; accent: string }) {
+  return (
+    <div className="bg-surface-raised border border-surface-line rounded-lg p-6">
+      {beat.heading && (
+        <h3 className="font-display text-xl md:text-2xl font-bold text-brand-900 mb-3 leading-tight">{beat.heading}</h3>
+      )}
+      <p className="text-base text-ink leading-relaxed">{beat.body}</p>
+      {beat.highlight && (
+        <div className={`mt-4 inline-block px-3 py-1.5 rounded-md font-mono text-xs border ${ACCENT_HIGHLIGHT[accent] ?? ACCENT_HIGHLIGHT.sky}`}>
+          {beat.highlight}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProvenanceCard({ provenance: p }: { provenance: Provenance }) {
+  return (
+    <section className="bg-surface-raised border border-surface-line rounded-lg overflow-hidden">
+      <div className="px-5 py-3 border-b border-surface-line bg-surface-subtle/40">
+        <div className="eyebrow text-ink-muted">Data provenance</div>
+        <div className="text-xs text-ink-muted mt-0.5">Where this came from. How to verify it.</div>
+      </div>
+      <div className="px-5 py-5 grid sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+        <Row label="Primary source">
+          <a href={p.primarySourceUrl} target="_blank" rel="noopener noreferrer" className="text-brand-700 hover:text-accent-700 hover:underline font-semibold">
+            {p.primarySource}
+          </a>
+        </Row>
+        {p.collector && <Row label="Collected by">{p.collector}</Row>}
+        {p.collectionMethod && <Row label="How it's measured" wide>{p.collectionMethod}</Row>}
+        {p.collectionPeriod && <Row label="When collected">{p.collectionPeriod}</Row>}
+        <Row label="When we pulled it">{p.retrievalDate}</Row>
+        <Row label="How we pulled it" wide><span className="font-mono text-xs">{p.retrievalMethod}</span></Row>
+        <Row label="License">{p.license}</Row>
+        {p.citation && <Row label="Citation" wide><span className="text-xs italic">{p.citation}</span></Row>}
+      </div>
+      {p.caveats && p.caveats.length > 0 && (
+        <div className="px-5 py-4 bg-accent-50 border-t border-accent-200">
+          <div className="eyebrow text-accent-800 mb-2">Caveats</div>
+          <ul className="text-xs text-accent-900 space-y-1.5 pl-4 list-disc leading-relaxed">
+            {p.caveats.map((c, i) => <li key={i}>{c}</li>)}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function Row({ label, children, wide }: { label: string; children: React.ReactNode; wide?: boolean }) {
+  return (
+    <div className={wide ? 'sm:col-span-2' : ''}>
+      <div className="eyebrow text-ink-muted mb-1">{label}</div>
+      <div className="text-ink leading-relaxed">{children}</div>
+    </div>
+  );
+}

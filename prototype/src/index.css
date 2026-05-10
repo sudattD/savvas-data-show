@@ -1,0 +1,92 @@
+/* Editorial design system — Savvas Data Show */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #FAF7F1;
+  color: #0E1E33;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Display headlines: tighten leading, softly track in */
+.font-display {
+  font-feature-settings: 'ss01', 'ss02';
+  font-optical-sizing: auto;
+  letter-spacing: -0.015em;
+}
+
+/* Editorial hero text */
+.editorial-hero {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 700;
+  font-variation-settings: 'opsz' 144;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+/* Caption / eyebrow */
+.eyebrow {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Tabular numerals everywhere they look like data */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* Range slider — editorial restyle */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 9999px;
+  background: #E5E0D2;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #1A2A52;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(10, 21, 48, 0.25);
+  transition: transform 0.1s ease;
+  border: 2px solid #FFFFFF;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+  background: #27396B;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #1A2A52;
+  border: 2px solid #FFFFFF;
+  cursor: pointer;
+}
+
+/* Selection: warm amber tint */
+::selection {
+  background-color: #FBD78A;
+  color: #67340F;
+}
