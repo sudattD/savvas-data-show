@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import Masthead from '../components/Masthead';
 import { DATASETS } from '../data/registry';
+import { LESSONS } from './lessons/LessonsHub';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function HomePage() {
   useDocumentTitle('Home');
   const datasetCount = DATASETS.length;
+  const lessonCount = LESSONS.length;
 
   return (
     <div className="min-h-screen">
@@ -23,14 +25,14 @@ export default function HomePage() {
               <p className="mt-6 text-lg md:text-xl text-ink-soft max-w-prose leading-relaxed">
                 A prototype of an embedded data-exploration feature for{' '}
                 <span className="text-brand-900 font-semibold">enVision Algebra 1, Geometry, and Algebra 2</span> —
-                eleven real-world datasets, six transferable lessons, and one
-                shared exploration tool, threaded through every chapter.
+                {' '}{datasetCount} real-world datasets, {lessonCount} transferable lessons,
+                and one shared exploration tool, threaded through every chapter.
               </p>
             </div>
             <div className="md:col-span-4">
               <div className="grid grid-cols-3 gap-2">
                 <Tile big label="datasets" value={datasetCount} />
-                <Tile label="lessons" value={6} />
+                <Tile label="lessons" value={lessonCount} />
                 <Tile label="acts" value={3} />
               </div>
             </div>
@@ -50,7 +52,7 @@ export default function HomePage() {
               to="/datasets"
               kicker="The Library"
               title="Datasets"
-              body="Eleven real-world datasets, fully sourced. From Mauna Loa CO₂ since 1958 to Boston Marathon finishers, every value is verifiable to its primary source."
+              body={`${datasetCount} real-world datasets, fully sourced. From Mauna Loa CO₂ since 1958 to Boston Marathon finishers, every value is verifiable to its primary source.`}
               cta="Browse the library"
               tone="amber"
             />
@@ -66,7 +68,7 @@ export default function HomePage() {
               to="/lessons"
               kicker="The Concepts"
               title="Lessons"
-              body="Six interactive lessons on the data-literacy concepts students keep forever — tidy data, lying with statistics, mean vs median, survivorship bias, cherry-picked windows."
+              body={`${lessonCount} interactive lessons on the data-literacy concepts students keep forever — tidy data, lying with statistics, mean vs median, survivorship bias, cherry-picked windows.`}
               cta="See the lessons"
               tone="rose"
             />
@@ -170,7 +172,7 @@ export default function HomePage() {
       <footer className="py-12">
         <div className="max-w-6xl mx-auto px-6 flex items-baseline justify-between text-xs text-ink-muted">
           <div>Prototype · built May 2026</div>
-          <div className="font-mono">v0.4 · 11 datasets · 6 lessons · 3 acts</div>
+          <div className="font-mono">v0.4 · {datasetCount} datasets · {lessonCount} lessons · 3 acts</div>
         </div>
       </footer>
     </div>

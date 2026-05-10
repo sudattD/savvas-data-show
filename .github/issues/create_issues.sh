@@ -20,49 +20,8 @@ gh label create copy        --color "C084FC" --description "Wording / content ed
 
 # --- Open work that's NOT already in source --------------------------------
 
-gh issue create --repo "$REPO" --label "important,copy" \
-  --title "N1 · Stale 'six lessons / eleven datasets' copy in five places" \
-  --body "$(cat <<'EOF'
-There are 9 lessons in `LessonsHub.LESSONS` and 15 datasets in `DATASETS`. But several pages still say six and eleven. Most embarrassing: on the home page, the hero paragraph says "eleven real-world datasets, six transferable lessons" while the count tile next to it (already computed from `DATASETS.length`) renders 15.
-
-**Locations:**
-
-| File | Line | Current text |
-|------|------|--------------|
-| `src/screens/HomePage.tsx` | 26-27 | "eleven real-world datasets, six transferable lessons" |
-| `src/screens/HomePage.tsx` | 33 | `<Tile label="lessons" value={6} />` — hardcoded |
-| `src/screens/HomePage.tsx` | 69 | "Six interactive lessons on the data-literacy concepts..." |
-| `src/screens/HomePage.tsx` | 173 | `v0.4 · 11 datasets · 6 lessons · 3 acts` (footer) |
-| `src/screens/lessons/LessonsHub.tsx` | 96-100 | "Six interactive lessons on the moves..." |
-
-**Suggested fix:** make every count computed from the array length, or do a find-replace and decide whether to advertise 9 / 15 or quietly trim the catalog before Wednesday. Either is fine — they just need to agree.
-
-**Est:** ~15 min.
-
-Source: `dev_feedback_addendum.md` item N1.
-EOF
-)"
-
-gh issue create --repo "$REPO" --label "important" \
-  --title "N2 · CensusPyramidPage is missing useDocumentTitle" \
-  --body "$(cat <<'EOF'
-Every other top-level screen calls \`useDocumentTitle\`. \`CensusPyramidPage.tsx\` doesn't.
-
-**Fix:**
-
-\`\`\`diff
-+ import { useDocumentTitle } from '../lib/useDocumentTitle';
-  // ...
-  export default function CensusPyramidPage() {
-+   useDocumentTitle('120 Years of America');
-    const [act, setAct] = useState<1 | 2 | 3>(1);
-\`\`\`
-
-**Est:** ~2 min.
-
-Source: \`dev_feedback_addendum.md\` item N2.
-EOF
-)"
+# N1 (stale "six lessons / eleven datasets" copy) — fixed in commit before this script ran.
+# N2 (CensusPyramidPage missing useDocumentTitle) — fixed in commit before this script ran.
 
 gh issue create --repo "$REPO" --label "important,design" \
   --title "I5 · Dataset story pages: chart not visible until beat 4" \

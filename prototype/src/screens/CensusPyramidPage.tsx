@@ -5,12 +5,14 @@ import CensusIdentify from './census/CensusIdentify';
 import CensusModel from './census/CensusModel';
 import CensusInterpret from './census/CensusInterpret';
 import type { CensusIdentifyState } from './census/CensusIdentify';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 const EMPTY: CensusIdentifyState = {
   firstQuestion: '', mainQuestion: '', whoChangedMore: '', seniorChangePp: 0, reasoning: '', tooLow: 0, tooHigh: 0,
 };
 
 export default function CensusPyramidPage() {
+  useDocumentTitle('120 Years of America');
   const [act, setAct] = useState<1 | 2 | 3>(1);
   const [identify, setIdentify] = useState<CensusIdentifyState>(EMPTY);
 

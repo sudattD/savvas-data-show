@@ -13,7 +13,7 @@ interface LessonCard {
   accent: string;
 }
 
-const LESSONS: LessonCard[] = [
+export const LESSONS: LessonCard[] = [
   {
     to: '/lessons/slider-of-lies',
     number: 'L1', family: 'VISUAL DECEPTION', title: 'The Slider of Lies',
@@ -93,10 +93,10 @@ export default function LessonsHub() {
             The data-literacy stuff students <em className="not-italic text-accent-600">keep</em> forever.
           </h1>
           <p className="mt-5 text-lg text-ink-soft max-w-prose leading-relaxed">
-            Six interactive lessons on the moves a data-literate adult actually
-            uses. Tidy data. Lying with statistics. Mean vs median. Survivorship
-            bias. Each lesson is short, focused, and named after a real concept
-            students can quote later.
+            {LESSONS.length} interactive lessons on the moves a data-literate adult
+            actually uses. Tidy data. Lying with statistics. Mean vs median.
+            Survivorship bias. Each lesson is short, focused, and named after a
+            real concept students can quote later.
           </p>
         </div>
       </section>

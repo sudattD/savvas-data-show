@@ -29,7 +29,7 @@ export default function DatasetsHub() {
             <div className="md:col-span-8">
               <div className="eyebrow text-accent-600 mb-3">The library</div>
               <h1 className="editorial-hero text-4xl md:text-6xl text-brand-900">
-                Eleven real datasets.<br />
+                {DATASETS.length} real datasets.<br />
                 <em className="not-italic text-accent-600">Every value</em> verifiable.
               </h1>
               <p className="mt-5 text-lg text-ink-soft max-w-prose leading-relaxed">
