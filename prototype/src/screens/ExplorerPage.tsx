@@ -69,8 +69,6 @@ export default function ExplorerPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Masthead
-        section={dataset.name}
-        eyebrow="Dataset Explorer"
         right={
           <div className="flex items-center gap-3">
             <Link

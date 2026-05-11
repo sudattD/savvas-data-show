@@ -136,6 +136,15 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
   const [markerOn, setMarkerOn] = useState(false);
   const [markerX, setMarkerX] = useState(0);
   const [meansOn, setMeansOn] = useState(false);
+  const [xScale, setXScale] = useState<'linear' | 'log'>('linear');
+  const [yScale, setYScale] = useState<'linear' | 'log'>('linear');
+
+  // Log scale requires strictly-positive values. Disable the toggle when the
+  // axis includes zero or negatives.
+  const xCanLog = ranges !== null && ranges.xMin > 0;
+  const yCanLog = ranges !== null && ranges.yMin > 0;
+  const effectiveXScale = xCanLog ? xScale : 'linear';
+  const effectiveYScale = yCanLog ? yScale : 'linear';
 
   // Mean and median for both axes — for the cross-hair overlay.
   const meanMedian = useMemo(() => {
@@ -249,6 +258,9 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
           {meansOn ? 'Mean / median ✓' : 'Mean / median'}
         </button>
 
+        <ScaleToggle axis="x" enabled={xCanLog} scale={xScale} onChange={setXScale} />
+        <ScaleToggle axis="y" enabled={yCanLog} scale={yScale} onChange={setYScale} />
+
         {markerOn && ranges && (
           <label className="flex items-center gap-2">
             <span className="text-ink-muted">x</span>
@@ -330,17 +342,20 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
 
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 16, right: 24, bottom: 36, left: 24 }}>
+          <ScatterChart margin={{ top: 16, right: 32, bottom: 48, left: 64 }}>
             <CartesianGrid stroke="#E5EFFB" strokeDasharray="3 3" />
             <XAxis
               type="number"
               dataKey="x"
-              domain={['dataMin', 'dataMax']}
+              scale={effectiveXScale}
+              domain={effectiveXScale === 'log' ? ['auto', 'auto'] : ['dataMin', 'dataMax']}
+              allowDataOverflow={false}
+              tickFormatter={formatTick}
               stroke="#64748B"
               label={{
-                value: axisLabel(xAttr),
+                value: axisLabel(xAttr) + (effectiveXScale === 'log' ? ' · log scale' : ''),
                 position: 'insideBottom',
-                offset: -16,
+                offset: -8,
                 fill: '#475569',
                 fontSize: 13,
               }}
@@ -348,17 +363,21 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
             <YAxis
               type="number"
               dataKey="y"
-              domain={['dataMin', 'dataMax']}
+              scale={effectiveYScale}
+              domain={effectiveYScale === 'log' ? ['auto', 'auto'] : ['dataMin', 'dataMax']}
+              allowDataOverflow={false}
+              tickFormatter={formatTick}
               reversed={yAttr.preferReversed === true}
               stroke="#64748B"
+              width={56}
               label={{
-                value: axisLabel(yAttr),
+                value: axisLabel(yAttr) + (effectiveYScale === 'log' ? ' · log scale' : ''),
                 angle: -90,
                 position: 'insideLeft',
-                offset: 8,
+                offset: -2,
                 fill: '#475569',
                 fontSize: 13,
-                dy: 60,
+                style: { textAnchor: 'middle' },
               }}
             />
             <Tooltip
@@ -370,7 +389,13 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
                 return [val, name];
               }}
             />
-            {colorAttr && groups.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
+            {colorAttr && groups.length > 1 && (
+              <Legend
+                verticalAlign="top"
+                align="right"
+                wrapperStyle={{ fontSize: 12, paddingBottom: 4 }}
+              />
+            )}
             {groups.map((g) => (
               <Scatter key={g.name} name={g.name} data={g.points} fill={g.color} fillOpacity={0.6} />
             ))}
@@ -436,4 +461,38 @@ function formatScalar(s: number): string {
   if (abs >= 1000) return s.toFixed(0);
   if (abs >= 10) return s.toFixed(1);
   return s.toFixed(2);
+}
+
+// Axis tick formatter — clean integers for whole-number-ish data, otherwise
+// minimal decimals. Compact notation for big magnitudes.
+function formatTick(v: number): string {
+  if (v === 0) return '0';
+  const abs = Math.abs(v);
+  if (abs >= 1e9) return `${(v / 1e9).toFixed(1)}B`;
+  if (abs >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
+  if (abs >= 1e4) return `${(v / 1e3).toFixed(0)}k`;
+  if (abs >= 100) return v.toFixed(0);
+  if (abs >= 10) return Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1);
+  if (abs >= 1) return v.toFixed(2);
+  return v.toFixed(3);
+}
+
+function ScaleToggle({
+  axis, enabled, scale, onChange,
+}: { axis: 'x' | 'y'; enabled: boolean; scale: 'linear' | 'log'; onChange: (s: 'linear' | 'log') => void }) {
+  if (!enabled) return null;
+  const isLog = scale === 'log';
+  return (
+    <button
+      onClick={() => onChange(isLog ? 'linear' : 'log')}
+      title={`Toggle ${axis.toUpperCase()} axis between linear and log scale`}
+      className={`px-3 py-1.5 rounded-md font-semibold transition border ${
+        isLog
+          ? 'bg-indigo-700 text-white border-indigo-700 shadow-editorial'
+          : 'bg-surface-raised border-surface-line text-ink hover:border-indigo-300'
+      }`}
+    >
+      {axis.toUpperCase()}: {isLog ? 'log' : 'linear'}
+    </button>
+  );
 }
