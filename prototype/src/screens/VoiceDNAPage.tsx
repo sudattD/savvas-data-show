@@ -5,7 +5,9 @@ import VoiceShare from './voice/VoiceShare';
 import type { VoiceSample } from './voice/VoicePlay';
 import ProgressDots from '../components/ProgressDots';
 import Masthead from '../components/Masthead';
+import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { getDataset } from '../data/registry';
 
 export default function VoiceDNAPage() {
   useDocumentTitle('Voice DNA');
@@ -36,6 +38,10 @@ export default function VoiceDNAPage() {
           />
         )}
         {act === 3 && <VoiceShare samples={samples} onRestart={restart} />}
+
+        <div className="mt-12">
+          <ChapterFitsSection dataset={getDataset('tides')} pin={{ course: 'algebra2', topic: 7 }} />
+        </div>
       </main>
 
       <footer className="border-t border-surface-line mt-16 py-6 text-center text-xs text-ink-muted">

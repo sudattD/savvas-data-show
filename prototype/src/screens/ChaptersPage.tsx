@@ -13,6 +13,7 @@ import {
 } from '../data/chapters';
 import type { CourseId, FormatCode, ChapterEntry } from '../data/chapters';
 import { DATASETS } from '../data/registry';
+import { COMPANION_LESSONS, companionLessonsFor } from '../data/lessonRules';
 
 const COURSE_ACCENT: Record<CourseId, { bar: string; chip: string; text: string }> = {
   algebra1: { bar: 'bg-sky-500', chip: 'bg-sky-50 text-sky-800 border-sky-200', text: 'text-sky-700' },
@@ -103,6 +104,8 @@ export default function ChaptersPage() {
       </section>
 
       <main className="max-w-6xl mx-auto px-6 py-10 space-y-12">
+        <CompanionLessonsRail />
+
         {courses.map((c) => (
           <CourseSection key={c} course={c} />
         ))}
@@ -209,6 +212,8 @@ function ChapterRow({ entry }: { entry: ChapterEntry }) {
               </span>
             ))}
           </div>
+
+          <CompanionLessonChips entry={entry} />
         </div>
 
         {/* CTA stack */}
@@ -291,5 +296,74 @@ function FilterChip({
     >
       {children}
     </button>
+  );
+}
+
+const LESSON_FAMILY_TONE: Record<string, string> = {
+  'Visual deception': 'bg-rose-50 text-rose-800 border-rose-200',
+  'Statistical thinking': 'bg-accent-50 text-accent-800 border-accent-200',
+  'Data hygiene': 'bg-emerald-50 text-emerald-800 border-emerald-200',
+};
+
+function CompanionLessonChips({ entry }: { entry: ChapterEntry }) {
+  const matches = companionLessonsFor(entry);
+  if (matches.length === 0) return null;
+
+  return (
+    <div className="mt-3 pt-3 border-t border-surface-line/60 flex flex-wrap items-baseline gap-1.5">
+      <span className="text-[10px] eyebrow text-ink-muted mr-1">Pair with</span>
+      {matches.map(({ lesson, reason }) => (
+        <Link
+          key={lesson.id}
+          to={`/lessons/${lesson.id}`}
+          title={`${lesson.title} (${lesson.concept}) — ${reason}`}
+          className={`text-[10px] eyebrow px-2 py-0.5 rounded border ${LESSON_FAMILY_TONE[lesson.family] ?? 'bg-surface-subtle border-surface-line'} hover:underline whitespace-nowrap`}
+        >
+          <span className="font-mono opacity-60 mr-1">{lesson.number}</span>
+          {lesson.concept}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function CompanionLessonsRail() {
+  return (
+    <section className="bg-surface-raised border border-surface-line rounded-lg overflow-hidden">
+      <header className="px-5 py-3 border-b border-surface-line bg-surface-subtle/40 flex flex-wrap items-baseline justify-between gap-3">
+        <div>
+          <div className="eyebrow text-ink-muted">Companion lessons</div>
+          <div className="text-xs text-ink-muted mt-0.5">
+            Six transferable data-literacy lessons that pair across multiple chapters. Each row below tags the lessons that fit.
+          </div>
+        </div>
+        <Link
+          to="/lessons"
+          className="text-xs eyebrow text-brand-700 hover:text-accent-700 hover:underline whitespace-nowrap"
+        >
+          All lessons →
+        </Link>
+      </header>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x lg:divide-x divide-surface-line">
+        {COMPANION_LESSONS.map((l) => (
+          <Link
+            key={l.id}
+            to={`/lessons/${l.id}`}
+            className="px-4 py-3 hover:bg-surface-subtle/40 transition flex items-start gap-3 group/lesson"
+          >
+            <div className="font-mono text-xs text-ink-muted shrink-0 w-7 pt-0.5">{l.number}</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-semibold text-brand-900 group-hover/lesson:text-accent-700 truncate">{l.title}</div>
+              <div className="text-[11px] text-ink-muted truncate">{l.concept} · {l.duration}</div>
+            </div>
+            <span
+              className={`text-[9px] eyebrow px-1.5 py-0.5 rounded border self-start mt-0.5 shrink-0 ${LESSON_FAMILY_TONE[l.family] ?? 'bg-surface-subtle border-surface-line'}`}
+            >
+              {l.family.split(' ')[0]}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }

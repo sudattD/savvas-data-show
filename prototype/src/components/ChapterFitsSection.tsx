@@ -1,21 +1,28 @@
 import { useState } from 'react';
-import type { ChapterFit, Dataset } from '../lib/dataset';
+import type { ChapterFit, Course, Dataset } from '../lib/dataset';
 import { COURSE_LABEL } from '../lib/dataset';
 
 interface Props {
   dataset: Dataset;
+  /** When set, render just that chapter's fit with no tabs — for activity
+   *  pages where the chapter is implicit from the route. */
+  pin?: { course: Course; topic: number };
 }
 
 type View = 'student' | 'teacher';
 
-export default function ChapterFitsSection({ dataset }: Props) {
-  const fits = dataset.chapterFits;
+export default function ChapterFitsSection({ dataset, pin }: Props) {
+  const all = dataset.chapterFits ?? [];
+  const fits = pin
+    ? all.filter((f) => f.course === pin.course && f.topic === pin.topic)
+    : all;
   const [view, setView] = useState<View>('student');
   const [active, setActive] = useState(0);
 
-  if (!fits || fits.length === 0) return null;
+  if (fits.length === 0) return null;
 
   const fit = fits[Math.min(active, fits.length - 1)];
+  const showTabs = !pin && fits.length > 1;
 
   return (
     <section className="bg-surface-raised border border-surface-line rounded-lg overflow-hidden">
@@ -23,15 +30,17 @@ export default function ChapterFitsSection({ dataset }: Props) {
         <div>
           <div className="eyebrow text-ink-muted">How this fits the chapter</div>
           <div className="text-xs text-ink-muted mt-0.5">
-            {fits.length === 1
-              ? 'One chapter, written for both roles below.'
-              : `${fits.length} chapters this dataset earns its place in.`}
+            {pin
+              ? `Standards and objective for ${COURSE_LABEL[fit.course]} · Topic ${fit.topic}.`
+              : fits.length === 1
+                ? 'One chapter, written for both roles below.'
+                : `${fits.length} chapters this dataset earns its place in.`}
           </div>
         </div>
         <ViewToggle view={view} onChange={setView} />
       </header>
 
-      {fits.length > 1 && (
+      {showTabs && (
         <div className="px-5 py-3 border-b border-surface-line bg-surface-subtle/20 flex flex-wrap gap-2">
           {fits.map((f, i) => {
             const isActive = i === active;

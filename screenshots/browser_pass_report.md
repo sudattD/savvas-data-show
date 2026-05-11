@@ -1,8 +1,10 @@
-## Browser-pass report · 2026-05-10 21:30 UTC
+## Browser-pass report · 2026-05-10 21:30 UTC (+ continuation pass 22:10 UTC)
 
 **Base URL tested:** https://prototype-five-iota.vercel.app/
 **Driver:** Claude in Chrome MCP from a Cowork session.
 **Note:** prototype-five-iota.vercel.app **does reflect HEAD** — the B1 (Wind Turbine empty chart), B2 (per-dataset Explorer defaults), I1 (document.title per route), N1 (stale "six/eleven" copy), N2 (CensusPyramidPage useDocumentTitle), and I5 (hero sparkline on dataset stories) fixes are all live.
+
+**Continuation pass adds:** /chapters, three new lessons (L7/L8/L9), one Explorer filter interaction (Gentoo chip toggle), and one beat-dot click test on a story page. See "Continuation findings" section below.
 
 ### Summary
 - Routes attempted: 11 / 11
@@ -61,6 +63,28 @@ None observed across all 11 routes. Console reads were performed at R1 (cleared 
 - Browser back button: not explicitly tested via the script, but inter-route navigation via masthead nav worked at every step.
 - Tab title changes per route: ✓ verified — every navigate produced a unique title (Home, Wind Power Curve, Voice DNA, Reaction Time, 120 Years of America, Explorer · Mauna Loa CO2 (monthly), Explorer · Palmer Penguins, Datasets, Mauna Loa CO2 (monthly), Palmer Penguins · Dictionary, Lessons, The Slider of Lies).
 - Direct URL paste in fresh tab for all routes: implicit pass — every `navigate` call to a deep URL succeeded with full content rendered, indicating SPA routing is intact.
+
+### Continuation findings (22:10 UTC)
+
+| Route | Functional | Visual | Notes | Screenshot |
+|---|---|---|---|---|
+| `/chapters` (new — not in brief) | ✓ pass | ✓ pass | New scope-and-sequence map. Hero: "Every chapter. One activity." Stats: 35 chapters · 8 built · 15 datasets. Filter (All / Algebra 1 / Geometry / Algebra 2). Per-topic card shows TOPIC #, math concept eyebrow, activity name, design rationale, and either an "Open activity" CTA (for built ones) or an "Explore [dataset] →" CTA (for unbuilt). Title "Savvas Data Show · Scope & sequence". This is one of the strongest pages for the Park persona; would be worth featuring in the demo flow. | ss_4565oqbw1 |
+| L7 `/lessons/rare-disease` | ✓ pass | ✓ pass | "You tested positive. Should you panic?" Base-rate fallacy lesson. 1,000-patient grid with red (true positives) and amber (false positives) cells. Three sliders: disease prevalence, test sensitivity, test specificity. Clean interactive. | ss_3832bx0cv |
+| L8 `/lessons/crack-the-headline` | ✓ pass | ✓ pass | "Every headline is an equation in disguise." 5 headlines, currently on #1 "Average rent rose 30% this year." Solve-for input + Check button. Tabs along the bottom for headlines 2-5. Good algebra-in-context puzzle. | ss_78991cs7e |
+| L9 `/lessons/hit-the-target` | ✓ pass | ✓ pass | "Every flying thing follows a quadratic." Cannon-fires-projectile interactive with launch angle (45°) and initial velocity (25 m/s) sliders. Trajectory shows apex 15.9m, range 63.8m. Four target zones (easy 30m, medium 60m, far 95m, long 120m) with the current chosen target highlighted. Beautiful physics-meets-math piece. | ss_8685pvu1o |
+| Explorer filter interaction (penguins → toggle Gentoo) | ✓ pass | ✓ pass | Click "Gentoo 123" chip in filter rail: scatter goes 342 → 219 points, "Gentoo 123" gets a strikethrough, stats panel recomputes (n=219, mean bill length 41.91 from 43.92, Island Biscoe drops from 167 to 44 because Gentoos cluster on Biscoe). "Clear all" link appears top-right of filter rail. Filter mechanics are tight. | ss_65800htks |
+| Story beat-dot navigation (co2 page, click beat 3) | △ partial | ✓ pass | Beat dots are real `<button role="tab">` elements with `aria-label="Beat N of 4"` — accessibility wired. **But** clicking beat 3 from the cold-open state did not advance the page (still showed beat 1/4 with "The graph that woke up the world"). The dots appear to only allow back-navigation to beats you've already unlocked via Continue, not forward-jumping. Defensible product choice (preserves narrative pacing) but doesn't match the brief's "tappable navigation works" assertion. | ss_99465vxsf |
+
+**New nice-to-haves I noticed in the continuation pass:**
+
+- The dataset story page (CO2) has a "**CHAPTERS THAT USE THIS DATASET**" panel below the story beats — "2 chapters draw on this data / Algebra 2 · T6 · The Log Trick — Exponential and Logarithmic Functions / See concept →". A real chapter back-link from dataset to where it's pedagogically used. Strong feature; the brief didn't mention testing it.
+- The `/chapters` page is the implicit fourth pillar from the home page that I'd never followed. Its "8 BUILT" out of 35 stat is honest about prototype scope — Park will read that as "this is a serious roadmap, not a one-off demo."
+- The Explorer's left-rail "**clear all**" link appears as soon as any filter is engaged. Tiny affordance but well-placed.
+
+**Net effect on the punch list:**
+
+- One new question for the dev — is the beat-dot forward-locking intentional? If yes, the brief should be updated. If no, it's a small bug to file (M-tier).
+- The masthead overlap I previously flagged at R6 was not reproducible in the continuation pass (screenshot ss_65800htks shows clean "DATA DICTIONARY →"). May have been a transient initial-render state. Worth one more spot-check before filing.
 
 ### What this means for Wednesday
 

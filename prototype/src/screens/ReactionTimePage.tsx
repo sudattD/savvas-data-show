@@ -6,7 +6,9 @@ import ReactionPlay from './reaction/ReactionPlay';
 import ReactionInterpret from './reaction/ReactionInterpret';
 import type { IdentifyState } from './reaction/ReactionIdentify';
 import type { ReactionTrials } from './reaction/ReactionPlay';
+import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { getDataset } from '../data/registry';
 
 const EMPTY: IdentifyState = {
   firstQuestion: '', mainQuestion: '', conjecture: 0, reasoning: '', tooLow: 0, tooHigh: 0,
@@ -51,6 +53,10 @@ export default function ReactionTimePage() {
           />
         )}
         {act === 3 && <ReactionInterpret identify={identify} trials={trials} onRestart={restart} />}
+
+        <div className="mt-12">
+          <ChapterFitsSection dataset={getDataset('marathon')} pin={{ course: 'algebra1', topic: 11 }} />
+        </div>
       </main>
       <footer className="border-t border-surface-line mt-16 py-6 text-center text-xs text-ink-muted">
         Prototype · all data stays on your device · visual ~270 ms · audio ~160 ms (Woods et al. 2015).

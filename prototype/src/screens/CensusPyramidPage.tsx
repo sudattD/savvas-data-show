@@ -6,7 +6,9 @@ import CensusIdentify from './census/CensusIdentify';
 import CensusModel from './census/CensusModel';
 import CensusInterpret from './census/CensusInterpret';
 import type { CensusIdentifyState } from './census/CensusIdentify';
+import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { getDataset } from '../data/registry';
 
 const EMPTY: CensusIdentifyState = {
   firstQuestion: '', mainQuestion: '', whoChangedMore: '', seniorChangePp: 0, reasoning: '', tooLow: 0, tooHigh: 0,
@@ -45,6 +47,10 @@ export default function CensusPyramidPage() {
         )}
         {act === 2 && <CensusModel onNext={() => setAct(3)} />}
         {act === 3 && <CensusInterpret identify={identify} onRestart={restart} />}
+
+        <div className="mt-12">
+          <ChapterFitsSection dataset={getDataset('population')} pin={{ course: 'algebra2', topic: 10 }} />
+        </div>
       </main>
       <footer className="border-t border-surface-line mt-16 py-6">
         <div className="max-w-5xl mx-auto px-6 flex flex-wrap items-baseline justify-between gap-3 text-xs text-ink-muted">

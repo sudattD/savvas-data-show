@@ -5,7 +5,9 @@ import Act2Model from './Act2Model';
 import Act3Interpret from './Act3Interpret';
 import Masthead from '../components/Masthead';
 import SeeAllDataLink from '../components/SeeAllDataLink';
+import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { getDataset } from '../data/registry';
 
 interface RunState {
   conjecture: string;
@@ -70,6 +72,10 @@ export default function WindTurbinePage() {
           />
         )}
         {act === 3 && <Act3Interpret state={state} onRestart={handleRestart} />}
+
+        <div className="mt-12">
+          <ChapterFitsSection dataset={getDataset('wind')} pin={{ course: 'algebra1', topic: 8 }} />
+        </div>
       </main>
 
       <footer className="border-t border-surface-line mt-16 py-6">
