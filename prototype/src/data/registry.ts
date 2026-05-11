@@ -17,6 +17,9 @@ import { POPULATION_DATASET } from './populationDataset';
 import { OLYMPIC_100M_DATASET } from './olympic100mDataset';
 import { HEART_RATE_DATASET } from './heartRateDataset';
 import { SOLAR_SYSTEM_DATASET } from './solarSystemDataset';
+import { SP500_DATASET } from './sp500Dataset';
+import { APPLIANCE_LOADS_DATASET } from './applianceLoadsDataset';
+import { SATELLITE_ORBITS_DATASET } from './satelliteOrbitsDataset';
 
 export const DATASETS: Dataset[] = [
   WIND_TURBINE_DATASET,
@@ -37,6 +40,9 @@ export const DATASETS: Dataset[] = [
   OLYMPIC_100M_DATASET,
   MOORE_LAW_DATASET,
   SPOTIFY_DATASET,
+  SP500_DATASET,
+  APPLIANCE_LOADS_DATASET,
+  SATELLITE_ORBITS_DATASET,
 ];
 
 export function getDataset(id: string): Dataset {

@@ -165,6 +165,26 @@ export default function ChaptersPage() {
       </section>
 
       <main className="max-w-6xl mx-auto px-6 py-10 space-y-12">
+        <Link
+          to="/alignment"
+          className="block bg-gradient-to-r from-emerald-50 to-accent-50 border border-emerald-200 rounded-lg px-5 py-4 hover:from-emerald-100 hover:to-accent-100 transition group"
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="eyebrow text-emerald-700 mb-0.5">Alternative approach · new</div>
+              <div className="font-display font-bold text-brand-900 text-lg leading-snug">
+                Keep Savvas's Act 1. Add Act 1.5 — real data.
+              </div>
+              <div className="text-xs text-ink-soft mt-1">
+                For each of the 35 chapters: the official Savvas 3-Act hook paired with the real-data exploration that picks up where it leaves off.
+              </div>
+            </div>
+            <span className="text-accent-700 group-hover:text-accent-900 font-semibold whitespace-nowrap text-sm">
+              See the alignment →
+            </span>
+          </div>
+        </Link>
+
         <CompanionLessonsRail />
 
         {courses.map((c) => (
