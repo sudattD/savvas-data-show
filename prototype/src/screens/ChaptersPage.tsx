@@ -10,6 +10,7 @@ import {
   BUILT_COUNT,
   chaptersForCourse,
   chapterAnchorId,
+  resolveTeacherInfo,
 } from '../data/chapters';
 import type { CourseId, FormatCode, ChapterEntry } from '../data/chapters';
 import { DATASETS } from '../data/registry';
@@ -32,19 +33,28 @@ const FORMAT_TONE: Record<FormatCode, string> = {
 };
 
 type CourseFilter = 'all' | CourseId;
+type FormatFilter = 'all' | FormatCode;
+type ViewMode = 'student' | 'teacher';
 
 export default function ChaptersPage() {
   useDocumentTitle('Scope & sequence');
   const [filter, setFilter] = useState<CourseFilter>('all');
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>('all');
+  const [builtOnly, setBuiltOnly] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('student');
   const location = useLocation();
 
-  // If we arrived with a chapter anchor in the URL, auto-select that
-  // chapter's course so the row isn't filtered out, then scroll it into view.
+  // If we arrived with a chapter anchor in the URL, auto-clear filters so the
+  // target row isn't filtered out, then scroll it into view.
   useEffect(() => {
     const hash = location.hash.replace('#', '');
     if (!hash) return;
     const target = CHAPTERS.find((c) => chapterAnchorId(c) === hash);
-    if (target) setFilter('all');
+    if (target) {
+      setFilter('all');
+      setFormatFilter('all');
+      setBuiltOnly(false);
+    }
     requestAnimationFrame(() => {
       const el = document.getElementById(hash);
       if (el) {
@@ -60,11 +70,28 @@ export default function ChaptersPage() {
     [filter],
   );
 
+  const passes = (c: ChapterEntry): boolean => {
+    if (formatFilter !== 'all' && !c.format.includes(formatFilter)) return false;
+    if (builtOnly && !c.route) return false;
+    return true;
+  };
+
   const totals = useMemo(() => ({
     chapters: CHAPTERS.length,
     built: BUILT_COUNT,
     datasets: new Set(CHAPTERS.flatMap((c) => c.datasets)).size,
   }), []);
+
+  const visibleCount = CHAPTERS.filter((c) => {
+    if (filter !== 'all' && c.course !== filter) return false;
+    return passes(c);
+  }).length;
+
+  const formatsInUse = useMemo(() => {
+    const set = new Set<FormatCode>();
+    CHAPTERS.forEach((c) => c.format.forEach((f) => set.add(f)));
+    return Array.from(set);
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -86,19 +113,52 @@ export default function ChaptersPage() {
                 the activity readable.
               </p>
             </div>
-            <div className="md:col-span-4 grid grid-cols-3 gap-2">
-              <Tile label="chapters" value={totals.chapters} big />
-              <Tile label="built" value={totals.built} />
-              <Tile label="datasets" value={totals.datasets} />
+            <div className="md:col-span-4 space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <Tile label="chapters" value={totals.chapters} big />
+                <Tile label="built" value={totals.built} />
+                <Tile label="datasets" value={totals.datasets} />
+              </div>
+              <ViewToggle mode={viewMode} onChange={setViewMode} />
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            <span className="eyebrow text-ink-muted mr-2">Filter:</span>
-            <FilterChip active={filter === 'all'} onClick={() => setFilter('all')}>All</FilterChip>
-            <FilterChip active={filter === 'algebra1'} onClick={() => setFilter('algebra1')} accent="sky">Algebra 1</FilterChip>
-            <FilterChip active={filter === 'geometry'} onClick={() => setFilter('geometry')} accent="emerald">Geometry</FilterChip>
-            <FilterChip active={filter === 'algebra2'} onClick={() => setFilter('algebra2')} accent="violet">Algebra 2</FilterChip>
+          <div className="mt-6 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="eyebrow text-ink-muted mr-2 w-14">Course</span>
+              <FilterChip active={filter === 'all'} onClick={() => setFilter('all')}>All</FilterChip>
+              <FilterChip active={filter === 'algebra1'} onClick={() => setFilter('algebra1')} accent="sky">Algebra 1</FilterChip>
+              <FilterChip active={filter === 'geometry'} onClick={() => setFilter('geometry')} accent="emerald">Geometry</FilterChip>
+              <FilterChip active={filter === 'algebra2'} onClick={() => setFilter('algebra2')} accent="violet">Algebra 2</FilterChip>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="eyebrow text-ink-muted mr-2 w-14">Format</span>
+              <FilterChip active={formatFilter === 'all'} onClick={() => setFormatFilter('all')}>All</FilterChip>
+              {formatsInUse.map((f) => (
+                <FilterChip
+                  key={f}
+                  active={formatFilter === f}
+                  onClick={() => setFormatFilter(formatFilter === f ? 'all' : f)}
+                  title={`${FORMAT_LABEL[f]} — ${FORMAT_BLURB[f]}`}
+                >
+                  <span className="font-mono opacity-70 mr-1">{f}</span>
+                  {FORMAT_LABEL[f]}
+                </FilterChip>
+              ))}
+              <span className="text-surface-line mx-1">·</span>
+              <FilterChip
+                active={builtOnly}
+                onClick={() => setBuiltOnly((v) => !v)}
+                accent="emerald"
+              >
+                Built only
+              </FilterChip>
+              {(formatFilter !== 'all' || builtOnly || filter !== 'all') && (
+                <span className="text-[11px] text-ink-muted ml-2">
+                  showing {visibleCount} of {CHAPTERS.length}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -107,8 +167,15 @@ export default function ChaptersPage() {
         <CompanionLessonsRail />
 
         {courses.map((c) => (
-          <CourseSection key={c} course={c} />
+          <CourseSection key={c} course={c} predicate={passes} viewMode={viewMode} />
         ))}
+
+        {visibleCount === 0 && (
+          <div className="bg-surface-raised border border-surface-line rounded-lg p-8 text-center">
+            <div className="font-display text-lg text-ink mb-1">No chapters match these filters.</div>
+            <div className="text-sm text-ink-muted">Try widening the format or turning off "Built only".</div>
+          </div>
+        )}
 
         <FormatLegend />
       </main>
@@ -120,9 +187,14 @@ export default function ChaptersPage() {
   );
 }
 
-function CourseSection({ course }: { course: CourseId }) {
-  const entries = chaptersForCourse(course);
+function CourseSection({
+  course, predicate, viewMode,
+}: { course: CourseId; predicate: (c: ChapterEntry) => boolean; viewMode: ViewMode }) {
+  const allEntries = chaptersForCourse(course);
+  const entries = allEntries.filter(predicate);
   const accent = COURSE_ACCENT[course];
+
+  if (entries.length === 0) return null;
 
   return (
     <section>
@@ -131,19 +203,23 @@ function CourseSection({ course }: { course: CourseId }) {
         <h2 className={`font-display text-2xl md:text-3xl font-bold ${accent.text}`}>
           {COURSE_TITLE[course]}
         </h2>
-        <div className="text-xs text-ink-muted font-mono">{entries.length} topics</div>
+        <div className="text-xs text-ink-muted font-mono">
+          {entries.length === allEntries.length
+            ? `${entries.length} topics`
+            : `${entries.length} of ${allEntries.length} topics`}
+        </div>
       </div>
 
       <div className="grid gap-3">
         {entries.map((entry) => (
-          <ChapterRow key={`${entry.course}-${entry.topic}`} entry={entry} />
+          <ChapterRow key={`${entry.course}-${entry.topic}`} entry={entry} viewMode={viewMode} />
         ))}
       </div>
     </section>
   );
 }
 
-function ChapterRow({ entry }: { entry: ChapterEntry }) {
+function ChapterRow({ entry, viewMode }: { entry: ChapterEntry; viewMode: ViewMode }) {
   const accent = COURSE_ACCENT[entry.course];
   const datasetObjs = entry.datasets.map((id) => DATASETS.find((d) => d.id === id)).filter(Boolean) as { id: string; name: string }[];
   const isBuilt = !!entry.route;
@@ -213,6 +289,8 @@ function ChapterRow({ entry }: { entry: ChapterEntry }) {
             ))}
           </div>
 
+          {viewMode === 'teacher' && <TeacherPanel entry={entry} />}
+
           <CompanionLessonChips entry={entry} />
         </div>
 
@@ -279,8 +357,8 @@ function Tile({ label, value, big }: { label: string; value: number | string; bi
 }
 
 function FilterChip({
-  active, onClick, children, accent,
-}: { active: boolean; onClick: () => void; children: React.ReactNode; accent?: 'sky' | 'emerald' | 'violet' }) {
+  active, onClick, children, accent, title,
+}: { active: boolean; onClick: () => void; children: React.ReactNode; accent?: 'sky' | 'emerald' | 'violet'; title?: string }) {
   const activeBg =
     accent === 'sky' ? 'bg-sky-600 text-white border-sky-600' :
     accent === 'emerald' ? 'bg-emerald-600 text-white border-emerald-600' :
@@ -290,6 +368,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      title={title}
       className={`text-xs font-semibold px-3 py-1.5 rounded-md border transition ${
         active ? activeBg : 'bg-surface-raised border-surface-line text-ink-soft hover:bg-surface-subtle'
       }`}
@@ -365,5 +444,129 @@ function CompanionLessonsRail() {
         ))}
       </div>
     </section>
+  );
+}
+
+function ViewToggle({ mode, onChange }: { mode: ViewMode; onChange: (m: ViewMode) => void }) {
+  return (
+    <div className="bg-surface-raised border border-surface-line rounded-lg p-1 flex text-xs font-semibold" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={mode === 'student'}
+        onClick={() => onChange('student')}
+        className={`flex-1 px-3 py-1.5 rounded-md transition ${
+          mode === 'student' ? 'bg-brand-900 text-white shadow-sm' : 'text-ink-soft hover:text-ink'
+        }`}
+      >
+        Student view
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={mode === 'teacher'}
+        onClick={() => onChange('teacher')}
+        className={`flex-1 px-3 py-1.5 rounded-md transition ${
+          mode === 'teacher' ? 'bg-brand-900 text-white shadow-sm' : 'text-ink-soft hover:text-ink'
+        }`}
+      >
+        Teacher view
+      </button>
+    </div>
+  );
+}
+
+const FORMAT_SETUP: Record<FormatCode, string> = {
+  CDS: 'Curated dataset — no extra prep beyond a browser.',
+  SEN: 'Students need phones or laptops with sensors enabled.',
+  GAM: 'Interactive simulation in the browser; no external setup.',
+  POL: 'Whole-class live poll — works best on a shared display.',
+  SIM: 'Browser simulation; no curated dataset needed.',
+  IMP: 'Students bring their own data (Spotify export, song file, etc.).',
+  TML: 'Trains a tiny model in the browser; demands ~30 MB and a few seconds of CPU.',
+};
+
+// Default class-time estimate per format when no teacher.minutes is set.
+const FORMAT_DEFAULT_MINUTES: Record<FormatCode, number> = {
+  CDS: 30, SEN: 35, GAM: 25, POL: 30, SIM: 25, IMP: 30, TML: 40,
+};
+
+function estimateMinutes(entry: ChapterEntry): number {
+  if (entry.teacher?.minutes) return entry.teacher.minutes;
+  // Take the max of the default minutes across the chapter's formats.
+  return Math.max(...entry.format.map((f) => FORMAT_DEFAULT_MINUTES[f]));
+}
+
+function TeacherPanel({ entry }: { entry: ChapterEntry }) {
+  const info = resolveTeacherInfo(entry);
+  const minutes = info.minutes ?? estimateMinutes(entry);
+  const sourceLabel = info.source === 'chapterFit'
+    ? 'authored on dataset'
+    : info.source === 'embedded'
+    ? 'authored on chapter'
+    : 'not yet drafted';
+
+  return (
+    <div className="mt-4 pt-4 border-t border-surface-line space-y-3 bg-surface-subtle/30 -mx-5 px-5 pb-3 rounded-b-lg">
+      <div className="flex items-center gap-2 text-[10px] eyebrow text-brand-700">
+        <span>Teacher notes</span>
+        <span className="font-mono text-ink-muted">~{minutes} min</span>
+        <span className="font-mono text-ink-muted opacity-70">· {sourceLabel}</span>
+      </div>
+
+      {info.objective ? (
+        <div>
+          <div className="text-[10px] eyebrow text-ink-muted mb-0.5">Objective</div>
+          <p className="text-xs text-ink leading-relaxed">{info.objective}</p>
+        </div>
+      ) : (
+        <div className="text-[11px] text-ink-muted italic">
+          Objective not yet drafted — student-facing connection above is the starting point.
+        </div>
+      )}
+
+      {info.mathFit && (
+        <div>
+          <div className="text-[10px] eyebrow text-ink-muted mb-0.5">Why this dataset fits this topic</div>
+          <p className="text-xs text-ink-soft leading-relaxed italic">{info.mathFit}</p>
+        </div>
+      )}
+
+      <div>
+        <div className="text-[10px] eyebrow text-ink-muted mb-0.5">Class setup</div>
+        <ul className="text-xs text-ink leading-relaxed list-disc pl-4 space-y-0.5">
+          {entry.format.map((f) => (
+            <li key={f}>
+              <strong>{FORMAT_LABEL[f]}</strong> — {FORMAT_SETUP[f]}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {info.standards.length > 0 && (
+        <div>
+          <div className="text-[10px] eyebrow text-ink-muted mb-1">Standards (CCSS-M)</div>
+          <div className="flex flex-wrap gap-1.5">
+            {info.standards.map((s) => (
+              <code
+                key={s}
+                className="font-mono text-[10px] bg-surface-raised border border-surface-line rounded px-1.5 py-0.5 text-ink"
+              >
+                {s}
+              </code>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {info.discussion.length > 0 && (
+        <div>
+          <div className="text-[10px] eyebrow text-ink-muted mb-1">Discussion prompts</div>
+          <ol className="text-xs text-ink leading-relaxed pl-5 space-y-1 list-decimal marker:text-ink-muted marker:font-mono">
+            {info.discussion.map((d, i) => <li key={i}>{d}</li>)}
+          </ol>
+        </div>
+      )}
+    </div>
   );
 }

@@ -52,6 +52,14 @@ export interface ChapterEntry {
   /** Design brief for concept rows — the Act-1 opening moment and the Act-3 reveal,
    *  in one or two sentences each. Lets unbuilt rows function as real specs. */
   design?: { hook: string; reveal: string };
+  /** Teacher-facing pedagogical metadata — used by the Teacher view on /chapters.
+   *  All fields optional; rows fall back to sensible defaults when missing. */
+  teacher?: {
+    objective?: string;
+    standards?: string[];
+    minutes?: number;
+    discussion?: string[];
+  };
 }
 
 export const CHAPTERS: ChapterEntry[] = [
@@ -63,6 +71,16 @@ export const CHAPTERS: ChapterEntry[] = [
     connection: 'Real-world equations almost always arrive as English. Translating English into x and = is the whole skill.',
     format: ['SIM'], datasets: [],
     route: '/lessons/crack-the-headline',
+    teacher: {
+      objective: 'Students will translate a real-world claim into a one-variable equation and solve for the missing quantity, then evaluate whether the claim is mathematically honest.',
+      standards: ['HSA-CED.A.1', 'HSA-REI.B.3'],
+      minutes: 25,
+      discussion: [
+        'Which headlines were ambiguous? What information was missing to make the equation solvable?',
+        'When a headline rounds aggressively, does the rounded version still imply the same equation?',
+        'How would you write a headline for your own equation that survives this scrutiny?',
+      ],
+    },
   },
   {
     course: 'algebra1', topic: 2, topicName: 'Linear Equations',
@@ -104,6 +122,16 @@ export const CHAPTERS: ChapterEntry[] = [
     connection: 'Real engineering uses piecewise functions because the world bends. Where it bends means something.',
     format: ['CDS'], datasets: ['wind'],
     route: '/wind-turbine',
+    teacher: {
+      objective: 'Students will identify the wind-speed breakpoints in real SCADA data and define a piecewise function (quadratic rise, rated plateau, cut-out drop) that matches each regime.',
+      standards: ['HSF-IF.C.7.b', 'HSF-BF.A.1.b'],
+      minutes: 30,
+      discussion: [
+        'Where exactly is the breakpoint? Is it a sharp transition or a soft one in the data?',
+        "Why is the plateau a design choice rather than a math fact? What's being protected?",
+        'What other real systems would you model piecewise? (Tax brackets, cell signal, drug dosage.)',
+      ],
+    },
   },
   {
     course: 'algebra1', topic: 6, topicName: 'Exponents and Exponential Functions',
@@ -135,6 +163,16 @@ export const CHAPTERS: ChapterEntry[] = [
     format: ['CDS'], datasets: ['wind'],
     route: '/wind-turbine',
     flagship: true,
+    teacher: {
+      objective: 'Students will fit a quadratic model P = a·v² + b·v + c to real wind-turbine SCADA data using interactive sliders, interpret a, b, c in context, and evaluate the fit using R².',
+      standards: ['HSF-IF.C.7.a', 'HSF-BF.A.1.a', 'HSS-ID.B.6.a'],
+      minutes: 30,
+      discussion: [
+        "What does each slider control geometrically? Which one is hardest to set well?",
+        'Kinetic energy in the wind grows as v³, but our fit is closer to v². Where does the missing factor go?',
+        'Where does the model stop being useful? What does that tell you about model scope?',
+      ],
+    },
   },
   {
     course: 'algebra1', topic: 9, topicName: 'Solving Quadratic Equations',
@@ -143,6 +181,16 @@ export const CHAPTERS: ChapterEntry[] = [
     connection: '"Find x such that h(x) = 0" is the moment of impact, in the literal sense.',
     format: ['GAM', 'SIM'], datasets: [],
     route: '/lessons/hit-the-target',
+    teacher: {
+      objective: 'Students will solve quadratic equations h(x) = 0 to predict the landing point of a projectile, then verify by adjusting launch angle and velocity to hit a target.',
+      standards: ['HSA-REI.B.4.b', 'HSF-IF.C.7.a'],
+      minutes: 25,
+      discussion: [
+        'Which two solutions does the quadratic give for h(x) = 0, and what does the negative one mean physically?',
+        'Why does the same target sometimes have two valid (angle, velocity) pairs? What does that tell you about the function?',
+        'How does air resistance, which we ignored, change the landing prediction?',
+      ],
+    },
   },
   {
     course: 'algebra1', topic: 10, topicName: 'Working with Functions',
@@ -163,6 +211,16 @@ export const CHAPTERS: ChapterEntry[] = [
     format: ['TML', 'SEN', 'GAM'], datasets: ['marathon', 'penguins', 'countries'],
     route: '/reaction-time',
     flagship: true,
+    teacher: {
+      objective: 'Students will generate their own visual and audio reaction-time distributions, compute summary statistics (median, mean, spread), compare the two distributions, and benchmark against published research values.',
+      standards: ['HSS-ID.A.1', 'HSS-ID.A.2', 'HSS-ID.A.3'],
+      minutes: 35,
+      discussion: [
+        'When does the median tell a different story than the mean for your trials?',
+        'How big does the gap between visual and audio medians have to be before we say it\'s real and not noise?',
+        'Whose audio median was the smallest? Was their visual median also the smallest?',
+      ],
+    },
   },
 
   // ──────────────── Geometry ────────────────
@@ -198,6 +256,16 @@ export const CHAPTERS: ChapterEntry[] = [
     design: {
       hook: 'Webcam on. MediaPipe tracks 33 keypoints on your body in real time and freezes a pose when you choose.',
       reveal: 'Apply transformations to the captured pose: rotate 30° clockwise, scale to half size, reflect across vertical. Watch yourself transform.',
+    },
+    teacher: {
+      objective: 'Students will apply rigid motions (translation, rotation, reflection) and a dilation to a captured pose, predict each result before executing, and identify which transformations preserve distance, angle, and orientation.',
+      standards: ['HSG-CO.A.2', 'HSG-CO.A.3', 'HSG-CO.A.4', 'HSG-CO.A.5'],
+      minutes: 35,
+      discussion: [
+        'Which transformations changed your shape and which only changed your position?',
+        'When you composed two transformations, did the order matter? When does it always matter?',
+        'How would you describe your final transformation as a single function from (x, y) to (x′, y′)?',
+      ],
     },
   },
   {
@@ -375,6 +443,16 @@ export const CHAPTERS: ChapterEntry[] = [
     format: ['SEN', 'CDS'], datasets: ['tides', 'co2'],
     route: '/voice-dna',
     flagship: true,
+    teacher: {
+      objective: 'Students will identify the periodic structure in their own voice as a sum of sinusoids (harmonics and formants), then connect that visual to the family of trigonometric functions used to model periodic signals broadly.',
+      standards: ['HSF-TF.B.5', 'HSF-IF.C.7.e'],
+      minutes: 30,
+      discussion: [
+        'Why do two students saying the same vowel produce different-looking spectrograms?',
+        'How does pitch change the spacing between the horizontal stripes? What does that tell you about period and frequency?',
+        'Where else does a sum-of-sines model the world well? Where does it break?',
+      ],
+    },
   },
   {
     course: 'algebra2', topic: 8, topicName: 'Trigonometric Equations and Identities',
@@ -405,6 +483,16 @@ export const CHAPTERS: ChapterEntry[] = [
     connection: 'Matrix multiplication = applying a year of demography.',
     format: ['CDS', 'SIM'], datasets: ['population'],
     route: '/census-pyramid',
+    teacher: {
+      objective: 'Students will compare two population pyramids quantitatively, identify which age groups shifted most, then represent a year of demographic change as a matrix-vector multiplication.',
+      standards: ['HSN-VM.C.6', 'HSN-VM.C.8', 'HSS-ID.A.1'],
+      minutes: 30,
+      discussion: [
+        'Why did the bottom of the pyramid change more than the top in absolute terms, even though the headline is "the country is aging"?',
+        'What does a Leslie matrix encode in each row and column? What real assumption are we making?',
+        'How would immigration, modeled separately, change the matrix you would use?',
+      ],
+    },
   },
   {
     course: 'algebra2', topic: 11, topicName: 'Data Analysis and Statistics',
@@ -417,6 +505,16 @@ export const CHAPTERS: ChapterEntry[] = [
       hook: 'Spotify audio features (danceability, energy, valence, etc.) for tens of thousands of tracks. Train a classifier in the browser to predict genre.',
       reveal: 'See the confusion matrix. Then go bias-hunting: does it fail more on Latin or R&B? Why? Real data analysis is iterative; bias is a feature of all models.',
     },
+    teacher: {
+      objective: 'Students will train a multi-class classifier on Spotify audio features, interpret a confusion matrix, identify systematic per-class errors, and propose hypotheses about the source of bias.',
+      standards: ['HSS-ID.B.6', 'HSS-IC.A.1', 'HSS-IC.B.6'],
+      minutes: 40,
+      discussion: [
+        'Which two genres confused the classifier the most? Why might that make musical sense?',
+        'If the training set has 8x more Pop than Latin, how does that shape what the model "knows"?',
+        'What would you change about the data — not the model — to fix the worst error pattern?',
+      ],
+    },
   },
   {
     course: 'algebra2', topic: 12, topicName: 'Probability',
@@ -425,6 +523,16 @@ export const CHAPTERS: ChapterEntry[] = [
     connection: "Conditional probability + Bayes' theorem in the most consequential setting.",
     format: ['SIM'], datasets: [],
     route: '/lessons/rare-disease',
+    teacher: {
+      objective: "Students will use a 1,000-patient grid to compute P(disease | positive test), then connect the grid arithmetic to Bayes' theorem in symbolic form.",
+      standards: ['HSS-CP.A.3', 'HSS-CP.B.6', 'HSS-MD.A.4'],
+      minutes: 25,
+      discussion: [
+        "Why is the answer so much lower than the test's accuracy number suggests?",
+        'How does the answer change as the base rate moves from 1-in-1000 to 1-in-100? When does the test start to be trustworthy on a positive?',
+        'What does this tell you about screening tests for rare conditions in the general population vs. high-risk groups?',
+      ],
+    },
   },
 ];
 
@@ -438,6 +546,53 @@ export function chaptersForCourse(course: CourseId): ChapterEntry[] {
 
 export function chaptersForDataset(datasetId: string): ChapterEntry[] {
   return CHAPTERS.filter((c) => c.datasets.includes(datasetId));
+}
+
+// Pull the richest teacher-facing metadata available for a chapter:
+// prefer the matching dataset.chapterFits entry (authored by the user),
+// fall back to the embedded ChapterEntry.teacher, then to nothing.
+// Returns a shape compatible with the TeacherPanel renderer.
+import { DATASETS } from './registry';
+import type { ChapterFit } from '../lib/dataset';
+
+export interface ResolvedTeacherInfo {
+  objective?: string;
+  standards: string[];
+  minutes?: number;
+  discussion: string[];
+  mathFit?: string;
+  studentWhy?: string;
+  source: 'chapterFit' | 'embedded' | 'none';
+}
+
+export function resolveTeacherInfo(entry: ChapterEntry): ResolvedTeacherInfo {
+  // Scan every dataset's chapterFits for a course+topic match
+  for (const ds of DATASETS) {
+    const fits = (ds as { chapterFits?: ChapterFit[] }).chapterFits;
+    if (!fits) continue;
+    const hit = fits.find((f) => f.course === entry.course && f.topic === entry.topic);
+    if (hit) {
+      return {
+        objective: hit.objective,
+        standards: hit.standards,
+        minutes: hit.minutes,
+        discussion: hit.discussion,
+        mathFit: hit.mathFit,
+        studentWhy: hit.studentWhy,
+        source: 'chapterFit',
+      };
+    }
+  }
+  if (entry.teacher) {
+    return {
+      objective: entry.teacher.objective,
+      standards: entry.teacher.standards ?? [],
+      minutes: entry.teacher.minutes,
+      discussion: entry.teacher.discussion ?? [],
+      source: 'embedded',
+    };
+  }
+  return { standards: [], discussion: [], source: 'none' };
 }
 
 const COURSE_SLUG: Record<CourseId, string> = {
