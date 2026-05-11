@@ -6,11 +6,25 @@
 
 **Base URL:** https://prototype-five-iota.vercel.app/  *(stable alias)*
 
+**This is a re-run.** A baseline pass landed on 2026-05-10 with a clean report. Since then the prototype has shipped significant new state. Run the full plan but pay extra attention to:
+
+- Three new datasets: `olympic100m`, `heartRate`, `solarSystem` (covered in R6.5–R6.7)
+- Explorer regression line + R² + auto-fit (R6.1)
+- Mean/median crosshairs + CSV export (R6.1b)
+- Histogram bin slider + marker + log scale (R6.2)
+- Scatter x-marker + y-marker (R6.3)
+- Map view for `earthquakes` and `hurricanes` (R6.4)
+- Color-by-numeric gradient (R6.6)
+- Box-plot default group picker (Cowork-flagged fix — should no longer empty out on Countries)
+- Feedback widget across the site (`?getinput` query param)
+
+Goal of the re-run: regression-detect. If anything that passed on 2026-05-10 now fails, that's the highest-priority finding.
+
 **How to run:**
 - Walk top to bottom. Each route has explicit assertions; mark each one ✓ or ✗.
 - Capture a screenshot at the marked points. Save as `screenshots/<route>-<step>.png`.
 - Note any console errors you encounter (text + URL + step).
-- At the end, output the report in the format specified at the bottom of this file.
+- At the end, output the report in the format specified at the bottom of this file. Compare against the previous report in `screenshots/browser_pass_report.md` and flag anything that regressed.
 - Don't subjectively judge "looks good" — only flag what fails an explicit assertion or throws an error.
 
 **Numbers worth knowing** (the dataset-derived truths for assertions below):
@@ -19,6 +33,9 @@
 - Under-18 share: 1900 ~43.1% → 2020 ~22.4% (a 21pp drop)
 - 65+ share: 1900 ~3.6% → 2020 ~16.4% (a 13pp gain)
 - Reaction-time research median (Woods et al. 2015): **270ms**
+- `solarSystem` log-log Kepler fit slope: **1.5**
+- `heartRate` log-log Kleiber fit slope: **−0.25**
+- `olympic100m` time range: **12.0s (1896) → 9.79s (2024)**, visible kink at 1968 (timing-system change)
 
 ---
 
@@ -475,6 +492,92 @@ Use the chart toolbar's "Color by" picker (e.g. `type` for earthquakes, `categor
 - [ ] Caveats acknowledge the hand-timing vs FAT precision gap, the 1968 altitude assist, the Ben Johnson DQ
 
 **Screenshot:** `screenshots/r6_5-olympic100m.png`
+
+---
+
+## R6.6 · Color-by-numeric gradient (`/explorer?dataset=heartRate`)
+
+**Navigate:** `/explorer?dataset=heartRate`. Default chart should be scatter X=mass, Y=BPM.
+
+**Click path:**
+1. Open the "Color by" picker — confirm numeric attributes (`Body mass`, `Resting heart rate`, `Typical max lifespan`) are now listed alongside categorical (`Species`, `Size class`).
+2. Select **`Typical max lifespan`**.
+
+**Assertions:**
+- [ ] Points are now colored along an amber gradient (light to dark)
+- [ ] A small gradient swatch appears in the chart's control row, right-aligned, with min/max labels (likely `2` and `90`)
+- [ ] The Recharts legend (categorical-style) is NOT shown — the gradient swatch replaces it
+- [ ] Color is monotonic with the value: highest lifespan (blue whale, 90 yr) is the darkest; shortest (Etruscan shrew, 2 yr) is the lightest
+- [ ] Switching back to a categorical attribute (`Species`) restores the categorical legend
+
+**Screenshot:** `screenshots/r6_6-color-by-numeric.png`
+
+---
+
+## R6.7 · Power-law datasets (`/explorer?dataset=heartRate` + `/explorer?dataset=solarSystem`)
+
+The two new biology/physics datasets. Both expect to fit a power law (linear on log-log).
+
+### heartRate (Kleiber's law)
+**Navigate:** `/explorer?dataset=heartRate`
+
+**Click path:**
+1. Toggle **X scale → log**.
+2. Toggle **Y scale → log**.
+3. Click **"Fit a line"** → drag to fit.
+4. Click **"Show best fit"**.
+
+**Assertions:**
+- [ ] On linear axes (before log toggle), data clusters in the lower-left corner — illegible
+- [ ] On log-log, data forms a visible downward line
+- [ ] Best-fit slope is approximately **−0.25** (range: −0.30 to −0.20)
+- [ ] Best R² > 0.85 on log-log axes
+
+**Screenshot:** `screenshots/r6_7-kleiber.png` after the regression overlay is on.
+
+### solarSystem (Kepler's third law)
+**Navigate:** `/explorer?dataset=solarSystem`
+
+**Click path:** same as above (log both axes, fit a line, show best fit).
+
+**Assertions:**
+- [ ] Best-fit slope is approximately **1.5** (range: 1.48 to 1.52 — Kepler's law is exact)
+- [ ] Best R² > 0.99 (essentially a perfect fit)
+- [ ] 11 points render: 8 planets + Ceres + Pluto + Eris
+- [ ] Color-by `zone` shows three groups: Inner (planets), Outer (gas giants), Trans-Neptunian (Pluto + Eris)
+
+**Screenshot:** `screenshots/r6_7-kepler.png`
+
+---
+
+## R6.8 · Box-plot default group regression check (`/explorer?dataset=countries` → chart=box)
+
+**Specifically tests the Cowork-flagged 2026-05-10 issue: the box plot defaulted to grouping by `country` (199 unique values → empty visual).**
+
+**Navigate:** `/explorer?dataset=countries`. Click the **Box plot** chart type.
+
+**Assertions:**
+- [ ] The default GROUP is **not** `country` — should be something with 2–12 unique values (e.g. `region` or `incomeGroup`)
+- [ ] The chart renders visible box-and-whiskers (not a sea of dots)
+- [ ] Manually picking `country` as GROUP still works, but is no longer the default
+
+**Screenshot:** `screenshots/r6_8-boxplot-fix.png`
+
+---
+
+## R6.9 · Histogram log scale (`/explorer?dataset=countries` → chart=histogram → X=`gdpPerCapita`)
+
+**Tests the long-tail fix from 9ecfa6d.**
+
+**Navigate:** `/explorer?dataset=countries`. Switch to histogram. Set X to `gdpPerCapita`.
+
+**Assertions:**
+- [ ] In linear mode, the histogram packs most countries into the leftmost bin — visible but cramped
+- [ ] A **"Try log scale"** button is visible (the label flips when long-tail is detected)
+- [ ] Click it: bars redistribute across the chart in log space. Now visibly spans low/mid/high GDP buckets.
+- [ ] Mean and median reference lines update to reflect the same underlying values (not log-space)
+
+**Screenshot:** `screenshots/r6_9-log-histogram.png`
 
 ---
 
