@@ -207,6 +207,23 @@ export default function ScatterView({
   const effectiveXScale = xCanLog ? xScale : 'linear';
   const effectiveYScale = yCanLog ? yScale : 'linear';
 
+  // Nice axis domains + ticks. Without these, Recharts pins the first/last
+  // tick to the literal data min/max (e.g. 0.044, 0.993) and spaces ticks
+  // evenly across that ugly range. Snapping to nice round numbers is what
+  // every other charting library does by default.
+  const xTickConfig = useMemo(() => {
+    if (!ranges) return null;
+    return effectiveXScale === 'log'
+      ? niceLogTicks(ranges.xMin, ranges.xMax)
+      : niceTicks(ranges.xMin, ranges.xMax);
+  }, [ranges, effectiveXScale]);
+  const yTickConfig = useMemo(() => {
+    if (!ranges) return null;
+    return effectiveYScale === 'log'
+      ? niceLogTicks(ranges.yMin, ranges.yMax)
+      : niceTicks(ranges.yMin, ranges.yMax);
+  }, [ranges, effectiveYScale]);
+
   // Fit the regression in the same coordinate space the user is viewing.
   // When both axes are linear, this is raw x/y. When either is log, we
   // transform that axis via log10 before computing slope/intercept/R².
@@ -515,15 +532,8 @@ export default function ScatterView({
               type="number"
               dataKey="x"
               scale={effectiveXScale}
-              // Recharts' 'auto' domain on log scale ends up including 0 (which
-              // log can't render), so points silently drop out. When log is on,
-              // pin the domain to the actual positive data range with light
-              // padding — that's what gives the data back.
-              domain={
-                effectiveXScale === 'log' && ranges
-                  ? [ranges.xMin * 0.9, ranges.xMax * 1.1]
-                  : ['dataMin', 'dataMax']
-              }
+              domain={xTickConfig ? xTickConfig.domain : ['dataMin', 'dataMax']}
+              ticks={xTickConfig?.ticks}
               allowDataOverflow={false}
               tickFormatter={formatTick}
               stroke="#64748B"
@@ -539,11 +549,8 @@ export default function ScatterView({
               type="number"
               dataKey="y"
               scale={effectiveYScale}
-              domain={
-                effectiveYScale === 'log' && ranges
-                  ? [ranges.yMin * 0.9, ranges.yMax * 1.1]
-                  : ['dataMin', 'dataMax']
-              }
+              domain={yTickConfig ? yTickConfig.domain : ['dataMin', 'dataMax']}
+              ticks={yTickConfig?.ticks}
               allowDataOverflow={false}
               tickFormatter={formatTick}
               reversed={yAttr.preferReversed === true}
@@ -658,6 +665,37 @@ function formatScalar(s: number): string {
 
 // Axis tick formatter — clean integers for whole-number-ish data, otherwise
 // minimal decimals. Compact notation for big magnitudes.
+function niceTicks(min: number, max: number, targetCount = 5): { domain: [number, number]; ticks: number[] } {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) {
+    const pad = Math.abs(min) > 0 ? Math.abs(min) * 0.1 : 1;
+    return { domain: [min - pad, max + pad], ticks: [min] };
+  }
+  const range = max - min;
+  const rough = range / Math.max(1, targetCount - 1);
+  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  const norm = rough / mag;
+  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
+  const niceMin = Math.floor(min / step) * step;
+  const niceMax = Math.ceil(max / step) * step;
+  const decimals = Math.max(0, -Math.floor(Math.log10(step)));
+  const ticks: number[] = [];
+  for (let v = niceMin; v <= niceMax + step / 2; v += step) {
+    ticks.push(Number(v.toFixed(decimals + 6)));
+  }
+  return { domain: [niceMin, niceMax], ticks };
+}
+
+function niceLogTicks(min: number, max: number): { domain: [number, number]; ticks: number[] } {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max <= 0) {
+    return { domain: [min, max], ticks: [] };
+  }
+  const lo = Math.floor(Math.log10(min));
+  const hi = Math.ceil(Math.log10(max));
+  const ticks: number[] = [];
+  for (let p = lo; p <= hi; p++) ticks.push(Math.pow(10, p));
+  return { domain: [Math.pow(10, lo), Math.pow(10, hi)], ticks };
+}
+
 function formatTick(v: number): string {
   if (v === 0) return '0';
   const abs = Math.abs(v);
