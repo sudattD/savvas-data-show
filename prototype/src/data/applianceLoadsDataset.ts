@@ -57,7 +57,7 @@ export const APPLIANCE_LOADS_DATASET: Dataset = {
   description:
     '23 common household appliances with typical operating amperage, wattage, and startup surge. Standard US residential circuits are rated for 15 or 20 amps; cumulative draw above that trips the breaker. The data behind "will the breaker trip if I plug in three power tools at once?"',
   source: 'Manufacturer nameplate ratings + US Department of Energy appliance reference, 2024',
-  family: 'engineering',
+  family: 'technology',
   provenance: {
     primarySource: 'US Department of Energy, "Estimating Appliance and Home Electronic Energy Use" reference table',
     primarySourceUrl: 'https://www.energy.gov/energysaver/estimating-appliance-and-home-electronic-energy-use',

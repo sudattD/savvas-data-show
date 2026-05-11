@@ -76,7 +76,7 @@ export const SP500_DATASET: Dataset = {
   description:
     'Annual total return (price + reinvested dividends) of the S&P 500 from 1928 through 2024, plus the running value of $100 invested at the start of 1928 — about $1M by end of 2024. The cleanest "exponential growth with shocks" series in finance.',
   source: 'NYU Stern (Damodaran), cross-checked against Shiller online and S&P DJI factsheet',
-  family: 'finance',
+  family: 'people',
   provenance: {
     primarySource: 'Aswath Damodaran, "Annual Returns on Stock, T.Bonds and T.Bills: 1928 - Current" (NYU Stern)',
     primarySourceUrl: 'https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html',

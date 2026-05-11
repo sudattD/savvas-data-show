@@ -4,7 +4,6 @@ import Masthead from '../components/Masthead';
 import EnvisionVideoLink from '../components/EnvisionVideoLink';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import {
-  CHAPTERS,
   COURSE_TITLE,
   chaptersForCourse,
   chapterAnchorId,
@@ -12,7 +11,7 @@ import {
 } from '../data/chapters';
 import type { CourseId, ChapterEntry } from '../data/chapters';
 import { ALIGNMENT, alignmentFor, strengthCount } from '../data/act1Alignment';
-import type { AlignmentStrength, AlignmentRow } from '../data/act1Alignment';
+import type { AlignmentStrength } from '../data/act1Alignment';
 import { DATASETS } from '../data/registry';
 
 const COURSE_ACCENT: Record<CourseId, { bar: string; text: string }> = {
@@ -300,5 +299,3 @@ function FilterChip({
   );
 }
 
-// Avoid unused-import warning
-void AlignmentRow;

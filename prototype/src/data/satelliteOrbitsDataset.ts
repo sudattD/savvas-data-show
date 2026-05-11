@@ -75,7 +75,7 @@ export const SATELLITE_ORBITS_DATASET: Dataset = {
   description:
     '16 representative satellites and constellations — LEO (ISS, Starlink, Iridium, Landsat), MEO (GPS, Galileo, GLONASS, BeiDou), GEO (GOES, Himawari, Meteosat, Intelsat), and one at L2 (Webb). Orbital period and ground-coverage radius computed from altitude via Kepler\'s third law and geometric horizon.',
   source: 'NASA Earthdata, NOAA NESDIS, ESA Sentinel, SpaceX, Eutelsat — current as of 2025',
-  family: 'engineering',
+  family: 'space',
   provenance: {
     primarySource: 'Constellation operator websites (NASA, ESA, NOAA, SpaceX, Eutelsat, Iridium, US Space Force, ROSCOSMOS, CNSA) + UN Office for Outer Space Affairs (UNOOSA) registry',
     primarySourceUrl: 'https://www.unoosa.org/oosa/en/spaceobjectregister/index.html',
