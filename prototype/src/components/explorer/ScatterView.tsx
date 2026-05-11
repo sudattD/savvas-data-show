@@ -132,6 +132,8 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
   // bad R² that students can improve from.
   const [manualSlope, setManualSlope] = useState(0);
   const [manualIntercept, setManualIntercept] = useState(0);
+  const [markerOn, setMarkerOn] = useState(false);
+  const [markerX, setMarkerX] = useState(0);
 
   // When regression is turned on, initialize to flat line at mean(y).
   useEffect(() => {
@@ -140,6 +142,18 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
       setManualIntercept(auto.meanY);
     }
   }, [regressionOn, auto]);
+
+  // Initialize marker to the midpoint of x when toggled on.
+  useEffect(() => {
+    if (markerOn && ranges && markerX === 0) {
+      setMarkerX((ranges.xMin + ranges.xMax) / 2);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markerOn, ranges]);
+
+  // Predicted y from the manual line at the marker's x (used as a readout
+  // when both features are on).
+  const markerYPredicted = manualSlope * markerX + manualIntercept;
 
   const manualR2 = useMemo(
     () => r2(allPoints, manualSlope, manualIntercept),
@@ -190,6 +204,36 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
         >
           {regressionOn ? 'Fit a line ✓' : 'Fit a line'}
         </button>
+
+        <button
+          onClick={() => setMarkerOn((v) => !v)}
+          className={`px-3 py-1.5 rounded-md font-semibold transition ${
+            markerOn
+              ? 'bg-rose-700 text-white shadow-editorial'
+              : 'bg-surface-raised border border-surface-line text-ink hover:border-rose-300'
+          }`}
+        >
+          {markerOn ? 'Drop a marker ✓' : 'Drop a marker'}
+        </button>
+
+        {markerOn && ranges && (
+          <label className="flex items-center gap-2">
+            <span className="text-ink-muted">x</span>
+            <input
+              type="range"
+              min={ranges.xMin}
+              max={ranges.xMax}
+              step={(ranges.xMax - ranges.xMin) / 200}
+              value={markerX}
+              onChange={(e) => setMarkerX(Number(e.target.value))}
+              className="w-28 accent-rose-700"
+            />
+            <span className="font-mono tabular-nums text-ink w-16 text-right">{formatScalar(markerX)}</span>
+            {regressionOn && (
+              <span className="font-mono tabular-nums text-ink-soft">→ <span className="text-rose-700 font-bold">y = {formatScalar(markerYPredicted)}</span></span>
+            )}
+          </label>
+        )}
 
         {regressionOn && (
           <>
@@ -318,6 +362,14 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
                 strokeWidth={2.5}
                 strokeDasharray="6 4"
                 ifOverflow="extendDomain"
+              />
+            )}
+            {markerOn && (
+              <ReferenceLine
+                x={markerX}
+                stroke="#9F1239"
+                strokeWidth={2}
+                label={{ value: formatScalar(markerX), fill: '#9F1239', fontSize: 11, position: 'top' }}
               />
             )}
           </ScatterChart>
