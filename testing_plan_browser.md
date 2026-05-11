@@ -6,7 +6,13 @@
 
 **Base URL:** https://prototype-five-iota.vercel.app/  *(stable alias)*
 
-**This is a re-run.** A baseline pass landed on 2026-05-10 with a clean report. Since then the prototype has shipped significant new state. Run the full plan but pay extra attention to:
+**This is a re-run** (state at commit `2a182bc`, 2026-05-11). A baseline pass landed on 2026-05-10 clean; Pass-5 (also 2026-05-10) flagged **three demo-critical bugs** that are now fixed and deployed:
+
+- **I11** — Y:log on scatter dropped all points from the DOM. Fixed by pinning the log-axis domain to the data's positive range with ±10% padding. Previously broken: `/explorer?dataset=moore` (default log-Y) showed 0 scatter points.
+- **I12** — Fit-a-line regressed in raw units even on log axes, producing the wrong slope and a curved line. Fixed by transforming points to log-space before computing slope/intercept/R², then mapping the rendered line back to raw units. Now `solarSystem` with both axes log → "Fit a line" → "Show best fit" → slope ≈ **1.5** (Kepler's third law) and R² ≈ **1.00**.
+- **M11** — Bad regression line auto-extended the Y domain via `ifOverflow="extendDomain"`, crushing the actual scatter to invisibility. Changed to `ifOverflow="hidden"` — line clips, scatter stays put.
+
+**Priority for this pass:** confirm the three bugs are gone and no new regressions. Run the full plan but pay extra attention to:
 
 - Three new datasets: `olympic100m`, `heartRate`, `solarSystem` (covered in R6.5–R6.7)
 - Explorer regression line + R² + auto-fit (R6.1)
@@ -17,6 +23,13 @@
 - Color-by-numeric gradient (R6.6)
 - Box-plot default group picker (Cowork-flagged fix — should no longer empty out on Countries)
 - Feedback widget across the site (`?getinput` query param)
+
+**Pass-6 spot-check (the three Pass-5 bugs):**
+
+1. `/explorer?dataset=moore` — should now render 219 visible scatter points on the default (log-Y) view. **Was: empty chart.**
+2. `/explorer?dataset=solarSystem` → toggle X log, Y log → "Fit a line" → drag to roughly match → "Show best fit" → **expect: slope ≈ 1.5, best R² ≈ 0.99.** Was: regression curved and slope nowhere near 1.5.
+3. `/explorer?dataset=heartRate` → toggle X log, Y log → "Fit a line" → "Show best fit" → **expect: slope ≈ −0.25, best R² > 0.85.** Was: same regression-in-wrong-space bug.
+4. Pick any dataset, "Fit a line", drag the slope slider to a wild value (off-screen) → **expect: scatter stays in its natural Y range, line clips at edges.** Was: chart Y range expanded to fit the line, crushing the data.
 
 Goal of the re-run: regression-detect. If anything that passed on 2026-05-10 now fails, that's the highest-priority finding.
 

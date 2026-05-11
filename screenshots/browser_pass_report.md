@@ -165,3 +165,29 @@ The two open work items I'd still ship if time permits:
 - **M6 Slider of Lies stroke width** (2.5 → 3.5). One-character source edit.
 
 Everything else (M1-M5 polish, the smoke-test items I couldn't exercise) is post-demo.
+
+---
+
+## Hand-back to Cowork from Terminal Claude · 2026-05-11
+
+**State:** all three Pass-5 bugs (I11, I12, M11) fixed and deployed at commit `2a182bc`. Live URL https://prototype-five-iota.vercel.app — alias is up to date.
+
+**What changed since Pass-5 (the bits worth re-verifying):**
+
+- **`src/components/explorer/ScatterView.tsx`**
+  - **I11 fix.** When `effectiveXScale === 'log'` or `effectiveYScale === 'log'`, the axis `domain` prop now pins to `[range.min * 0.9, range.max * 1.1]` instead of `['auto', 'auto']`. Recharts' `'auto'` on log scale was including 0 and silently filtering every point.
+  - **I12 fix.** A new `fitPoints` useMemo log10-transforms x and/or y before regression is computed. `auto.slope`, `auto.intercept`, `autoR2`, and `manualR2` all live in fit-space. The rendered `manualSegment` / `autoSegment` endpoints transform back to raw units via a `lineY()` helper. Net effect: log-log fits now give the log-space slope directly in the readout.
+  - **M11 fix.** Both `<ReferenceLine>` instances for the regression now use `ifOverflow="hidden"` instead of `"extendDomain"` so a wild slope clips the line at chart edges instead of resizing the Y domain.
+
+**Pass-6 ask — minimum verification, ~5 min:**
+
+1. `/explorer?dataset=moore` cold-open → expect 219 visible scatter points on log-Y. (Was: 0.)
+2. `/explorer?dataset=solarSystem` → toggle X log → Y log → "Fit a line" → "Show best fit" → expect best R² ≈ **0.99** and slope ≈ **1.5**. (Was: slope nowhere near 1.5.)
+3. `/explorer?dataset=heartRate` → X log → Y log → "Fit a line" → "Show best fit" → expect best R² **> 0.85** and slope ≈ **−0.25**.
+4. Any dataset → "Fit a line" → drag the slope slider to a wild value → expect the scatter Y range to stay put with the line clipping at chart edges. (Was: chart Y range expanded to fit the line, crushing the data to invisibility.)
+
+If all four land, append a brief "## Pass-6 · ✓ all clear" section to this file. If any fail, write a `### BUG · I11.2` (or similar) section with: URL, expected vs observed, DOM-query evidence; Terminal Claude will pick it up.
+
+**What I didn't change** (so you don't go looking for new state where there isn't any): everything outside `ScatterView.tsx`. Same dataset registry, same 4 chapter activities, same lessons, same homepage. The masthead overlap nit on Explorer pages is still unaddressed; the beat-dot forward-locking is intentional per the dev note.
+
+**Why this matters for the demo:** `demo_runbook.md` Beat 4c is the prototype's strongest 90 seconds — a breadth tour through Kepler / Kleiber / Olympic on log-log axes. Without I11 and I12 fixed, that beat would show empty charts and wrong slopes. With them fixed, it lands. Verifying these three is the highest-leverage thing you can do for Wednesday.
