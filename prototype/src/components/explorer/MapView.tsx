@@ -1,6 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
 import { categoryColor, uniqueValues, DEFAULT_POINT } from './ColorScale';
+
+function formatScalar(v: number): string {
+  if (Math.abs(v) >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
+  if (Math.abs(v) >= 1e3) return `${(v / 1e3).toFixed(1)}k`;
+  if (Math.abs(v) >= 100) return v.toFixed(0);
+  if (Math.abs(v) >= 10) return v.toFixed(1);
+  return v.toFixed(2);
+}
 
 interface MapViewProps {
   dataset: Dataset;
@@ -26,6 +34,39 @@ function project(lat: number, lon: number, width: number, height: number) {
 const W = 720;
 const H = 360; // 2:1 aspect for equirectangular
 
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 16;
+
+// Preset regions in [lonMin, lonMax, latMin, latMax].
+type Region = { name: string; bounds: [number, number, number, number] };
+const REGIONS: Region[] = [
+  { name: 'World',        bounds: [-180, 180, -90, 90] },
+  { name: 'Atlantic',     bounds: [-100, -10, 5, 50] },
+  { name: 'Pacific',      bounds: [120, -80, -40, 50] },
+  { name: 'N. America',   bounds: [-130, -60, 15, 55] },
+  { name: 'Europe',       bounds: [-15, 40, 35, 70] },
+  { name: 'Asia · Pacific', bounds: [60, 180, -10, 50] },
+];
+
+// Region bounds (lon/lat degrees) → viewBox state (zoom + center in image px).
+function regionToViewBox(b: [number, number, number, number]): { zoom: number; cx: number; cy: number } {
+  let [lonMin, lonMax, latMin, latMax] = b;
+  // Handle wrap-around: if lonMax < lonMin, treat as crossing antimeridian
+  // by shifting longitudes. For simplicity, clamp wrap-around to "World" view.
+  if (lonMax < lonMin) return { zoom: 1, cx: W / 2, cy: H / 2 };
+  const x1 = ((lonMin + 180) / 360) * W;
+  const x2 = ((lonMax + 180) / 360) * W;
+  const y1 = ((90 - latMax) / 180) * H;
+  const y2 = ((90 - latMin) / 180) * H;
+  const w = x2 - x1;
+  const h = y2 - y1;
+  const cx = (x1 + x2) / 2;
+  const cy = (y1 + y2) / 2;
+  // Zoom = whichever axis is more constraining, with a 10% padding margin.
+  const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Math.min(W / w, H / h) * 0.9));
+  return { zoom, cx, cy };
+}
+
 export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, sizeAttr }: MapViewProps) {
   const points = useMemo(() => {
     return rows
@@ -46,12 +87,34 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
     return { min: Math.min(...vals), max: Math.max(...vals) };
   }, [points]);
 
+  // Zoom + pan state. `zoom` = 1 is the full earth; `cx, cy` is the viewport
+  // center in image-pixel coordinates (1 unit = 1 SVG-coordinate pixel).
+  const [zoom, setZoom] = useState(1);
+  const [center, setCenter] = useState({ cx: W / 2, cy: H / 2 });
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  // The visible viewBox derived from zoom + center, clamped so the view
+  // doesn't escape the image extent.
+  const viewBox = useMemo(() => {
+    const vw = W / zoom;
+    const vh = H / zoom;
+    const minX = Math.max(0, Math.min(W - vw, center.cx - vw / 2));
+    const minY = Math.max(0, Math.min(H - vh, center.cy - vh / 2));
+    return { minX, minY, vw, vh };
+  }, [zoom, center]);
+
+  // Geometry to size dots inversely with zoom so they don't bloat into blobs
+  // when zoomed in. radius = base / sqrt(zoom).
   const radius = (size: number | null) => {
-    if (size === null || !sizeBounds) return 3;
-    const { min, max } = sizeBounds;
-    if (max === min) return 3;
-    const t = Math.sqrt((size - min) / (max - min));
-    return 2 + t * 7;
+    const base = size === null || !sizeBounds
+      ? 3
+      : (() => {
+          const { min, max } = sizeBounds;
+          if (max === min) return 3;
+          const t = Math.sqrt((size - min) / (max - min));
+          return 2 + t * 7;
+        })();
+    return base / Math.sqrt(zoom);
   };
 
   const cats = useMemo(
@@ -65,12 +128,88 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
 
   const [hovered, setHovered] = useState<{ lat: number; lon: number; row: Row } | null>(null);
 
+  // Convert a screen-space mouse event into image-pixel coords (so we can
+  // zoom centered on the cursor). Uses SVG's intrinsic CTM.
+  function eventToImage(e: React.MouseEvent | React.WheelEvent): { ix: number; iy: number } | null {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return null;
+    const p = pt.matrixTransform(ctm.inverse());
+    return { ix: p.x, iy: p.y };
+  }
+
+  function handleWheel(e: React.WheelEvent) {
+    e.preventDefault();
+    const pt = eventToImage(e);
+    if (!pt) return;
+    const direction = e.deltaY < 0 ? 1 : -1;
+    const factor = direction > 0 ? 1.25 : 0.8;
+    const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * factor));
+    if (newZoom === zoom) return;
+    // Keep the cursor point fixed in image-space by adjusting center.
+    const ratio = zoom / newZoom; // how much smaller new view is
+    const dx = pt.ix - center.cx;
+    const dy = pt.iy - center.cy;
+    setCenter({
+      cx: pt.ix - dx * ratio,
+      cy: pt.iy - dy * ratio,
+    });
+    setZoom(newZoom);
+  }
+
+  // Drag-to-pan
+  const dragRef = useRef<{ startX: number; startY: number; startCx: number; startCy: number } | null>(null);
+  function handleMouseDown(e: React.MouseEvent) {
+    const pt = eventToImage(e);
+    if (!pt) return;
+    dragRef.current = { startX: pt.ix, startY: pt.iy, startCx: center.cx, startCy: center.cy };
+  }
+  function handleMouseMove(e: React.MouseEvent) {
+    if (!dragRef.current) return;
+    const pt = eventToImage(e);
+    if (!pt) return;
+    const dx = pt.ix - dragRef.current.startX;
+    const dy = pt.iy - dragRef.current.startY;
+    setCenter({
+      cx: dragRef.current.startCx - dx,
+      cy: dragRef.current.startCy - dy,
+    });
+  }
+  function handleMouseUp() {
+    dragRef.current = null;
+  }
+
+  function setRegion(r: Region) {
+    const { zoom: z, cx, cy } = regionToViewBox(r.bounds);
+    setZoom(z);
+    setCenter({ cx, cy });
+  }
+
+  function zoomBy(factor: number) {
+    const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom * factor));
+    setZoom(newZoom);
+  }
+
   return (
     <div className="w-full h-full flex flex-col gap-2">
       <div className="shrink-0 flex items-center gap-3 flex-wrap text-xs text-ink-muted">
         <span>
-          {points.length.toLocaleString()} points · {dataset.name} ·{' '}
-          equirectangular projection
+          {points.length.toLocaleString()} points · {dataset.name}
+        </span>
+        {sizeAttr && sizeBounds && (
+          <span>
+            · dot size = <span className="font-semibold text-ink">{sizeAttr.label}{sizeAttr.unit ? ` (${sizeAttr.unit})` : ''}</span> · {formatScalar(sizeBounds.min)}–{formatScalar(sizeBounds.max)}
+          </span>
+        )}
+        {colorAttr && (
+          <span>· color = <span className="font-semibold text-ink">{colorAttr.label}</span></span>
+        )}
+        <span className="font-mono tabular-nums opacity-70">
+          zoom {zoom.toFixed(1)}×
         </span>
         {hovered && (
           <span className="ml-auto font-mono tabular-nums">
@@ -79,13 +218,65 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
         )}
       </div>
 
-      <div className="flex-1 min-h-0 bg-surface-raised border border-surface-line rounded-lg overflow-hidden">
-        <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="w-full h-full block">
+      {/* Region preset + zoom controls */}
+      <div className="shrink-0 flex items-center gap-2 flex-wrap">
+        <span className="eyebrow text-ink-muted text-[10px] mr-1">Region</span>
+        {REGIONS.map((r) => (
+          <button
+            key={r.name}
+            type="button"
+            onClick={() => setRegion(r)}
+            className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-surface-raised border border-surface-line text-ink-soft hover:bg-surface-subtle hover:border-brand-300 hover:text-brand-700 transition"
+          >
+            {r.name}
+          </button>
+        ))}
+        <span className="text-surface-line mx-1">·</span>
+        <button
+          type="button"
+          onClick={() => zoomBy(1.5)}
+          className="text-xs font-bold w-7 h-7 rounded-md bg-surface-raised border border-surface-line text-ink-soft hover:bg-surface-subtle hover:border-brand-300 transition"
+          title="Zoom in"
+        >+</button>
+        <button
+          type="button"
+          onClick={() => zoomBy(1 / 1.5)}
+          className="text-xs font-bold w-7 h-7 rounded-md bg-surface-raised border border-surface-line text-ink-soft hover:bg-surface-subtle hover:border-brand-300 transition"
+          title="Zoom out"
+        >−</button>
+        <button
+          type="button"
+          onClick={() => setRegion(REGIONS[0])}
+          className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-surface-raised border border-surface-line text-ink-soft hover:bg-surface-subtle hover:border-brand-300 transition"
+          title="Reset to world view"
+        >
+          Reset
+        </button>
+        <span className="text-[10px] text-ink-muted italic ml-auto hidden sm:inline">
+          Scroll to zoom · drag to pan
+        </span>
+      </div>
+
+      <div
+        className="flex-1 min-h-0 bg-surface-raised border border-surface-line rounded-lg overflow-hidden"
+        style={{ cursor: dragRef.current ? 'grabbing' : 'grab' }}
+      >
+        <svg
+          ref={svgRef}
+          viewBox={`${viewBox.minX} ${viewBox.minY} ${viewBox.vw} ${viewBox.vh}`}
+          preserveAspectRatio="xMidYMid meet"
+          className="w-full h-full block select-none"
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
           {/* Ocean background */}
           <rect x={0} y={0} width={W} height={H} fill="#E5EFFB" />
 
           {/* Graticule — lat/lon grid every 30 degrees */}
-          <g stroke="#BFD3EE" strokeWidth={0.5} fill="none">
+          <g stroke="#BFD3EE" strokeWidth={0.5 / zoom} fill="none">
             {[-60, -30, 0, 30, 60].map((lat) => {
               const y = ((90 - lat) / 180) * H;
               return <line key={`lat${lat}`} x1={0} x2={W} y1={y} y2={y} />;
@@ -97,27 +288,17 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
           </g>
 
           {/* Equator + prime meridian — emphasized */}
-          <g stroke="#94A3B8" strokeWidth={1} fill="none">
+          <g stroke="#94A3B8" strokeWidth={1 / zoom} fill="none">
             <line x1={0} x2={W} y1={H / 2} y2={H / 2} />
             <line x1={W / 2} x2={W / 2} y1={0} y2={H} />
           </g>
 
           {/* Tropics + arctic/antarctic circles — labels for orientation */}
-          <g stroke="#CBD5E1" strokeWidth={0.5} strokeDasharray="2 3" fill="none">
+          <g stroke="#CBD5E1" strokeWidth={0.5 / zoom} strokeDasharray={`${2 / zoom} ${3 / zoom}`} fill="none">
             {[-66.5, -23.5, 23.5, 66.5].map((lat) => {
               const y = ((90 - lat) / 180) * H;
               return <line key={`spec${lat}`} x1={0} x2={W} y1={y} y2={y} />;
             })}
-          </g>
-
-          {/* Axis labels */}
-          <g fontFamily="monospace" fontSize={9} fill="#64748B">
-            <text x={4} y={H / 2 - 3}>0° (equator)</text>
-            <text x={W / 2 + 3} y={H - 4}>0° (prime meridian)</text>
-            <text x={4} y={H - 4}>–90°W</text>
-            <text x={W - 4} y={H - 4} textAnchor="end">+90°E</text>
-            <text x={4} y={10}>+90°N</text>
-            <text x={4} y={H - 14}>–90°S</text>
           </g>
 
           {/* Points */}
@@ -133,7 +314,7 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
                   fill={colorOf(p.row)}
                   fillOpacity={0.6}
                   stroke={hovered === p ? '#1A2A52' : 'transparent'}
-                  strokeWidth={1.5}
+                  strokeWidth={1.5 / zoom}
                   onMouseEnter={() => setHovered(p)}
                   onMouseLeave={() => setHovered(null)}
                   style={{ cursor: 'pointer' }}
