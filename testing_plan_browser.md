@@ -321,6 +321,41 @@ Especially watch for:
 
 ---
 
+## R6.1b · Scatter mean/median crosshairs + CSV download (`/explorer?dataset=co2`)
+
+**Tests two more CODAP gaps closed in 447ae27.**
+
+### Mean / median crosshairs
+**Navigate:** `/explorer?dataset=co2`
+
+**Click:** "Mean / median"
+
+**Assertions:**
+- [ ] Four reference lines appear: two verticals (mean-x amber, median-x emerald) and two horizontals (mean-y amber, median-y emerald)
+- [ ] Labels visible: `mean x`, `median x`, `mean y`, `median y`
+- [ ] Lines are dashed (matching the existing histogram mean/median convention)
+- [ ] On CO2 (monotonic time series), median-y and mean-y are visibly different (median lower than mean if mean is dragged up by recent steep growth — confirms central-tendency divergence in skewed data)
+- [ ] Toggling off removes all four lines
+
+**Screenshot:** `screenshots/r6_1b-meanmedian.png`
+
+### CSV download
+**Below the chart**, find the data table.
+
+**Assertions:**
+- [ ] A "Download CSV ↓" button is visible next to the row-count display
+- [ ] Click it: a CSV file downloads with filename like `co2-2026-MM-DD.csv`
+- [ ] Open the file — header row contains all attribute keys; row count matches what the table reports
+
+**With a filter active** (apply any filter via the left rail), click "Download CSV ↓" again.
+
+- [ ] Filename now contains `-filtered` (e.g. `co2-filtered-2026-MM-DD.csv`)
+- [ ] Downloaded row count matches the filtered count, not the full count
+
+**Screenshot:** `screenshots/r6_1b-csv-button.png`
+
+---
+
 ## R6.2 · Histogram bin slider + marker (`/explorer?dataset=marathon` then chart=histogram)
 
 **Navigate:** `/explorer?dataset=marathon`. In the chart toolbar, click `Histogram`. Set X to `officialTime` (or whichever numeric attribute defaults).
@@ -416,6 +451,30 @@ Use the chart toolbar's "Color by" picker (e.g. `type` for earthquakes, `categor
 **Assertions:**
 - [ ] Points are colored by the category attribute (e.g. earthquake type)
 - [ ] If only one category exists in the filtered data, all points share a color (no legend needed)
+
+---
+
+## R6.5 · Olympic 100m dataset (`/explorer?dataset=olympic100m`)
+
+**Navigate:** `/explorer?dataset=olympic100m`
+
+**Assertions:**
+- [ ] HTTP 200
+- [ ] Default chart is scatter with X=`year`, Y=`time`, color by `timing` (hand vs automatic)
+- [ ] 29 points render (one per Olympics 1896-2024)
+- [ ] Two visibly distinct color clusters: hand-timed (pre-1968) and automatic (1968+)
+- [ ] Toggle "Fit a line" → best R² should be > 0.85 (strong linear-with-bend signal)
+- [ ] Hover on point near (year=2008, time=9.69) → tooltip shows Bolt's Beijing run
+
+**Story page:** `/datasets/olympic100m`
+
+**Assertions:**
+- [ ] Sparkline of time-vs-year renders above the fold (a downward sloping line — winning times getting faster)
+- [ ] Family label "PEOPLE & CULTURE" in eyebrow
+- [ ] Provenance block cites IOC + Wikipedia + World Athletics
+- [ ] Caveats acknowledge the hand-timing vs FAT precision gap, the 1968 altitude assist, the Ben Johnson DQ
+
+**Screenshot:** `screenshots/r6_5-olympic100m.png`
 
 ---
 
