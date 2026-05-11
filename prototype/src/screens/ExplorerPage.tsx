@@ -9,6 +9,7 @@ import ScatterView from '../components/explorer/ScatterView';
 import HistogramView from '../components/explorer/HistogramView';
 import BarView from '../components/explorer/BarView';
 import BoxPlotView from '../components/explorer/BoxPlotView';
+import MapView from '../components/explorer/MapView';
 import DataTable from '../components/explorer/DataTable';
 import StatsPanel from '../components/explorer/StatsPanel';
 import FilterPanel from '../components/explorer/FilterPanel';
@@ -106,6 +107,22 @@ export default function ExplorerPage() {
               {config.type === 'box' && xAttr && yAttr && (
                 <BoxPlotView dataset={dataset} rows={filteredRows} yAttr={yAttr} groupAttr={xAttr} />
               )}
+              {config.type === 'map' && dataset.geo && (() => {
+                const latAttr = attrByKey(dataset, dataset.geo.lat);
+                const lonAttr = attrByKey(dataset, dataset.geo.lon);
+                const sizeAttr = dataset.geo.size ? attrByKey(dataset, dataset.geo.size) : null;
+                if (!latAttr || !lonAttr) return null;
+                return (
+                  <MapView
+                    dataset={dataset}
+                    rows={filteredRows}
+                    latAttr={latAttr}
+                    lonAttr={lonAttr}
+                    colorAttr={colorAttr}
+                    sizeAttr={sizeAttr}
+                  />
+                );
+              })()}
             </div>
           </div>
           <DataTable dataset={dataset} rows={filteredRows} totalCount={dataset.rows.length} />

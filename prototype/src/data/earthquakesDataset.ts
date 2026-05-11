@@ -432,6 +432,7 @@ export const EARTHQUAKES_DATASET: Dataset = {
     { key: 'lon', label: 'Longitude', kind: 'numeric', description: 'Longitude in decimal degrees, –180 to +180. Plot X on a map.' },
   ],
   featured: { x: 'lon', y: 'lat', color: 'type' },
+  geo: { lat: 'lat', lon: 'lon', size: 'magnitude' },
   chapterFits: [
     {
       course: 'geometry',

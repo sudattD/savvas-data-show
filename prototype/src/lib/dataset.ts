@@ -128,6 +128,10 @@ export interface Dataset {
   rows: Row[];
   /** Optional canonical scatter view — used as the Explorer's default X/Y/color. */
   featured?: { x: string; y: string; color?: string };
+  /** Optional geo coordinates — names of the lat / lon attributes if this
+   *  dataset can be plotted on a world map. Presence enables the Explorer's
+   *  map view. `size` is an optional numeric attribute to scale point radius. */
+  geo?: { lat: string; lon: string; size?: string };
   /** Which Savvas chapters this dataset earns its place in. Each entry pairs
    *  a chapter to a teacher-facing objective + student-facing why. */
   chapterFits?: ChapterFit[];

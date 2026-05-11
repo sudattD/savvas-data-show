@@ -1,7 +1,7 @@
 import type { Dataset, Attribute } from '../../lib/dataset';
 import { getNumericAttrs, getCategoricalAttrs } from '../../lib/dataset';
 
-export type ChartType = 'scatter' | 'histogram' | 'bar' | 'box';
+export type ChartType = 'scatter' | 'histogram' | 'bar' | 'box' | 'map';
 
 export interface ChartConfig {
   type: ChartType;
@@ -16,11 +16,12 @@ interface ChartToolbarProps {
   onChange: (c: ChartConfig) => void;
 }
 
-const CHART_TYPES: { type: ChartType; label: string; icon: string; needs: 'x+y' | 'x-num' | 'x-cat' | 'y-num+group' }[] = [
+const CHART_TYPES: { type: ChartType; label: string; icon: string; needs: 'x+y' | 'x-num' | 'x-cat' | 'y-num+group' | 'geo' }[] = [
   { type: 'scatter', label: 'Scatter', icon: '⠠⠂', needs: 'x+y' },
   { type: 'histogram', label: 'Histogram', icon: '▁▃▅▆▃▁', needs: 'x-num' },
   { type: 'bar', label: 'Bar', icon: '▌▌', needs: 'x-cat' },
   { type: 'box', label: 'Box plot', icon: '▭', needs: 'y-num+group' },
+  { type: 'map', label: 'Map', icon: '◯', needs: 'geo' },
 ];
 
 export default function ChartToolbar({ dataset, config, onChange }: ChartToolbarProps) {
@@ -42,6 +43,9 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
     } else if (t === 'box') {
       if (!num.find((a) => a.key === next.yKey)) next.yKey = num[0]?.key ?? null;
       if (!cat.find((a) => a.key === next.xKey)) next.xKey = cat[0]?.key ?? null;
+    } else if (t === 'map') {
+      // Map view reads lat/lon from dataset.geo and color from config.colorKey.
+      // x/y are irrelevant for the map; clear them so other types don't inherit stale picks.
     }
     onChange(next);
   };
@@ -54,10 +58,13 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
     onChange(next);
   };
 
+  // Hide Map button when the dataset doesn't have geo coordinates.
+  const availableTypes = CHART_TYPES.filter((c) => c.needs !== 'geo' || dataset.geo != null);
+
   return (
     <div className="flex flex-wrap items-center gap-2 p-3 border-b border-slate-200 bg-white">
       <div className="flex bg-slate-100 rounded-lg p-0.5">
-        {CHART_TYPES.map((c) => (
+        {availableTypes.map((c) => (
           <button
             key={c.type}
             onClick={() => setType(c.type)}
@@ -89,7 +96,7 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
         </>
       )}
 
-      {config.type === 'scatter' && (
+      {(config.type === 'scatter' || config.type === 'map') && (
         <>
           <Sep />
           <AttrPicker label="Color by" attrs={cat} value={config.colorKey} onChange={(k) => setKey('color', k)} allowNone />

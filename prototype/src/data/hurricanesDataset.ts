@@ -1015,6 +1015,7 @@ export const HURRICANES_DATASET: Dataset = {
     { key: 'durationDays', label: 'Duration', kind: 'numeric', unit: 'days', description: 'Time from formation to dissipation, in days. Long-lived Atlantic storms (Cape Verde-type) often run 10+ days; short-fuse Gulf storms a couple.' },
   ],
   featured: { x: 'peakWind', y: 'minPressure', color: 'category' },
+  geo: { lat: 'startLat', lon: 'startLon', size: 'peakWind' },
   chapterFits: [
     {
       course: 'geometry',
