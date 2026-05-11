@@ -363,6 +363,7 @@ export const PENGUINS_DATASET: Dataset = {
   description: 'Three penguin species (Adélie, Chinstrap, Gentoo) measured at three Antarctic islands by the Palmer Station Long-Term Ecological Research program.',
   source: 'palmerpenguins R package (CC-0) · Dr. Kristen Gorman, Palmer Station LTER',
   accent: 'indigo',
+  family: 'life',
   provenance: {
     primarySource: 'palmerpenguins R package by Allison Horst (Univ. of California, Santa Barbara)',
     primarySourceUrl: 'https://github.com/allisonhorst/palmerpenguins',

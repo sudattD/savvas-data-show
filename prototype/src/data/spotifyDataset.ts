@@ -623,6 +623,7 @@ export const SPOTIFY_DATASET: Dataset = {
   description: '600 popular tracks 1990-2024 with Spotify\u2019s computed audio features: danceability, energy, valence, tempo, loudness, popularity. Stratified by genre.',
   source: 'Spotify Web API audio-features, via TidyTuesday public mirror',
   accent: 'pink',
+  family: 'people',
   provenance: {
     primarySource: 'Spotify Web API — Get Track\u2019s Audio Features',
     primarySourceUrl: 'https://developer.spotify.com/documentation/web-api/reference/get-audio-features',

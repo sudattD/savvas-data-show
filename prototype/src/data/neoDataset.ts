@@ -109,6 +109,7 @@ export const NEO_DATASET: Dataset = {
   description: 'Asteroids that passed near Earth in a recent 3-week window. Diameter, velocity, miss distance, hazard flag.',
   source: 'NASA JPL Center for NEO Studies (CNEOS) via NeoWs API',
   accent: 'orange',
+  family: 'space',
   provenance: {
     primarySource: 'NASA Jet Propulsion Laboratory — Center for Near-Earth Object Studies (CNEOS)',
     primarySourceUrl: 'https://cneos.jpl.nasa.gov/',

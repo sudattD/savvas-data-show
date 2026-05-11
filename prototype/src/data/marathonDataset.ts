@@ -820,6 +820,7 @@ export const MARATHON_DATASET: Dataset = {
   description: 'Random 800-runner sample of the 2014 Boston Marathon. Age, gender, country, finishing time. Bimodal-ish distribution by gender; long-tail in finish times.',
   source: 'Boston Athletic Association, via llimllib/bostonmarathon (GitHub)',
   accent: 'teal',
+  family: 'people',
   provenance: {
     primarySource: 'Boston Athletic Association — official Boston Marathon results',
     primarySourceUrl: 'https://www.baa.org/races/boston-marathon/results',

@@ -835,6 +835,7 @@ export const CO2_DATASET: Dataset = {
   description: 'Atmospheric CO2 measured atop Mauna Loa, Hawaii, since 1958. The most famous chart in climate science. Linear trend + sinusoidal seasonal cycle.',
   source: 'NOAA Global Monitoring Laboratory · gml.noaa.gov/ccgg/trends',
   accent: 'emerald',
+  family: 'earth',
   provenance: {
     primarySource: 'NOAA Global Monitoring Laboratory — Mauna Loa Observatory',
     primarySourceUrl: 'https://gml.noaa.gov/ccgg/trends/data.html',

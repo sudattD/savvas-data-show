@@ -980,6 +980,7 @@ export const HURRICANES_DATASET: Dataset = {
   description: 'Every named Atlantic storm of tropical-storm strength or higher since 1950 — peak wind, minimum pressure, formation point, category, decade.',
   source: 'NOAA HURDAT2 hurricane reanalysis dataset',
   accent: 'rose',
+  family: 'earth',
   provenance: {
     primarySource: 'NOAA National Hurricane Center — HURDAT2 (Hurricane Database, version 2)',
     primarySourceUrl: 'https://www.nhc.noaa.gov/data/hurdat/',

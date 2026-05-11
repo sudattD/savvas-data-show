@@ -425,6 +425,7 @@ export const POPULATION_DATASET: Dataset = {
   description: 'Age × sex breakdown of the US population, 1900 vs 2020. Same country, two snapshots. Watch the shape change from a true "pyramid" to a column.',
   source: 'US Census Bureau (1900 census + 2020 population estimates)',
   accent: 'amber',
+  family: 'people',
   provenance: {
     primarySource: 'US Census Bureau',
     primarySourceUrl: 'https://www.census.gov/data.html',

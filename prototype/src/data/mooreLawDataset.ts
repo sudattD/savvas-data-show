@@ -242,6 +242,7 @@ export const MOORE_LAW_DATASET: Dataset = {
   description: "Microprocessor transistor counts from 1970-2024. The most famous exponential growth chart in tech: doubling every ~2 years for half a century.",
   source: 'Wikipedia "Transistor count" article (CC-BY-SA)',
   accent: 'slate',
+  family: 'technology',
   provenance: {
     primarySource: 'Wikipedia "Transistor count" article',
     primarySourceUrl: 'https://en.wikipedia.org/wiki/Transistor_count',

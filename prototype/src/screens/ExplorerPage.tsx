@@ -14,6 +14,7 @@ import StatsPanel from '../components/explorer/StatsPanel';
 import FilterPanel from '../components/explorer/FilterPanel';
 import Masthead from '../components/Masthead';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
+import { datasetAccent } from '../lib/dataset';
 import { Link } from 'react-router-dom';
 
 function defaultConfig(d: Dataset): ChartConfig {
@@ -151,7 +152,7 @@ function DatasetPicker({ datasetId, onChange }: { datasetId: string; onChange: (
         ))}
       </select>
       <div
-        className={`absolute left-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ${ACCENT_DOT[current.accent ?? 'sky'] ?? 'bg-ink-muted'}`}
+        className={`absolute left-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full ${ACCENT_DOT[datasetAccent(current)] ?? 'bg-ink-muted'}`}
       />
       <svg
         className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-ink-muted pointer-events-none"

@@ -18,6 +18,7 @@ export const WIND_TURBINE_DATASET: Dataset = {
   description: 'SCADA log from a 1.5 MW wind turbine. One row per minute.',
   source: 'STEAMQuests / wind-wise dataset',
   accent: 'sky',
+  family: 'earth',
   provenance: {
     primarySource: 'STEAMQuests "wind-wise" project (SCADA log)',
     primarySourceUrl: 'https://github.com/dereklomas/quests-app',

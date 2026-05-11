@@ -3,6 +3,7 @@ import { DATASETS } from '../../data/registry';
 import {
   numericStats,
   categoricalCounts,
+  datasetAccent,
   type Attribute,
   type Dataset,
   type Provenance,
@@ -34,7 +35,7 @@ export default function DatasetDictionary() {
     );
   }
 
-  const accent = dataset.accent ?? 'sky';
+  const accent = datasetAccent(dataset);
 
   return (
     <div className="min-h-screen">

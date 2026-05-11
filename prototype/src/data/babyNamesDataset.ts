@@ -1455,6 +1455,7 @@ export const BABY_NAMES_DATASET: Dataset = {
   description: 'Yearly popularity (percent of all babies) of selected first names since 1950. Long-tail rises and falls — Karen peaks then collapses, Olivia explodes, Linda dies.',
   source: 'US Social Security Administration via hadley/data-baby-names',
   accent: 'pink',
+  family: 'people',
   provenance: {
     primarySource: 'US Social Security Administration — National Names Database',
     primarySourceUrl: 'https://www.ssa.gov/oact/babynames/',

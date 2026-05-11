@@ -771,6 +771,7 @@ export const STARS_DATASET: Dataset = {
   description: 'Stars visible to the naked eye from Earth. Apparent magnitude, absolute magnitude, color index, distance, spectral class, constellation. The classic Hertzsprung-Russell diagram lives here.',
   source: 'HYG Database (Hipparcos + Yale + Gliese), CC-BY-SA',
   accent: 'indigo',
+  family: 'space',
   provenance: {
     primarySource: 'HYG Database v3.8 (compilation of Hipparcos, Yale Bright Star, and Gliese catalogs)',
     primarySourceUrl: 'https://github.com/astronexus/HYG-Database',

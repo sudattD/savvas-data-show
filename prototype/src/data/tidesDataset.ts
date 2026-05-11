@@ -397,6 +397,7 @@ export const TIDES_DATASET: Dataset = {
   description: 'Hourly water levels at the San Francisco NOAA tide gauge over the past month. Two cycles per day, modulated by the spring/neap fortnight — a classic compound sine wave.',
   source: 'NOAA Tides & Currents · tidesandcurrents.noaa.gov',
   accent: 'cyan',
+  family: 'earth',
   provenance: {
     primarySource: 'NOAA Center for Operational Oceanographic Products and Services (CO-OPS)',
     primarySourceUrl: 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter',

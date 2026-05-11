@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { Dataset } from '../lib/dataset';
-import { attrByKey } from '../lib/dataset';
+import { attrByKey, datasetAccent } from '../lib/dataset';
 
 interface Props {
   dataset: Dataset;
@@ -61,7 +61,7 @@ export default function DatasetSparkline({ dataset, height = 160 }: Props) {
     );
   }
 
-  const color = ACCENT_TO_HEX[dataset.accent ?? 'sky'] ?? '#0EA5E9';
+  const color = ACCENT_TO_HEX[datasetAccent(dataset)] ?? '#0EA5E9';
 
   return (
     <figure

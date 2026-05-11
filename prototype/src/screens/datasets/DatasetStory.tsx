@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { DATASETS } from '../../data/registry';
-import type { Provenance, StoryBeat } from '../../lib/dataset';
+import type { Provenance, StoryBeat, DatasetFamily } from '../../lib/dataset';
+import { datasetAccent, FAMILY_LABEL } from '../../lib/dataset';
 import Masthead from '../../components/Masthead';
 import DatasetSparkline from '../../components/DatasetSparkline';
 import { useDocumentTitle } from '../../lib/useDocumentTitle';
@@ -44,7 +45,8 @@ export default function DatasetStory() {
     );
   }
 
-  const accent = dataset.accent ?? 'sky';
+  const accent = datasetAccent(dataset);
+  const familyLabel = dataset.family ? FAMILY_LABEL[dataset.family as DatasetFamily] : null;
   const story = dataset.story ?? [];
   const totalSteps = story.length;
   const visibleBeats = story.slice(0, step + 1);
@@ -60,7 +62,10 @@ export default function DatasetStory() {
       <section className="border-b border-surface-line bg-surface relative overflow-hidden">
         <div className={`absolute inset-x-0 top-0 h-1 ${ACCENT_BAR[accent]}`} />
         <div className="max-w-5xl mx-auto px-6 pt-14 pb-12">
-          <div className="eyebrow text-accent-600 mb-4">Dataset · #{String(DATASETS.findIndex((d) => d.id === dataset.id) + 1).padStart(2, '0')}</div>
+          <div className="eyebrow text-accent-600 mb-4">
+            Dataset · #{String(DATASETS.findIndex((d) => d.id === dataset.id) + 1).padStart(2, '0')}
+            {familyLabel && <span className="text-ink-muted"> · {familyLabel}</span>}
+          </div>
           <div className="grid md:grid-cols-[1fr_320px] gap-8 items-start">
             <div>
               <h1 className="editorial-hero text-4xl md:text-6xl text-brand-900 mb-5">

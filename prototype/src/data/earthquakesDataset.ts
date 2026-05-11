@@ -400,6 +400,7 @@ export const EARTHQUAKES_DATASET: Dataset = {
   description: 'Past-week earthquakes worldwide of magnitude 2.5+. Snapshot from USGS at build time. Log-scaled magnitudes; long-tail distribution; geographic.',
   source: 'USGS Earthquake Hazards Program · earthquake.usgs.gov',
   accent: 'rose',
+  family: 'earth',
   provenance: {
     primarySource: 'USGS Earthquake Hazards Program',
     primarySourceUrl: 'https://earthquake.usgs.gov/earthquakes/feed/',

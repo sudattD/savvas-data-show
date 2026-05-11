@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { DATASETS } from '../../data/registry';
+import { datasetAccent, FAMILY_LABEL } from '../../lib/dataset';
+import type { DatasetFamily } from '../../lib/dataset';
 import Masthead from '../../components/Masthead';
 import { useDocumentTitle } from '../../lib/useDocumentTitle';
 
@@ -15,6 +17,20 @@ const ACCENT_BAR: Record<string, string> = {
   orange: 'bg-orange-500',
   teal: 'bg-teal-500',
   slate: 'bg-brand-700',
+};
+
+const ACCENT_TEXT: Record<string, string> = {
+  sky: 'text-sky-700',
+  emerald: 'text-emerald-700',
+  cyan: 'text-cyan-700',
+  amber: 'text-accent-700',
+  rose: 'text-rose-700',
+  violet: 'text-violet-700',
+  indigo: 'text-indigo-700',
+  pink: 'text-pink-700',
+  orange: 'text-orange-700',
+  teal: 'text-teal-700',
+  slate: 'text-brand-700',
 };
 
 export default function DatasetsHub() {
@@ -50,9 +66,10 @@ export default function DatasetsHub() {
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {DATASETS.map((d) => {
-            const accent = d.accent ?? 'sky';
+            const accent = datasetAccent(d);
             const numericCount = d.attributes.filter((a) => a.kind === 'numeric').length;
             const catCount = d.attributes.filter((a) => a.kind === 'categorical').length;
+            const familyLabel = d.family ? FAMILY_LABEL[d.family as DatasetFamily] : null;
             return (
               <Link
                 key={d.id}
@@ -61,7 +78,12 @@ export default function DatasetsHub() {
               >
                 <div className={`h-1 ${ACCENT_BAR[accent]}`} />
                 <div className="p-5">
-                  <div className="eyebrow text-ink-muted mb-2">{d.provenance.primarySource.split(' ').slice(0, 4).join(' ').replace(/—.*$/, '').trim()}</div>
+                  <div className="flex items-baseline justify-between gap-3 mb-2">
+                    <div className="eyebrow text-ink-muted">{d.provenance.primarySource.split(' ').slice(0, 4).join(' ').replace(/—.*$/, '').trim()}</div>
+                    {familyLabel && (
+                      <div className={`eyebrow text-[9px] ${ACCENT_TEXT[accent] ?? 'text-ink-muted'}`}>{familyLabel}</div>
+                    )}
+                  </div>
                   <h2 className="font-display text-xl font-bold text-brand-900 leading-tight mb-2">
                     {d.name}
                   </h2>

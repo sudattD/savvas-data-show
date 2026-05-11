@@ -621,6 +621,7 @@ export const EXOPLANETS_DATASET: Dataset = {
   description: 'Confirmed exoplanets with measured orbital period, radius, distance, and discovery method. Log-scaled relationships, classification by size, decade-by-decade discovery boom.',
   source: 'NASA Exoplanet Archive (Caltech) · exoplanetarchive.ipac.caltech.edu',
   accent: 'violet',
+  family: 'space',
   provenance: {
     primarySource: 'NASA Exoplanet Archive (Caltech)',
     primarySourceUrl: 'https://exoplanetarchive.ipac.caltech.edu/',

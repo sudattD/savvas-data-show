@@ -45,12 +45,35 @@ export interface StoryBeat {
   highlight?: string;
 }
 
+/** High-level subject family the dataset belongs to. Drives spine color in the
+ *  library so reviewers can scan-read coverage by subject. */
+export type DatasetFamily = 'earth' | 'space' | 'life' | 'people' | 'technology';
+
+export const FAMILY_LABEL: Record<DatasetFamily, string> = {
+  earth: 'Earth & climate',
+  space: 'Space',
+  life: 'Life',
+  people: 'People & culture',
+  technology: 'Technology',
+};
+
+export const FAMILY_ACCENT: Record<DatasetFamily, string> = {
+  earth: 'emerald',
+  space: 'indigo',
+  life: 'teal',
+  people: 'rose',
+  technology: 'slate',
+};
+
 export interface Dataset {
   id: string;
   name: string;
   description: string;
   source: string;
-  /** Tailwind hue family for visual identification — e.g. "sky", "amber", "emerald". */
+  /** High-level subject family — drives spine color in the library. */
+  family?: DatasetFamily;
+  /** Tailwind hue family for visual identification — e.g. "sky", "amber", "emerald".
+   *  Used when family is not set; otherwise FAMILY_ACCENT[family] wins. */
   accent?: string;
   /** Required: where this data came from and how to verify it. */
   provenance: Provenance;
@@ -60,6 +83,12 @@ export interface Dataset {
   rows: Row[];
   /** Optional canonical scatter view — used as the Explorer's default X/Y/color. */
   featured?: { x: string; y: string; color?: string };
+}
+
+/** Resolve the visual accent for a dataset — prefers family if set. */
+export function datasetAccent(d: Dataset): string {
+  if (d.family) return FAMILY_ACCENT[d.family];
+  return d.accent ?? 'sky';
 }
 
 export function getNumericAttrs(d: Dataset) {

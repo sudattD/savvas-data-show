@@ -225,6 +225,7 @@ export const COUNTRIES_DATASET: Dataset = {
   description: 'World Bank indicators for ~200 countries: population, life expectancy, GDP per capita (PPP), CO2 per capita, internet use, urban population %.',
   source: 'World Bank Open Data · data.worldbank.org',
   accent: 'amber',
+  family: 'people',
   provenance: {
     primarySource: 'World Bank Open Data',
     primarySourceUrl: 'https://data.worldbank.org/',
