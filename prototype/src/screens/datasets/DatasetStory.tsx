@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { DATASETS } from '../../data/registry';
 import type { Provenance, StoryBeat } from '../../lib/dataset';
 import Masthead from '../../components/Masthead';
+import DatasetSparkline from '../../components/DatasetSparkline';
 import { useDocumentTitle } from '../../lib/useDocumentTitle';
 
 const ACCENT_BAR: Record<string, string> = {
@@ -58,19 +59,33 @@ export default function DatasetStory() {
       {/* Hero — editorial */}
       <section className="border-b border-surface-line bg-surface relative overflow-hidden">
         <div className={`absolute inset-x-0 top-0 h-1 ${ACCENT_BAR[accent]}`} />
-        <div className="max-w-4xl mx-auto px-6 pt-14 pb-12">
+        <div className="max-w-5xl mx-auto px-6 pt-14 pb-12">
           <div className="eyebrow text-accent-600 mb-4">Dataset · #{String(DATASETS.findIndex((d) => d.id === dataset.id) + 1).padStart(2, '0')}</div>
-          <h1 className="editorial-hero text-4xl md:text-6xl text-brand-900 mb-5">
-            {dataset.name}
-          </h1>
-          <p className="text-lg md:text-xl text-ink-soft max-w-prose leading-relaxed mb-8">
-            {dataset.description}
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-2xl">
-            <Stat label="Rows" value={dataset.rows.length.toLocaleString()} mono />
-            <Stat label="Numeric" value={numericAttrs.length} mono />
-            <Stat label="Categorical" value={catAttrs.length} mono />
-            <Stat label="Source" value={dataset.provenance.primarySource.split('—')[0].trim()} />
+          <div className="grid md:grid-cols-[1fr_320px] gap-8 items-start">
+            <div>
+              <h1 className="editorial-hero text-4xl md:text-6xl text-brand-900 mb-5">
+                {dataset.name}
+              </h1>
+              <p className="text-lg md:text-xl text-ink-soft max-w-prose leading-relaxed mb-8">
+                {dataset.description}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-2xl">
+                <Stat label="Rows" value={dataset.rows.length.toLocaleString()} mono />
+                <Stat label="Numeric" value={numericAttrs.length} mono />
+                <Stat label="Categorical" value={catAttrs.length} mono />
+                <Stat label="Source" value={dataset.provenance.primarySource.split('—')[0].trim()} />
+              </div>
+            </div>
+            <div className="md:pt-1">
+              <div className="eyebrow text-ink-muted mb-2">A first look</div>
+              <DatasetSparkline dataset={dataset} height={220} />
+              {dataset.featured && (
+                <div className="font-mono text-[10px] text-ink-muted mt-2 leading-relaxed">
+                  {dataset.featured.x} × {dataset.featured.y}
+                  {dataset.featured.color && ` · grouped by ${dataset.featured.color}`}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -79,9 +94,9 @@ export default function DatasetStory() {
         {/* Story beats */}
         {story.length > 0 && (
           <section>
-            <div className="flex items-baseline justify-between mb-6">
+            <div className="flex items-baseline justify-between mb-6 gap-4">
               <h2 className="font-display text-2xl md:text-3xl font-bold text-brand-900">The story</h2>
-              <div className="font-mono text-xs text-ink-muted">{Math.min(step + 1, totalSteps)} / {totalSteps}</div>
+              <BeatDots total={totalSteps} current={step} onJump={setStep} accent={accent} />
             </div>
             <div className="space-y-5">
               {visibleBeats.map((b, i) => <Beat key={i} beat={b} accent={accent} />)}
@@ -156,6 +171,40 @@ export default function DatasetStory() {
           </Link>
         </div>
       </main>
+    </div>
+  );
+}
+
+function BeatDots({
+  total, current, onJump, accent,
+}: { total: number; current: number; onJump: (n: number) => void; accent: string }) {
+  const onColor = ACCENT_BAR[accent] ?? 'bg-brand-700';
+  return (
+    <div className="flex items-center gap-2 shrink-0" role="tablist" aria-label="Story beats">
+      {Array.from({ length: total }, (_, i) => {
+        const seen = i <= current;
+        const isCurrent = i === current;
+        return (
+          <button
+            key={i}
+            type="button"
+            role="tab"
+            aria-selected={isCurrent}
+            aria-label={`Beat ${i + 1} of ${total}`}
+            onClick={() => onJump(i)}
+            className={`transition-all rounded-full ${
+              isCurrent
+                ? `w-6 h-2.5 ${onColor}`
+                : seen
+                  ? `w-2.5 h-2.5 ${onColor} opacity-60 hover:opacity-100`
+                  : 'w-2.5 h-2.5 bg-surface-line hover:bg-ink-muted/40'
+            }`}
+          />
+        );
+      })}
+      <span className="font-mono text-[10px] text-ink-muted ml-2 tabular-nums">
+        {current + 1}/{total}
+      </span>
     </div>
   );
 }
