@@ -251,6 +251,76 @@ If key events not supported, mark Act 2 as "skipped — keys".
 
 ---
 
+## R6.1 · Explorer regression line (`/explorer?dataset=wind`)
+
+**Tests the new CODAP-style regression feature in ScatterView.**
+
+**Navigate:** `/explorer?dataset=wind`
+
+### Initial state
+**Assertions:**
+- [ ] A "Fit a line" button is visible above the scatter chart
+- [ ] No regression line is drawn yet
+- [ ] No R² value is displayed
+
+### After clicking "Fit a line"
+**Click:** the "Fit a line" button.
+
+**Assertions:**
+- [ ] Two range sliders appear, labeled `slope` and `intercept`
+- [ ] A horizontal line appears on the scatter at approximately the mean y-value
+- [ ] A "your R²" label appears with a value near `0.000`
+- [ ] A "Show best fit" button is visible
+
+**Screenshot:** `screenshots/r6_1-fit-on.png`
+
+### Adjust slope
+**Click path:** Drag the slope slider to roughly its top quarter (a positive slope).
+
+**Assertions:**
+- [ ] The drawn line rotates upward (positive slope visible)
+- [ ] The "your R²" value updates as the slider moves
+- [ ] The numeric slope readout next to the slider updates live (monospace tabular numbers)
+
+### Show best fit
+**Click:** "Show best fit"
+
+**Assertions:**
+- [ ] A second line appears, in amber dashed (`stroke="#E18809"`, `strokeDasharray`)
+- [ ] A "best R²" value appears
+- [ ] best R² > 0 (the wind power dataset should have a healthy positive fit, expect best R² > 0.5)
+- [ ] A "Snap to best fit" button appears
+
+**Screenshot:** `screenshots/r6_1-best-fit.png`
+
+### Snap to best fit
+**Click:** "Snap to best fit"
+
+**Assertions:**
+- [ ] The "your R²" value jumps to approximately equal "best R²" (within 0.005)
+- [ ] The two lines now visually overlap
+
+### Cross-dataset behavior
+Repeat the toggle for at least two more datasets to confirm slider ranges adapt:
+- `/explorer?dataset=co2` — should produce a near-perfect fit (CO₂ vs year, R² > 0.95)
+- `/explorer?dataset=moore` — should *underfit* a line (Moore's Law is exponential, not linear; best R² will be moderate, perhaps 0.7, suggesting the linear model isn't the right one — an interesting teaching moment but not a bug)
+
+**Assertions:**
+- [ ] On both datasets, the slope slider lets you reach a positive-correlation fit without the line flying off-screen
+- [ ] On both datasets, "Show best fit" displays a sane R² value (between 0 and 1)
+- [ ] No console errors at any toggle/drag step
+
+**Screenshot:** `screenshots/r6_1-co2.png`, `screenshots/r6_1-moore.png`
+
+### Visual quality (apply the checklist)
+Especially watch for:
+- [ ] Slider controls don't wrap to a second line on widths ≥ 1280px (they should fit on one row)
+- [ ] R² readouts don't jitter as sliders move (tabular-nums working)
+- [ ] Reference lines have visible strokes (not 1px hairlines that disappear at 100% zoom)
+- [ ] Manual (navy) and auto (amber dashed) lines are distinguishable
+
+---
+
 ## R7 · Datasets Hub (`/datasets`)
 
 **Assertions:**
