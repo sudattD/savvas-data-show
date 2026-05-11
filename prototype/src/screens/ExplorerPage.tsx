@@ -141,8 +141,8 @@ function DatasetPicker({ datasetId, onChange }: { datasetId: string; onChange: (
   const current = DATASETS.find((d) => d.id === datasetId)!;
   return (
     <div className="relative">
-      <span className="eyebrow text-ink-muted absolute right-full mr-2 top-1/2 -translate-y-1/2 hidden sm:block whitespace-nowrap">Dataset</span>
       <select
+        aria-label="Dataset"
         value={datasetId}
         onChange={(e) => onChange(e.target.value)}
         className="pl-7 pr-8 py-1.5 rounded-md border border-surface-line bg-surface-raised font-medium text-ink text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 outline-none appearance-none"
