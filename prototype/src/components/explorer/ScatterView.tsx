@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import {
   ScatterChart,
   Scatter,
@@ -9,9 +9,10 @@ import {
   ResponsiveContainer,
   Legend,
   ReferenceLine,
+  ReferenceArea,
 } from 'recharts';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
-import { niceTicks, niceLogTicks } from '../../lib/niceTicks';
+import { niceTicks, niceTicksWithin, niceLogTicks } from '../../lib/niceTicks';
 import { categoryColor, uniqueValues, DEFAULT_POINT, numericColor, numericRampStops } from './ColorScale';
 
 interface ScatterViewProps {
@@ -208,22 +209,103 @@ export default function ScatterView({
   const effectiveXScale = xCanLog ? xScale : 'linear';
   const effectiveYScale = yCanLog ? yScale : 'linear';
 
+  // Box-zoom: click-drag a rectangle on the chart to zoom into that region.
+  // Double-click or "Reset zoom" to return to the full data extent.
+  const [zoomDomain, setZoomDomain] = useState<{ x: [number, number]; y: [number, number] } | null>(null);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragEnd, setDragEnd] = useState<{ x: number; y: number } | null>(null);
+  const chartWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Reset zoom when the underlying data or scale changes — otherwise a zoom
+  // set on a linear plot would carry over to log and produce a broken view.
+  useEffect(() => {
+    setZoomDomain(null);
+  }, [dataset.id, xAttr.key, yAttr.key, effectiveXScale, effectiveYScale]);
+
   // Nice axis domains + ticks. Without these, Recharts pins the first/last
   // tick to the literal data min/max (e.g. 0.044, 0.993) and spaces ticks
   // evenly across that ugly range. Snapping to nice round numbers is what
   // every other charting library does by default.
+  //
+  // When the user has zoomed via box-select, we honor the exact bounds they
+  // chose (no nice-rounding the domain) but still snap ticks to round
+  // values inside that range.
   const xTickConfig = useMemo(() => {
     if (!ranges) return null;
+    if (zoomDomain) {
+      const [lo, hi] = zoomDomain.x;
+      return { domain: [lo, hi] as [number, number], ticks: niceTicksWithin(lo, hi) };
+    }
     return effectiveXScale === 'log'
       ? niceLogTicks(ranges.xMin, ranges.xMax)
       : niceTicks(ranges.xMin, ranges.xMax);
-  }, [ranges, effectiveXScale]);
+  }, [ranges, effectiveXScale, zoomDomain]);
   const yTickConfig = useMemo(() => {
     if (!ranges) return null;
+    if (zoomDomain) {
+      const [lo, hi] = zoomDomain.y;
+      return { domain: [lo, hi] as [number, number], ticks: niceTicksWithin(lo, hi) };
+    }
     return effectiveYScale === 'log'
       ? niceLogTicks(ranges.yMin, ranges.yMax)
       : niceTicks(ranges.yMin, ranges.yMax);
-  }, [ranges, effectiveYScale]);
+  }, [ranges, effectiveYScale, zoomDomain]);
+
+  // Pixel-to-data projection. Uses the known chart margins + current effective
+  // domain to convert mouse-position-on-chart into data-space coordinates.
+  // Returns null for points outside the plot area.
+  const CHART_MARGIN = { top: 16, right: 32, bottom: 48, left: 64 };
+  function pixelToData(chartX: number, chartY: number): { x: number; y: number } | null {
+    const wrapper = chartWrapperRef.current;
+    if (!wrapper || !xTickConfig || !yTickConfig) return null;
+    const w = wrapper.clientWidth;
+    const h = wrapper.clientHeight;
+    const plotW = w - CHART_MARGIN.left - CHART_MARGIN.right;
+    const plotH = h - CHART_MARGIN.top - CHART_MARGIN.bottom;
+    const px = chartX - CHART_MARGIN.left;
+    const py = chartY - CHART_MARGIN.top;
+    if (px < 0 || px > plotW || py < 0 || py > plotH) return null;
+    const [x0, x1] = xTickConfig.domain;
+    const [y0, y1] = yTickConfig.domain;
+    const reverseY = yAttr.preferReversed === true;
+    const xLog = effectiveXScale === 'log';
+    const yLog = effectiveYScale === 'log';
+    const dataX = xLog
+      ? Math.pow(10, Math.log10(x0) + (px / plotW) * (Math.log10(x1) - Math.log10(x0)))
+      : x0 + (px / plotW) * (x1 - x0);
+    // Y axis is inverted in screen space by default. Honor preferReversed too.
+    const fracY = py / plotH;
+    const dataY = yLog
+      ? (reverseY
+          ? Math.pow(10, Math.log10(y0) + fracY * (Math.log10(y1) - Math.log10(y0)))
+          : Math.pow(10, Math.log10(y1) - fracY * (Math.log10(y1) - Math.log10(y0))))
+      : (reverseY ? y0 + fracY * (y1 - y0) : y1 - fracY * (y1 - y0));
+    return { x: dataX, y: dataY };
+  }
+
+  function commitZoom() {
+    if (!dragStart || !dragEnd || !xTickConfig || !yTickConfig) {
+      setDragStart(null);
+      setDragEnd(null);
+      return;
+    }
+    const x1 = Math.min(dragStart.x, dragEnd.x);
+    const x2 = Math.max(dragStart.x, dragEnd.x);
+    const y1 = Math.min(dragStart.y, dragEnd.y);
+    const y2 = Math.max(dragStart.y, dragEnd.y);
+    const [xd0, xd1] = xTickConfig.domain;
+    const [yd0, yd1] = yTickConfig.domain;
+    // Ignore tiny drags (clicks).
+    if (Math.abs(x2 - x1) < Math.abs(xd1 - xd0) * 0.02 ||
+        Math.abs(y2 - y1) < Math.abs(yd1 - yd0) * 0.02) {
+      setDragStart(null);
+      setDragEnd(null);
+      return;
+    }
+    setZoomDomain({ x: [x1, x2], y: [y1, y2] });
+    setDragStart(null);
+    setDragEnd(null);
+  }
 
   // Fit the regression in the same coordinate space the user is viewing.
   // When both axes are linear, this is raw x/y. When either is log, we
@@ -525,9 +607,37 @@ export default function ScatterView({
         )}
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 relative" ref={chartWrapperRef}>
+        {zoomDomain && (
+          <button
+            type="button"
+            onClick={() => setZoomDomain(null)}
+            className="absolute top-2 right-2 z-10 text-xs font-semibold px-2.5 py-1 rounded-md bg-brand-900 text-white hover:bg-brand-700 shadow-sm"
+            title="Return to the full data extent"
+          >
+            Reset zoom ↺
+          </button>
+        )}
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 16, right: 32, bottom: 48, left: 64 }}>
+          <ScatterChart
+            margin={{ top: 16, right: 32, bottom: 48, left: 64 }}
+            onMouseDown={(e: any) => {
+              if (!e || e.chartX == null || e.chartY == null) return;
+              const p = pixelToData(e.chartX, e.chartY);
+              if (!p) return;
+              setDragStart(p);
+              setDragEnd(p);
+            }}
+            onMouseMove={(e: any) => {
+              if (!dragStart || !e || e.chartX == null || e.chartY == null) return;
+              const p = pixelToData(e.chartX, e.chartY);
+              if (p) setDragEnd(p);
+            }}
+            onMouseUp={commitZoom}
+            onMouseLeave={commitZoom}
+            onDoubleClick={() => setZoomDomain(null)}
+            style={{ cursor: dragStart ? 'crosshair' : 'crosshair' }}
+          >
             <CartesianGrid stroke="#E5EFFB" strokeDasharray="3 3" />
             <XAxis
               type="number"
@@ -592,6 +702,20 @@ export default function ScatterView({
               // .github/issues/issues_to_create.md.
               <Scatter key={g.name} name={g.name} data={g.points} fill={g.color} fillOpacity={0.6} isAnimationActive={false} />
             ))}
+            {dragStart && dragEnd && (
+              <ReferenceArea
+                x1={Math.min(dragStart.x, dragEnd.x)}
+                x2={Math.max(dragStart.x, dragEnd.x)}
+                y1={Math.min(dragStart.y, dragEnd.y)}
+                y2={Math.max(dragStart.y, dragEnd.y)}
+                fill="#60A5FA"
+                fillOpacity={0.15}
+                stroke="#3B82F6"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                ifOverflow="visible"
+              />
+            )}
             {regressionOn && manualSegment && (
               <ReferenceLine
                 segment={[
