@@ -103,6 +103,18 @@ None observed across all 11 routes. Console reads were performed at R1 (cleared 
 
 None of these are demo-blockers individually — Park is most likely to play with Scatter (which works), and the bug surfaces only when he switches to Histogram or Box plot on a long-tail dataset. But if he does, the page reads as broken. Worth a few hours' fix; deferrable if Tuesday is tight.
 
+### Pass-4 finding — "Fit a line" works pedagogically; chart-type switching has a state bug
+
+**"Fit a line" behavior is excellent.** Toggling it reveals: **slope slider · intercept slider · your R² (live) · best R² (computed) · Show best fit (renders optimal line) · Snap to best fit (applies to user's sliders)**. Students drag, get instant R² feedback, optionally reveal the optimal solution, optionally snap.
+
+The reported best R² for the Preston curve view (GDP per capita × Life expectancy) is **0.451** — that's the mathematically correct value for a linear fit on a logarithmic relationship. Showing students 0.451 (not 0.9+) is itself a data-literacy lesson: "the relationship is real but not linear." Strong design.
+
+**But the chart-type switching has a state bug.** Going Box plot → Scatter resets X and Y to the first numeric attribute ("Population" for the Countries dataset), rather than restoring the previous Scatter state or applying `featured`. Then manually setting X and Y back via dropdowns doesn't fully re-scale the chart axis domain — the Y axis still displayed `24,162,997` at top even though the Y attribute was set to Life expectancy. The best-fit overlay drew in correct life-expectancy units, but the axes lied.
+
+**Candidate issue M10/I10 · Chart-type switching corrupts X/Y selection and stale axis domain.** Files: `src/screens/ExplorerPage.tsx` (state model for X/Y across chart types) and the chart-view components. Fix: when switching chart types, preserve the existing X/Y if compatible with the new chart, or fall back to the dataset's `featured`. And when X/Y attributes change, force the axis domain to recompute (probably a missing dependency in a useMemo).
+
+This is a real bug but a contained one — the cold-open `/explorer?dataset=*` URLs all render correctly because the state model starts clean. It only surfaces when a user toggles chart types mid-session. Park is unlikely to do that scripted, but if he experiments, he'll see it.
+
 ### What this means for Wednesday
 
 The prototype is in **demo-ready** shape. The deploy went out, the visible empty-chart bugs are gone, the stats land their numbers, the explorer's "wow" views render on cold-open, and the dataset-story sparkline gives Jamal-persona students something to look at on first scroll. The one visible nit (masthead overlap on Explorer pages) is recoverable in a single CSS line if Tuesday has spare time; otherwise it's not the kind of thing that derails a Savvas pitch.

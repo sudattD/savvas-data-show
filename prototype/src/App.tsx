@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import InputWidget from './components/InputWidget';
 import HomePage from './screens/HomePage';
 import WindTurbinePage from './screens/WindTurbinePage';
 import VoiceDNAPage from './screens/VoiceDNAPage';
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/lessons/crack-the-headline" element={<CrackTheHeadline />} />
         <Route path="/lessons/hit-the-target" element={<HitTheTarget />} />
       </Routes>
+      <InputWidget allowedHosts={['localhost', 'vercel.app']} />
     </BrowserRouter>
   );
 }
