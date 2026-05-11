@@ -7,16 +7,17 @@
 
 ## The pitch in one paragraph
 
-When students open the current enVision quadratics chapter, the data is invented — cans falling, fictional prices, contrived sequences. The math works, but the data is wallpaper. **The Data Show** threads a single product through every chapter: 15 verified real-world datasets, one CODAP-class exploration tool students learn once and use for three years, and six transferable data-literacy lessons. Every chapter ships an activity built on Savvas's existing 3-Act structure — but the Act-1 commitment changes shape per activity, so the framework covers *all* chapter types, not just predict-a-number.
+When students open the current enVision quadratics chapter, the data is invented — cans falling, fictional prices, contrived sequences. The math works, but the data is wallpaper. **The Data Show** threads a single product through every chapter: 18 verified real-world datasets, one CODAP-class exploration tool students learn once and use for three years, and 9 transferable data-literacy lessons. Every chapter ships an activity built on Savvas's existing 3-Act structure — but the Act-1 commitment changes shape per activity, so the framework covers *all* chapter types, not just predict-a-number.
 
 ---
 
 ## What's in the prototype
 
-**Three doors in:**
-- **The Library** — 15 real datasets, fully sourced. Mauna Loa CO₂ since 1958. USGS earthquakes. 1.5 MW wind-turbine SCADA. US Census 1900 vs 2020. Every value traceable to its primary source, with provenance, retrieval method, license, and caveats.
-- **The Engine** — a CODAP-class explorer. Tables, scatter plots, histograms, box plots, filters, summary stats. *Same interface, every dataset, every chapter.* Students learn it once.
-- **The Concepts** — 9 interactive lessons on what students keep forever: tidy data, lying with statistics, mean vs median, survivorship bias, cherry-picked windows, Bayesian thinking on rare diseases.
+**Four doors in:**
+- **The Library** — 18 real datasets, fully sourced. Mauna Loa CO₂ since 1958. USGS earthquakes (with map view). 1.5 MW wind-turbine SCADA. US Census 1900 vs 2020. Olympic 100m winning times since 1896. Heart rate vs body mass across 16 mammals (Kleiber's law in a single chart). Every value traceable to its primary source, with provenance, retrieval method, license, and caveats.
+- **The Engine** — a CODAP-class explorer. Tables, scatter plots, histograms, box plots, **maps**, **regression-line fitting with auto least-squares + R²**, **log scales**, **color by category or numeric gradient**, **bin-width sliders**, **mean/median crosshairs**, **CSV export**. *Same interface, every dataset, every chapter.* Students learn it once.
+- **The Concepts** — 9 interactive lessons on what students keep forever: tidy data, lying with statistics, mean vs median, survivorship bias, cherry-picked windows, Bayesian thinking on rare diseases, hitting the target with quadratics.
+- **The Map** — a scope-and-sequence grid of all 35 enVision chapters across Algebra 1, Geometry, and Algebra 2. Each chapter shows its planned activity format, the dataset it draws on, and whether a prototype is built. Eight built; the rest are content fill, not engineering.
 
 **Four prototype chapter activities, one per Act-1 frame:**
 
@@ -43,11 +44,17 @@ All three preserve the pedagogical core: *students commit before they measure.* 
 
 ## By the numbers
 
-- **15** real datasets · every value verifiable to primary source
+- **18** real datasets · every value verifiable to primary source
 - **9** interactive data-literacy lessons
 - **35** enVision chapters mapped to candidate datasets (Algebra 1, Geometry, Algebra 2)
 - **3** Act-1 frames covering every chapter type
 - **2 weeks** prototype build time
+
+### Three datasets that close real math
+
+- **`solarSystem`** · 11 planets and dwarfs. Plot orbital period vs. distance on log-log axes — fitted slope is **1.5**. That's Kepler's third law as a straight line. (Algebra 2 · Logs)
+- **`heartRate`** · 16 mammals across five orders of magnitude of body mass. Log-log fit gives a **−0.25** slope. That's Kleiber's law. (Algebra 2 · Logs)
+- **`olympic100m`** · 29 Olympic 100m gold-medal times since 1896. The bend at 1968 isn't a sprinting breakthrough — it's the year electronic timing replaced human stopwatches. (Algebra 1 · Linear models)
 
 ---
 
@@ -64,11 +71,12 @@ Start at the homepage. Pick any of the four featured activities — they each ta
 
 The prototype is engineered like a product, not a slide deck. Same design system that ships to teachers. Same provenance discipline applied to every dataset. The path to production is straightforward:
 
-1. **The other 31 chapter activities.** The hardest engineering work — the design system, the explorer, the activity scaffolding, the provenance schema — is done. Each remaining activity is a content fill, not a re-build.
+1. **The other 27 chapter activities.** Eight built so far. The hardest engineering work — the design system, the explorer, the activity scaffolding, the provenance schema, the URL-encoded view state — is done. Each remaining activity is a content fill, not a re-build.
 2. **Teacher dashboard & roster integration.** Submitted findings need a class wall. Teachers need to assign activities. Standard SaaS workmanship — well-understood.
 3. **Accessibility audit & WCAG-AA conformance.** Color contrast already passes; keyboard nav and screen-reader semantics need a sweep.
 4. **Mobile + tablet polish.** The Explorer is desktop-first by design (data exploration benefits from screen real estate), but tablet-portrait layouts need a pass before classroom iPad rollout.
 5. **Standards-alignment metadata.** Each activity tagged to a topic; full Common Core / state-standards mapping is a content-team task.
+6. **Bring-your-own-data.** CSV import — students could drop in class survey data, lab measurements, or fitness-tracker exports. The Explorer's machinery already handles arbitrary tabular shapes; this is a file picker plus a parser.
 
 None of this is research risk. It's all execution.
 
