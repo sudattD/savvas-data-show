@@ -54,7 +54,7 @@ export default function HistogramView({ rows, xAttr, bins = 20 }: HistogramViewP
             stroke="#64748B"
             tickFormatter={(v) => Number(v).toFixed(1)}
             label={{
-              value: `${xAttr.label}${xAttr.unit ? ` (${xAttr.unit})` : ''}`,
+              value: `${xAttr.label}${xAttr.unit ? ` (${xAttr.unit})` : ''}${xAttr.axisHint ? ` · ${xAttr.axisHint}` : ''}`,
               position: 'insideBottom',
               offset: -16,
               fill: '#475569',

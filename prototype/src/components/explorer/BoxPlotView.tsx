@@ -96,6 +96,7 @@ export default function BoxPlotView({ rows, yAttr, groupAttr }: BoxPlotViewProps
           <text x={20} y={20} fontSize={11} fill="#475569" fontWeight="600" textAnchor="start">
             {yAttr.label}
             {yAttr.unit ? ` (${yAttr.unit})` : ''}
+            {yAttr.axisHint ? ` · ${yAttr.axisHint}` : ''}
           </text>
         </g>
         {/* boxes */}
