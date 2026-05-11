@@ -1486,6 +1486,37 @@ export const BABY_NAMES_DATASET: Dataset = {
     { key: 'percent', label: 'Popularity', kind: 'numeric', unit: '% of births', description: 'Share of births of the given sex in that year that received this name, expressed as a percentage. 1.0 % means roughly 1 in 100 babies of that sex got this name.' },
   ],
   featured: { x: 'year', y: 'percent', color: 'name' },
+  chapterFits: [
+    {
+      course: 'algebra1',
+      topic: 4,
+      topicName: 'Systems of Linear Equations and Inequalities',
+      flagship: true,
+      mathFit: 'Two name lifecycles overlaid — when does Olivia overtake Linda? Two linear best-fits intersecting.',
+      standards: ['HSA-REI.C.6', 'HSA-REI.D.11', 'HSF-LE.A.1', 'S-ID.B.6a'],
+      objective: 'Students will fit linear models to two real trends, solve the resulting system, and interpret the intersection in context.',
+      studentWhy: 'Two names rise and fall on different timelines. Solving the system of two lines tells you exactly when one overtook the other — and your chapter is that math.',
+      minutes: 20,
+      discussion: [
+        'Two lines crossing has a "before" and an "after". For Linda and Olivia, what changed in the world between those eras?',
+        'Real trends are not perfectly linear. How sensitive is your crossing point to the years you choose to fit?',
+      ],
+    },
+    {
+      course: 'algebra1',
+      topic: 6,
+      topicName: 'Exponential and Logarithmic',
+      mathFit: 'Each name\'s rise/fall is roughly Gaussian-bell-shaped, but the rising portion is near-exponential — fad spread.',
+      standards: ['HSF-LE.A.1', 'HSF-LE.A.2', 'HSF-LE.B.5'],
+      objective: 'Students will identify near-exponential growth in real data, fit the rising portion, and connect doubling time to a social-spread mechanism.',
+      studentWhy: 'When a baby name catches on, it spreads through word of mouth — and that spreads exponentially. The math is the same as any rumor or virus.',
+      minutes: 20,
+      discussion: [
+        'Find a name with a clean rising phase. Estimate its doubling time. Does that feel fast or slow?',
+        'Every name eventually plateaus and falls. Why does no name grow forever?',
+      ],
+    },
+  ],
   rows: RAW.map((r) => ({
     name: r.name,
     sex: r.sex,

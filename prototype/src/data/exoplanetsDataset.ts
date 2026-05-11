@@ -657,6 +657,37 @@ export const EXOPLANETS_DATASET: Dataset = {
     { key: 'eqTempK', label: 'Equilibrium temp', kind: 'numeric', unit: 'K', description: 'Equilibrium temperature in Kelvin assuming a black-body planet with no atmosphere — a rough proxy for "how hot is it from its star". Earth\'s value is ~255 K (–18 °C).' },
   ],
   featured: { x: 'orbitalPeriod', y: 'radiusEarth', color: 'method' },
+  chapterFits: [
+    {
+      course: 'algebra2',
+      topic: 5,
+      topicName: 'Rational Exponents and Radical Functions',
+      flagship: true,
+      mathFit: 'Kepler\'s third law: T² ∝ a³. Plot orbital period² vs. semi-major axis³ on log-log axes — every planet falls on a single line, from our solar system to thousand-light-year worlds.',
+      standards: ['HSA-REI.A.2', 'HSF-IF.C.7b', 'HSF-BF.A.1a', 'HSA-SSE.B.3c'],
+      objective: 'Students will recognize a power-law relationship in real data, linearize via log-log axes, and interpret the slope as a physical exponent.',
+      studentWhy: 'Kepler found T² ∝ a³ in 1619 with six planets. Your radical-function chapter is the math behind a law that still holds 400 years later for 600 worlds you have never heard of.',
+      minutes: 30,
+      discussion: [
+        'On a log-log plot, T² = k·a³ becomes a line. What is the slope? Why?',
+        'Kepler found this law without knowing gravity existed. What did he find first — the pattern or the cause?',
+      ],
+    },
+    {
+      course: 'algebra2',
+      topic: 9,
+      topicName: 'Conic Sections',
+      mathFit: 'Real exoplanet eccentricities — most orbits are near-circular ellipses, but some "hot Jupiters" are wildly elongated. Some asteroid orbits are open hyperbolas — escapers.',
+      standards: ['HSG-GPE.A.3', 'HSG-GPE.A.1', 'HSF-IF.C.7c'],
+      objective: 'Students will classify real orbital trajectories as circles, ellipses, parabolas, or hyperbolas using eccentricity, and explain what each shape means physically.',
+      studentWhy: 'Every planet, asteroid, and comet traces a conic section. Your chapter\'s e=0 (circle), 0<e<1 (ellipse), e=1 (parabola), e>1 (hyperbola) literally classifies every orbit in the universe.',
+      minutes: 25,
+      discussion: [
+        'What kind of object would have e > 1? Where does it go?',
+        'Why are most known exoplanet orbits more elongated than the planets in our solar system? (Hint: detection bias.)',
+      ],
+    },
+  ],
   rows: RAW.map((r) => ({
     name: r.name,
     host: r.host,

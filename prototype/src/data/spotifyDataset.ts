@@ -661,6 +661,38 @@ export const SPOTIFY_DATASET: Dataset = {
     { key: 'durationSec', label: 'Duration', kind: 'numeric', unit: 's', description: 'Track length in seconds. Streaming-era tracks have trended shorter over the last decade.' },
   ],
   featured: { x: 'energy', y: 'valence', color: 'genre' },
+  chapterFits: [
+    {
+      course: 'algebra2',
+      topic: 11,
+      topicName: 'Data Analysis and Statistics',
+      flagship: true,
+      mathFit: 'Train a classifier on Spotify audio features to predict genre. See the confusion matrix. Hunt for bias — does it fail more on Latin or R&B?',
+      standards: ['S-ID.B.6a', 'S-ID.C.8', 'S-ID.C.9', 'S-IC.B.6'],
+      objective: 'Students will train a simple classifier on real audio features, evaluate its accuracy with a confusion matrix, and identify where and why it fails on particular groups.',
+      studentWhy: 'Spotify\'s algorithm decides what music you hear. Your statistics chapter is exactly the math behind that decision — including the bugs.',
+      minutes: 30,
+      discussion: [
+        'The classifier confuses Latin and pop more than rock and classical. Why might that be?',
+        'A confusion matrix is a small table. What is the one number you would read from it first?',
+        'If your classifier is 80% accurate overall but 50% on country music, which number does Spotify care about?',
+      ],
+    },
+    {
+      course: 'algebra1',
+      topic: 10,
+      topicName: 'Working with Functions',
+      mathFit: 'A song is a function: time → pressure wave. Spotify reduces it to (energy, valence, tempo, …). Each axis is a function of the audio.',
+      standards: ['HSF-IF.A.1', 'HSF-IF.A.2', 'HSF-IF.B.5'],
+      objective: 'Students will recognize that a numeric audio feature is the output of a function applied to a song, and use those features to find similar songs.',
+      studentWhy: 'Every song you stream gets turned into 8 numbers by a function. Your "working with functions" chapter is what that function looks like.',
+      minutes: 20,
+      discussion: [
+        'Pick a song. Predict its (energy, valence, danceability). Then look it up. How close were you?',
+        'Two songs you love that have similar feature values. How similar do they actually sound?',
+      ],
+    },
+  ],
   rows: RAW.map((r) => ({
     title: r.title,
     artist: r.artist,

@@ -457,6 +457,37 @@ export const POPULATION_DATASET: Dataset = {
     { key: 'population', label: 'Population', kind: 'numeric', description: 'Number of people recorded in this age × sex × year cell. The bar length on a pyramid.' },
   ],
   featured: { x: 'age', y: 'population', color: 'sex' },
+  chapterFits: [
+    {
+      course: 'algebra2',
+      topic: 10,
+      topicName: 'Matrices',
+      flagship: true,
+      mathFit: 'A Leslie matrix takes the current age distribution and produces next year\'s. Multiply matrices to age the US population from 2020 to 2030, 2040, 2050.',
+      standards: ['HSN-VM.C.8', 'HSN-VM.C.6', 'HSN-VM.C.7', 'HSF-LE.A.2'],
+      objective: 'Students will use matrix-vector multiplication to project a population forward in time, and interpret each row of the matrix demographically.',
+      studentWhy: 'Demographers age a whole country one year at a time with a single matrix multiplication. Your matrix chapter is the engine for forecasting populations.',
+      minutes: 30,
+      discussion: [
+        'What does each row of the Leslie matrix represent? What is the "birth row"?',
+        'Iterate 10× to project 10 years forward. Does the shape of the pyramid converge to something stable?',
+      ],
+    },
+    {
+      course: 'algebra2',
+      topic: 1,
+      topicName: 'Linear Functions and Systems',
+      mathFit: 'Births vs. deaths over time as two near-linear trends. Solving the system tells you when natural-increase flips negative.',
+      standards: ['HSA-REI.C.6', 'HSF-LE.A.2', 'S-ID.B.6a'],
+      objective: 'Students will model a real demographic crossover with two linear functions, solve the system, and interpret the intersection.',
+      studentWhy: 'Births and deaths cross somewhere — your chapter solves exactly when. The answer reshapes the future of a country.',
+      minutes: 25,
+      discussion: [
+        'In which year do US deaths overtake births under a simple linear extrapolation?',
+        'Linear extrapolation may not be the right tool here. What pattern might fit better?',
+      ],
+    },
+  ],
   rows: RAW.map((r) => ({
     sex: r.sex,
     ageGroup: r.ageGroup,

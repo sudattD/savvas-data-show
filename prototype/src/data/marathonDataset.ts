@@ -853,6 +853,37 @@ export const MARATHON_DATASET: Dataset = {
     { key: 'paceMinPerMile', label: 'Pace', kind: 'numeric', unit: 'min/mi', description: 'Average pace over the full 26.2 miles, in minutes per mile (e.g. 8.42 ≈ 8:25/mi). Computed as officialTime / 26.2.' },
   ],
   featured: { x: 'age', y: 'officialTime', color: 'gender' },
+  chapterFits: [
+    {
+      course: 'algebra1',
+      topic: 11,
+      topicName: 'Statistics',
+      flagship: true,
+      mathFit: 'Distributions of finish times (right-skewed), group comparison (men vs. women, age groups), correlation (half split vs. final time is near-linear with a "wall" deviation).',
+      standards: ['S-ID.A.1', 'S-ID.A.2', 'S-ID.A.3', 'S-ID.B.6a'],
+      objective: 'Students will describe shape, center, and spread of a real performance distribution, compare groups, and quantify the half-to-full split relationship.',
+      studentWhy: 'A real race produces a real distribution — shape, center, spread, outliers. Your stats chapter gives you the names for everything you see here.',
+      minutes: 25,
+      discussion: [
+        'Why is the finish-time distribution right-skewed? What\'s in the long tail?',
+        'Half-marathon split predicts full-marathon time pretty well — until the wall hits. What does "the wall" look like in the scatter?',
+      ],
+    },
+    {
+      course: 'algebra1',
+      topic: 2,
+      topicName: 'Linear Equations',
+      mathFit: 'Half-marathon split predicts full-marathon time near-linearly. Build the prediction equation, then test it against a held-out runner.',
+      standards: ['HSA-CED.A.2', 'HSF-LE.A.2', 'S-ID.B.6a', 'S-ID.B.6c'],
+      objective: 'Students will fit a linear prediction equation to real paired data, interpret the slope and intercept, and test the model on a held-out case.',
+      studentWhy: 'If you ran the half-marathon in 1:42, the chapter math predicts your full time within minutes. Real numbers, real prediction, real test.',
+      minutes: 20,
+      discussion: [
+        'Interpret the slope of your fitted line. Is it a "doubling factor"? Why not exactly 2?',
+        'The intercept matters too. What does a negative intercept mean physically here?',
+      ],
+    },
+  ],
   rows: RAW.map((r) => ({
     gender: r.gender,
     ageGroup: r.ageGroup,

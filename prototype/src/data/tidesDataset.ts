@@ -427,6 +427,38 @@ export const TIDES_DATASET: Dataset = {
     { key: 'height', label: 'Water level', kind: 'numeric', unit: 'ft', description: 'Verified water level above MLLW (Mean Lower-Low Water datum) in feet, reported by NOAA Tides & Currents. Higher = higher tide.' },
   ],
   featured: { x: 'hour', y: 'height' },
+  chapterFits: [
+    {
+      course: 'algebra2',
+      topic: 7,
+      topicName: 'Trigonometric Functions',
+      flagship: true,
+      mathFit: 'Compound sine wave: a 12.42-hour lunar cycle modulated by a 14.77-day spring/neap envelope. Period, amplitude, and phase live in real data.',
+      standards: ['HSF-TF.B.5', 'HSF-IF.B.4', 'HSF-BF.A.1b'],
+      objective: 'Students will model a real periodic phenomenon as a sum of sinusoidal functions, and identify period, amplitude, and phase from data.',
+      studentWhy: 'The Pacific Ocean rises and falls on a clean 12.42-hour cycle. Your trig chapter gives you sine, cosine, period, amplitude — and the ocean was already using all of them.',
+      minutes: 25,
+      discussion: [
+        'Why 12.42 hours and not 12 — what physical thing determines the period?',
+        'When two sine waves of different frequencies add, you get a "beat". Where do you see that here?',
+        'If you measured tides for a year instead of a month, what additional cycle would emerge?',
+      ],
+    },
+    {
+      course: 'algebra2',
+      topic: 8,
+      topicName: 'Trigonometric Equations and Identities',
+      mathFit: 'Solve sin(2π·t/12.42) = 0.8 to find when the tide passes a given height. Use double-angle identity to find when two tides differ by exactly 2 ft.',
+      standards: ['HSF-TF.B.5', 'HSF-TF.C.8'],
+      objective: 'Students will solve trigonometric equations arising from a real periodic model, and use identities to answer "when does this happen?" questions.',
+      studentWhy: 'Asking "when is the tide 4 feet?" turns into solving a trig equation. The math you learn here is how surfers, sailors, and oil rigs schedule their day.',
+      minutes: 20,
+      discussion: [
+        'sin(x) = 0.8 has infinitely many solutions. Which one is the answer to a real question about today?',
+        'When do the high tides on the same day differ by exactly 2 feet? That is a real timing question for a marina.',
+      ],
+    },
+  ],
   rows: RAW.map((r) => ({
     t: r.t,
     date: r.date,

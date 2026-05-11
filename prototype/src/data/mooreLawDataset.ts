@@ -273,6 +273,38 @@ export const MOORE_LAW_DATASET: Dataset = {
     { key: 'processNm', label: 'Process node', kind: 'numeric', unit: 'nm', description: 'Manufacturing process node, in nanometres (e.g. 10000 = 10 µm in 1971; 3 = TSMC N3 in 2022). Smaller is newer; the number is a marketing label, not a literal feature size.' },
   ],
   featured: { x: 'year', y: 'transistors', color: 'manufacturer' },
+  chapterFits: [
+    {
+      course: 'algebra2',
+      topic: 6,
+      topicName: 'Exponential and Logarithmic Functions',
+      flagship: true,
+      mathFit: 'Plot transistors vs. year on linear y — an unreadable wall. Toggle to log y — a clean diagonal. THE iconic exponential dataset; slope is the doubling time.',
+      standards: ['HSF-LE.A.1c', 'HSF-LE.A.2', 'HSF-LE.A.4', 'HSF-LE.B.5'],
+      objective: 'Students will recognize when a dataset is best displayed on a log scale, fit a linear model on log-transformed y, and extract a doubling time from the slope.',
+      studentWhy: 'Logs are not a topic — they are a lens. This dataset is the textbook case for why your log chapter exists. Linear y: unreadable. Log y: a perfect line.',
+      minutes: 30,
+      discussion: [
+        'Why does linear y "hide" the early decades? What is mathematically going on?',
+        'The slope on log-y is the doubling time. Why is that the right interpretation?',
+        'Moore\'s "law" is empirical, not a law of physics. What ended other technology curves at scale?',
+      ],
+    },
+    {
+      course: 'algebra1',
+      topic: 6,
+      topicName: 'Exponents and Exponential Functions',
+      mathFit: 'Doubling time ≈ 2 years for 50+ years. Predict next year\'s chip from the trend; compare to recent reality.',
+      standards: ['HSF-LE.A.1c', 'HSF-LE.A.2', 'HSF-LE.B.5'],
+      objective: 'Students will model real exponential growth in everyday language ("the doubling time") and project the trend forward to make a prediction.',
+      studentWhy: 'The chips in your phone got that powerful because of an exponential growth your chapter is about. "Doubling time" is the human-readable form.',
+      minutes: 20,
+      discussion: [
+        'Find the doubling time visually. Then compute it from the slope. Do they agree?',
+        'Predict what year a chip will have 10× the transistor count of today\'s biggest. Reasonable? Or have we hit a wall?',
+      ],
+    },
+  ],
   rows: RAW.map((r) => ({
     name: r.name,
     manufacturer: r.manufacturer,
