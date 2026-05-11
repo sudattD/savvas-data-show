@@ -44,7 +44,12 @@ export default function WindTurbinePage() {
       <Masthead
         section="Wind Power Curve"
         eyebrow="Algebra 1 · Topic 8 · Quadratic Functions"
-        right={<ProgressDots current={act} />}
+        right={
+          <div className="flex items-center gap-4">
+            <SeeAllDataLink datasetId="wind" label="Explore the data" compact />
+            <ProgressDots current={act} />
+          </div>
+        }
       />
 
       <main className="max-w-5xl mx-auto px-6 py-8">

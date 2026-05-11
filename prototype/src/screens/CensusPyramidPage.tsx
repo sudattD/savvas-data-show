@@ -27,7 +27,12 @@ export default function CensusPyramidPage() {
       <Masthead
         section="120 Years of America"
         eyebrow="Algebra 1 · Topic 12 · Distributions"
-        right={<ProgressDots current={act} />}
+        right={
+          <div className="flex items-center gap-4">
+            <SeeAllDataLink datasetId="population" label="Explore the data" compact />
+            <ProgressDots current={act} />
+          </div>
+        }
       />
       <main className="max-w-5xl mx-auto px-6 py-8">
         {act === 1 && (

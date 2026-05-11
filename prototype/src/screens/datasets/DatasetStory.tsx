@@ -6,6 +6,7 @@ import { datasetAccent, FAMILY_LABEL } from '../../lib/dataset';
 import Masthead from '../../components/Masthead';
 import DatasetSparkline from '../../components/DatasetSparkline';
 import ChapterFitsSection from '../../components/ChapterFitsSection';
+import { chaptersForDataset, chapterAnchorId, COURSE_TITLE } from '../../data/chapters';
 import { useDocumentTitle } from '../../lib/useDocumentTitle';
 
 const ACCENT_BAR: Record<string, string> = {
@@ -138,6 +139,9 @@ export default function DatasetStory() {
             </div>
           </section>
         )}
+
+        {/* Chapters that use this dataset (cross-link into /chapters) */}
+        <ChapterCrosslink datasetId={dataset.id} />
 
         {/* Chapter fits — teacher + student views */}
         <ChapterFitsSection dataset={dataset} />
@@ -301,5 +305,58 @@ function Row({ label, children, wide }: { label: string; children: React.ReactNo
       <div className="eyebrow text-ink-muted mb-1">{label}</div>
       <div className="text-ink leading-relaxed">{children}</div>
     </div>
+  );
+}
+
+
+function ChapterCrosslink({ datasetId }: { datasetId: string }) {
+  const fits = chaptersForDataset(datasetId);
+  if (fits.length === 0) return null;
+
+  return (
+    <section className="bg-surface-raised border border-surface-line rounded-lg overflow-hidden">
+      <header className="px-5 py-3 border-b border-surface-line bg-surface-subtle/40 flex items-baseline justify-between gap-3">
+        <div>
+          <div className="eyebrow text-ink-muted">Chapters that use this dataset</div>
+          <div className="text-xs text-ink-muted mt-0.5">
+            {fits.length === 1 ? '1 chapter draws on this data' : `${fits.length} chapters draw on this data`}
+          </div>
+        </div>
+        <Link
+          to="/chapters"
+          className="text-xs eyebrow text-brand-700 hover:text-accent-700 hover:underline whitespace-nowrap"
+        >
+          Full scope &amp; sequence →
+        </Link>
+      </header>
+      <ul className="divide-y divide-surface-line">
+        {fits.map((c) => (
+          <li key={chapterAnchorId(c)} className="px-5 py-3 flex items-baseline gap-3">
+            <div className="text-[10px] eyebrow text-ink-muted font-mono shrink-0 w-20">
+              {COURSE_TITLE[c.course]} · T{c.topic}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-ink truncate">{c.activity}</div>
+              <div className="text-xs text-ink-muted truncate">{c.topicName}</div>
+            </div>
+            {c.route ? (
+              <Link
+                to={c.route}
+                className="text-xs font-semibold text-emerald-700 hover:text-emerald-900 hover:underline whitespace-nowrap shrink-0"
+              >
+                Open activity →
+              </Link>
+            ) : (
+              <Link
+                to={`/chapters#${chapterAnchorId(c)}`}
+                className="text-xs font-semibold text-brand-700 hover:text-accent-700 hover:underline whitespace-nowrap shrink-0"
+              >
+                See concept →
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

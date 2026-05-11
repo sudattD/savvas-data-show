@@ -49,6 +49,9 @@ export interface ChapterEntry {
   route?: string;
   /** Flag for headline demo flagships. */
   flagship?: boolean;
+  /** Design brief for concept rows — the Act-1 opening moment and the Act-3 reveal,
+   *  in one or two sentences each. Lets unbuilt rows function as real specs. */
+  design?: { hook: string; reveal: string };
 }
 
 export const CHAPTERS: ChapterEntry[] = [
@@ -67,6 +70,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Pairs measure two correlated body metrics on each other, fit y = mx + b, then test on a stranger.',
     connection: 'Students invent y = mx + b before being told.',
     format: ['POL', 'SEN'], datasets: ['marathon'],
+    design: {
+      hook: 'You and your partner pick two body measurements (hand-span vs. height, half-marathon pace vs. full pace, age vs. step length) and plot what you find.',
+      reveal: 'Your linear equation predicts a stranger from another pair. With 32,000 Boston Marathon finishers, the same line still holds.',
+    },
   },
   {
     course: 'algebra1', topic: 3, topicName: 'Linear Functions',
@@ -74,6 +81,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Phone accelerometer records height vs. time as you walk upstairs. Slope = speed.',
     connection: 'Slope as rate-of-change becomes embodied — your slope is your speed.',
     format: ['SEN'], datasets: [],
+    design: {
+      hook: 'Phone in pocket, you walk a flight of stairs. The accelerometer logs height vs. time and you keep the trace.',
+      reveal: 'Your slope is your speed. The class compares fastest, steepest, and weirdest — and the unit (m/s) falls out for free.',
+    },
   },
   {
     course: 'algebra1', topic: 4, topicName: 'Systems of Linear Equations and Inequalities',
@@ -81,6 +92,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "Two real time-series that cross — women's vs. men's marathon record, Linda vs. Olivia — fit lines and predict the year.",
     connection: 'Solving simultaneous linear equations is suddenly necessary — they want to know the answer.',
     format: ['CDS'], datasets: ['babyNames', 'population', 'marathon'],
+    design: {
+      hook: "Pick one of three real time-series that cross: women's vs. men's marathon record, US births vs. deaths, or baby names Linda vs. Olivia.",
+      reveal: 'Fit two lines, solve for x. The year they intersect is testable history — sometimes the model nails it, sometimes the world bent.',
+    },
   },
   {
     course: 'algebra1', topic: 5, topicName: 'Piecewise Functions',
@@ -96,6 +111,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "Real exponential growth at scale (Moore's Law / GitHub stars). Estimate the doubling time, predict the next one.",
     connection: 'Doubling time is the human-readable form of exponential growth.',
     format: ['CDS'], datasets: ['moore'],
+    design: {
+      hook: "Plot Moore's Law (or GitHub stars on a famous repo's first 90 days). The curve climbs absurdly steeply on a linear axis.",
+      reveal: 'Find the doubling time — ~24 months for transistors, for decades. Then predict the next doubling and check.',
+    },
   },
   {
     course: 'algebra1', topic: 7, topicName: 'Polynomials and Factoring',
@@ -103,6 +122,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Real cubic-shaped data; the roots are physical events — cut-in wind, closest asteroid approach.',
     connection: "Roots aren't abstractions — they're the moment something turns on, lands, or crosses.",
     format: ['CDS'], datasets: ['wind', 'neo'],
+    design: {
+      hook: "Pick a curve: a wind turbine's power crosses zero at cut-in speed; an asteroid's distance crosses zero at fly-by.",
+      reveal: 'Factor the polynomial. The roots are physical events — cut-in wind, closest approach. Math meets the world.',
+    },
   },
   {
     course: 'algebra1', topic: 8, topicName: 'Quadratic Functions',
@@ -127,6 +150,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "A song is a function. Spotify reduces it to (danceability, energy, valence, tempo) — each axis IS a function of the audio.",
     connection: 'Functions take inputs to outputs — students see this for music they love.',
     format: ['IMP', 'CDS'], datasets: ['spotify'],
+    design: {
+      hook: 'A song is a function: time → pressure wave. Spotify reduces it to four numbers (danceability, energy, valence, tempo). Bring your own song in.',
+      reveal: 'See your song placed in the feature space. Its three nearest neighbors are songs you have probably never heard — but should.',
+    },
   },
   {
     course: 'algebra1', topic: 11, topicName: 'Statistics',
@@ -145,6 +172,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "USGS earthquake feed for the past week — plot lat/long on a world map. The Ring of Fire emerges.",
     connection: 'Coordinates as the foundation of geometric description.',
     format: ['CDS'], datasets: ['earthquakes'],
+    design: {
+      hook: 'USGS earthquake feed for the past week, one row per quake. Plot lat/long on a world map.',
+      reveal: 'Without anyone naming it, the Ring of Fire emerges. Coordinates as the foundation of every geometric thing to come.',
+    },
   },
   {
     course: 'geometry', topic: 2, topicName: 'Parallel and Perpendicular Lines',
@@ -152,6 +183,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Best-fit lines for San Andreas, Mid-Atlantic Ridge, Pacific Rim — check which are parallel, which perpendicular.',
     connection: "Real Earth lines aren't perfectly parallel — but the math says how close they get.",
     format: ['CDS'], datasets: ['earthquakes'],
+    design: {
+      hook: 'Earthquakes cluster along plate boundaries. Draw your best-fit lines for San Andreas, the Mid-Atlantic Ridge, and the Pacific Rim.',
+      reveal: 'Compute the angle between any two. Real Earth lines are not perfectly parallel — but the math measures how close they get.',
+    },
   },
   {
     course: 'geometry', topic: 3, topicName: 'Transformations',
@@ -160,6 +195,10 @@ export const CHAPTERS: ChapterEntry[] = [
     connection: "Transformations stop being abstract — they're applied to your body.",
     format: ['SEN'], datasets: [],
     flagship: true,
+    design: {
+      hook: 'Webcam on. MediaPipe tracks 33 keypoints on your body in real time and freezes a pose when you choose.',
+      reveal: 'Apply transformations to the captured pose: rotate 30° clockwise, scale to half size, reflect across vertical. Watch yourself transform.',
+    },
   },
   {
     course: 'geometry', topic: 4, topicName: 'Triangle Congruence',
@@ -167,6 +206,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Pace and measure the room. Each pair claims a triangle. Class compares — are any congruent within tolerance?',
     connection: 'SSS, SAS, ASA become protocols for agreeing across measurements.',
     format: ['SEN', 'POL'], datasets: [],
+    design: {
+      hook: 'Pace the room. Each pair claims a triangle — corner to corner to corner — and measures sides and angles by phone.',
+      reveal: 'Compare across pairs. Which triangles are congruent within tolerance? SSS, SAS, and ASA become protocols for agreeing across measurements.',
+    },
   },
   {
     course: 'geometry', topic: 5, topicName: 'Relationships in Triangles',
@@ -174,6 +217,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'P-wave arrival times at three real stations. Locate the epicenter geometrically — three circles intersecting.',
     connection: 'This is literally how seismologists locate quakes.',
     format: ['CDS', 'SIM'], datasets: ['earthquakes'],
+    design: {
+      hook: 'Three real USGS stations report P-wave arrival times for the same quake. Each time gives you a circle of possible source locations.',
+      reveal: 'Three circles intersect at one point — the epicenter. The triangle of stations and its medians are exactly how seismologists locate quakes.',
+    },
   },
   {
     course: 'geometry', topic: 6, topicName: 'Quadrilaterals and Other Polygons',
@@ -181,6 +228,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Real bright-star sky data. Pick 5–9 stars, connect them, name your constellation, claim it.',
     connection: 'Constellations are polygons projected on a sphere — perimeter, interior angles, classification all apply.',
     format: ['CDS'], datasets: ['stars'],
+    design: {
+      hook: 'A sky full of real bright stars. Pick 5–9 that look like something to you, connect them, and name your constellation.',
+      reveal: 'Your constellation is a polygon — compute perimeter, interior angles, classification. Compare which constellations the class made compact vs. spread.',
+    },
   },
   {
     course: 'geometry', topic: 7, topicName: 'Similarity',
@@ -188,6 +239,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Side-profile selfie → height vs. mass scaling. Class data shows mass grows with height³, bone strength only with height². That gap is biology.',
     connection: 'Similar shapes scale predictably — and that gap is why we don\'t have giants.',
     format: ['SEN', 'CDS'], datasets: ['penguins'],
+    design: {
+      hook: 'Side-profile selfie. The phone measures your body proportions. Class data builds a height vs. mass scatter.',
+      reveal: 'Mass grows with height³, bone strength only with height². That gap is biology — and the reason giants are impossible.',
+    },
   },
   {
     course: 'geometry', topic: 8, topicName: 'Right Triangles and Trigonometry',
@@ -195,6 +250,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "Given Earth's orbit and a real Hipparcos parallax angle, compute the star's distance with trig.",
     connection: 'Trig is how we know how far away stars are.',
     format: ['CDS'], datasets: ['stars'],
+    design: {
+      hook: 'Pick a nearby star with a real Hipparcos parallax angle. Earth\'s orbit gives you the baseline (1 AU).',
+      reveal: 'Trig gives you the star\'s distance in parsecs. This is not a textbook problem — this is how astronomers actually do it.',
+    },
   },
   {
     course: 'geometry', topic: 9, topicName: 'Coordinate Geometry',
@@ -202,6 +261,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "Pick a hurricane. Plot its path on a lat/long grid. Compute heading, distance, speed.",
     connection: 'Lat/long is coordinate geometry on a (slightly curved) plane.',
     format: ['CDS'], datasets: ['hurricanes'],
+    design: {
+      hook: 'Pick a real Atlantic hurricane. Plot its track on a lat/long grid, position by position.',
+      reveal: 'Compute average heading, total distance, average speed. Compare to another storm — same coast, very different paths.',
+    },
   },
   {
     course: 'geometry', topic: 10, topicName: 'Circles',
@@ -209,6 +272,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "Measure the eye radius from a satellite still. Compute area, circumference. Stronger storms have smaller eyes.",
     connection: 'A circle\'s properties teach you something physical.',
     format: ['CDS'], datasets: ['hurricanes'],
+    design: {
+      hook: 'A real satellite still of a hurricane. Drag an on-image ruler across the eye to measure its radius.',
+      reveal: 'Compute area and circumference, then plot against wind speed. Stronger storms have smaller eyes — a circle teaches you something physical.',
+    },
   },
   {
     course: 'geometry', topic: 11, topicName: 'Two- and Three-Dimensional Models',
@@ -216,6 +283,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Each near-Earth asteroid has a diameter range. Compute volume, then kinetic energy on impact. Rank the threat.',
     connection: 'V = (4/3)π·r³ becomes a real-stakes calculation.',
     format: ['CDS'], datasets: ['neo'],
+    design: {
+      hook: 'Each near-Earth asteroid has a diameter range — asteroids are lumpy, so the size carries uncertainty.',
+      reveal: 'V = (4/3)π·r³ feeds into KE = ½mv². Rank the threats. The numbers are real and unsettling.',
+    },
   },
   {
     course: 'geometry', topic: 12, topicName: 'Probability',
@@ -223,6 +294,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: '70+ years of Atlantic hurricane data → empirical probabilities. Chance of Cat 4+ in any year? Major hurricane in October?',
     connection: 'Frequency-based probability becomes calculable from real history.',
     format: ['CDS'], datasets: ['hurricanes'],
+    design: {
+      hook: '70+ years of Atlantic hurricane records. How often does a Cat 4+ form? How often does one hit the US?',
+      reveal: 'Count the events, divide by years. Frequency-based probability becomes a calculable answer instead of a guess.',
+    },
   },
 
   // ──────────────── Algebra 2 ────────────────
@@ -232,6 +307,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "Plot two slow trends — births vs. deaths, country A's median age vs. country B's. Fit linear best-fits and predict when they cross.",
     connection: 'Systems of linear equations as a forecasting tool.',
     format: ['CDS'], datasets: ['population', 'countries'],
+    design: {
+      hook: "Two slow trends on the same axes — US births vs. deaths, or country A's median age vs. country B's. Plot both.",
+      reveal: 'Fit linear best-fits, solve for the crossing year. Forecasting via systems of equations on data that actually shapes policy.',
+    },
   },
   {
     course: 'algebra2', topic: 2, topicName: 'Quadratic Functions and Equations',
@@ -239,6 +318,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'KE = ½mv² for each near-Earth asteroid. Convert to TNT equivalent. Solve for the velocity that matches Tunguska.',
     connection: 'Quadratic in v means doubling speed quadruples damage.',
     format: ['CDS'], datasets: ['neo'],
+    design: {
+      hook: 'Pick a near-Earth asteroid from the catalog. You have its mass and approach velocity.',
+      reveal: 'KE = ½mv², convert to TNT equivalent. Then solve: what velocity would make this one as dangerous as Tunguska? Quadratic in v means doubling speed quadruples damage.',
+    },
   },
   {
     course: 'algebra2', topic: 3, topicName: 'Polynomial Functions',
@@ -246,6 +329,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "Return to wind turbines and fit a cubic. Why is v³ the physically true model? When does it fail?",
     connection: 'Polynomials of higher degree describe deeper physics.',
     format: ['CDS'], datasets: ['wind'],
+    design: {
+      hook: 'Return to wind turbines, but this time fit a cubic instead of a quadratic.',
+      reveal: 'Why is v³ the physically true model? (Kinetic flux through swept area scales with v³.) When does cubic fail? (Mechanical limits.) Polynomial degree matches physics.',
+    },
   },
   {
     course: 'algebra2', topic: 4, topicName: 'Rational Functions',
@@ -253,6 +340,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Pick a star. If we moved it twice as far away, how dim would it look? The 1/r² law — plot an absolute-magnitude HR diagram.',
     connection: 'Rational functions describe inverse relationships — distance vs. brightness is the cleanest example.',
     format: ['CDS'], datasets: ['stars'],
+    design: {
+      hook: 'Pick a real star. If we moved it twice as far away, how dim would it look? Three times as far?',
+      reveal: '1/r² law in action. Plot apparent magnitude as a rational function of distance, then build the absolute-magnitude HR diagram for all stars at one fixed distance.',
+    },
   },
   {
     course: 'algebra2', topic: 5, topicName: 'Rational Exponents and Radical Functions',
@@ -260,6 +351,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'For every confirmed exoplanet, plot orbital period² vs. semi-major axis³ (log-log). A perfect line.',
     connection: 'T² = (constant)·a³ is a radical/rational-exponent equation living in the data.',
     format: ['CDS'], datasets: ['exoplanets'],
+    design: {
+      hook: 'Thousands of confirmed exoplanets, each with an orbital period and a semi-major axis. Plot them on a log-log scatter.',
+      reveal: "Period² vs. axis³ is a perfect line. Kepler's third law, discovered in 1619, still holds for thousand-light-year-distant worlds.",
+    },
   },
   {
     course: 'algebra2', topic: 6, topicName: 'Exponential and Logarithmic Functions',
@@ -267,6 +362,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "Moore's Law on a linear y-axis is an unreadable wall. Toggle to log y-axis: a clean diagonal. Same trick for earthquake magnitudes, decibels, pH.",
     connection: "Logs aren't a topic — they're a lens. The chapter builds the lens; the activity uses it.",
     format: ['CDS'], datasets: ['moore', 'earthquakes'],
+    design: {
+      hook: "Moore's Law on a linear y-axis is an unreadable wall of growth. Toggle to a log y-axis.",
+      reveal: 'A clean diagonal line. The slope IS the doubling time. Same trick reveals earthquake magnitudes, decibels, pH. Logs are a lens, not a topic.',
+    },
   },
   {
     course: 'algebra2', topic: 7, topicName: 'Trigonometric Functions',
@@ -283,6 +382,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Solve sin(2π·t/12.42) = 0.8 for when the tide passes a given height. Use identities to find when two tides differ by 2 ft.',
     connection: 'Trig equations as the math of "when does this periodic thing happen?"',
     format: ['CDS'], datasets: ['tides'],
+    design: {
+      hook: 'SF tide hourly data, plotted as a compound sine wave with the lunar tidal period.',
+      reveal: 'Solve sin(2π·t/12.42) = 0.8 for when the tide passes a given height. Use a double-angle identity to find when two tide cycles differ by exactly 2 ft.',
+    },
   },
   {
     course: 'algebra2', topic: 9, topicName: 'Conic Sections',
@@ -290,6 +393,10 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Fit ellipses to real exoplanet orbits. Some are wildly elongated (hot Jupiters). Some asteroids have open hyperbolic orbits — escaping forever.',
     connection: 'Ellipse, hyperbola, parabola are the orbit shapes — Newton proved it; Kepler found it first.',
     format: ['CDS'], datasets: ['exoplanets', 'neo'],
+    design: {
+      hook: 'Real exoplanet orbital parameters. Fit an ellipse to each. Compare eccentricities.',
+      reveal: 'Some hot Jupiters have wildly elongated orbits. Some near-Earth asteroids have open hyperbolic orbits — escaping the Sun forever. Conic sections are orbit shapes.',
+    },
   },
   {
     course: 'algebra2', topic: 10, topicName: 'Matrices',
@@ -306,6 +413,10 @@ export const CHAPTERS: ChapterEntry[] = [
     connection: 'Real data analysis is iterative; bias is a feature of all models.',
     format: ['TML', 'CDS'], datasets: ['spotify'],
     flagship: true,
+    design: {
+      hook: 'Spotify audio features (danceability, energy, valence, etc.) for tens of thousands of tracks. Train a classifier in the browser to predict genre.',
+      reveal: 'See the confusion matrix. Then go bias-hunting: does it fail more on Latin or R&B? Why? Real data analysis is iterative; bias is a feature of all models.',
+    },
   },
   {
     course: 'algebra2', topic: 12, topicName: 'Probability',
@@ -323,6 +434,20 @@ export const COURSE_TOPIC_COUNT: Record<CourseId, number> = {
 
 export function chaptersForCourse(course: CourseId): ChapterEntry[] {
   return CHAPTERS.filter((c) => c.course === course).sort((a, b) => a.topic - b.topic);
+}
+
+export function chaptersForDataset(datasetId: string): ChapterEntry[] {
+  return CHAPTERS.filter((c) => c.datasets.includes(datasetId));
+}
+
+const COURSE_SLUG: Record<CourseId, string> = {
+  algebra1: 'alg1', geometry: 'geo', algebra2: 'alg2',
+};
+
+/** Stable anchor id for a chapter row, used both as the DOM id on the chapters
+ *  page and as the hash target when linking in from a dataset story. */
+export function chapterAnchorId(entry: Pick<ChapterEntry, 'course' | 'topic'>): string {
+  return `${COURSE_SLUG[entry.course]}-t${entry.topic}`;
 }
 
 export const BUILT_COUNT = CHAPTERS.filter((c) => c.route).length;

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import Masthead from '../components/Masthead';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import {
@@ -9,6 +9,7 @@ import {
   FORMAT_BLURB,
   BUILT_COUNT,
   chaptersForCourse,
+  chapterAnchorId,
 } from '../data/chapters';
 import type { CourseId, FormatCode, ChapterEntry } from '../data/chapters';
 import { DATASETS } from '../data/registry';
@@ -34,6 +35,24 @@ type CourseFilter = 'all' | CourseId;
 export default function ChaptersPage() {
   useDocumentTitle('Scope & sequence');
   const [filter, setFilter] = useState<CourseFilter>('all');
+  const location = useLocation();
+
+  // If we arrived with a chapter anchor in the URL, auto-select that
+  // chapter's course so the row isn't filtered out, then scroll it into view.
+  useEffect(() => {
+    const hash = location.hash.replace('#', '');
+    if (!hash) return;
+    const target = CHAPTERS.find((c) => chapterAnchorId(c) === hash);
+    if (target) setFilter('all');
+    requestAnimationFrame(() => {
+      const el = document.getElementById(hash);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-2', 'ring-accent-400');
+        window.setTimeout(() => el.classList.remove('ring-2', 'ring-accent-400'), 2200);
+      }
+    });
+  }, [location.hash]);
 
   const courses = useMemo<CourseId[]>(
     () => filter === 'all' ? ['algebra1', 'geometry', 'algebra2'] : [filter],
@@ -129,7 +148,8 @@ function ChapterRow({ entry }: { entry: ChapterEntry }) {
 
   return (
     <article
-      className={`group bg-surface-raised border ${isBuilt ? 'border-surface-line hover:border-brand-300' : 'border-surface-line/70'} rounded-lg overflow-hidden transition`}
+      id={chapterAnchorId(entry)}
+      className={`group bg-surface-raised border ${isBuilt ? 'border-surface-line hover:border-brand-300' : 'border-surface-line/70'} rounded-lg overflow-hidden transition scroll-mt-24`}
     >
       <div className="grid md:grid-cols-[120px_1fr_220px] gap-0 items-stretch">
         {/* Topic label */}
@@ -145,12 +165,38 @@ function ChapterRow({ entry }: { entry: ChapterEntry }) {
 
         {/* Body */}
         <div className="px-5 py-4 min-w-0">
-          <div className="eyebrow text-ink-muted mb-1">{entry.topicName}</div>
+          <div className="flex items-baseline gap-3 mb-1">
+            <div className="eyebrow text-ink-muted">{entry.topicName}</div>
+            {!isBuilt && (
+              <span className="text-[9px] eyebrow text-ink-muted bg-surface-subtle border border-surface-line px-1.5 py-0.5 rounded">
+                Design brief
+              </span>
+            )}
+          </div>
           <h3 className="font-display text-lg font-bold text-brand-900 leading-snug mb-1.5">
             {entry.activity}
           </h3>
           <p className="text-sm text-ink leading-relaxed mb-2">{entry.blurb}</p>
           <p className="text-xs text-ink-muted leading-relaxed italic">{entry.connection}</p>
+
+          {entry.design && (
+            <details className="mt-3 group/brief">
+              <summary className="cursor-pointer text-[11px] eyebrow text-brand-700 hover:text-accent-700 select-none inline-flex items-center gap-1">
+                <span className="group-open/brief:hidden">Read the design brief ▾</span>
+                <span className="hidden group-open/brief:inline">Hide design brief ▴</span>
+              </summary>
+              <div className="mt-2.5 space-y-2 pl-3 border-l-2 border-surface-line">
+                <div>
+                  <div className="text-[10px] eyebrow text-ink-muted mb-0.5">Act 1 · The opening</div>
+                  <p className="text-xs text-ink leading-relaxed">{entry.design.hook}</p>
+                </div>
+                <div>
+                  <div className="text-[10px] eyebrow text-ink-muted mb-0.5">Act 3 · The reveal</div>
+                  <p className="text-xs text-ink leading-relaxed">{entry.design.reveal}</p>
+                </div>
+              </div>
+            </details>
+          )}
 
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             {entry.format.map((f) => (
