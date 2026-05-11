@@ -2,7 +2,7 @@
 
 **Audience:** Savvas leadership / publisher executives
 **Date:** Wednesday, May 13, 2026
-**Live URL:** https://prototype-8r6cisglg-dereklomas-projects.vercel.app/
+**Live URL:** https://prototype-five-iota.vercel.app/  *(stable alias — always points to the latest production deploy)*
 **Repo:** https://github.com/JDerekLomas/savvas-data-show
 **Length:** 5 minutes hands-on, 10 minutes total with Q&A
 
