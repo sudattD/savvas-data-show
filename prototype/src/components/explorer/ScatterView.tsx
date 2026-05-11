@@ -576,7 +576,13 @@ export default function ScatterView({
               />
             )}
             {groups.map((g) => (
-              <Scatter key={g.name} name={g.name} data={g.points} fill={g.color} fillOpacity={0.6} />
+              // isAnimationActive={false}: large-N scatter (stars 750, spotify
+              // 600) was deferring its initial paint behind Recharts' enter
+              // animation, leaving the chart blank for a beat after the rest
+              // of the page rendered. Disabling the entrance animation paints
+              // every point immediately on first render. See N3 in
+              // .github/issues/issues_to_create.md.
+              <Scatter key={g.name} name={g.name} data={g.points} fill={g.color} fillOpacity={0.6} isAnimationActive={false} />
             ))}
             {regressionOn && manualSegment && (
               <ReferenceLine
