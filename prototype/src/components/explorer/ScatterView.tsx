@@ -135,6 +135,26 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
   const [manualIntercept, setManualIntercept] = useState(0);
   const [markerOn, setMarkerOn] = useState(false);
   const [markerX, setMarkerX] = useState(0);
+  const [meansOn, setMeansOn] = useState(false);
+
+  // Mean and median for both axes — for the cross-hair overlay.
+  const meanMedian = useMemo(() => {
+    if (allPoints.length === 0) return null;
+    const xs = allPoints.map((p) => p.x).sort((a, b) => a - b);
+    const ys = allPoints.map((p) => p.y).sort((a, b) => a - b);
+    const sum = (arr: number[]) => arr.reduce((s, v) => s + v, 0);
+    const median = (arr: number[]) => {
+      const n = arr.length;
+      if (n === 0) return 0;
+      return n % 2 ? arr[(n - 1) / 2] : (arr[n / 2 - 1] + arr[n / 2]) / 2;
+    };
+    return {
+      meanX: sum(xs) / xs.length,
+      meanY: sum(ys) / ys.length,
+      medianX: median(xs),
+      medianY: median(ys),
+    };
+  }, [allPoints]);
 
   // When regression is turned on, initialize to flat line at mean(y).
   useEffect(() => {
@@ -215,6 +235,18 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
           }`}
         >
           {markerOn ? 'Drop a marker ✓' : 'Drop a marker'}
+        </button>
+
+        <button
+          onClick={() => setMeansOn((v) => !v)}
+          className={`px-3 py-1.5 rounded-md font-semibold transition ${
+            meansOn
+              ? 'bg-emerald-700 text-white shadow-editorial'
+              : 'bg-surface-raised border border-surface-line text-ink hover:border-emerald-300'
+          }`}
+          title="Show mean and median crosshairs on both axes"
+        >
+          {meansOn ? 'Mean / median ✓' : 'Mean / median'}
         </button>
 
         {markerOn && ranges && (
@@ -372,6 +404,14 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
                 strokeWidth={2}
                 label={{ value: formatScalar(markerX), fill: '#9F1239', fontSize: 11, position: 'top' }}
               />
+            )}
+            {meansOn && meanMedian && (
+              <>
+                <ReferenceLine x={meanMedian.meanX}   stroke="#F59E0B" strokeWidth={1.5} strokeDasharray="3 3" label={{ value: 'mean x',   fill: '#F59E0B', fontSize: 10, position: 'top' }} />
+                <ReferenceLine x={meanMedian.medianX} stroke="#10B981" strokeWidth={1.5} strokeDasharray="3 3" label={{ value: 'median x', fill: '#10B981', fontSize: 10, position: 'insideTopRight' }} />
+                <ReferenceLine y={meanMedian.meanY}   stroke="#F59E0B" strokeWidth={1.5} strokeDasharray="3 3" label={{ value: 'mean y',   fill: '#F59E0B', fontSize: 10, position: 'right' }} />
+                <ReferenceLine y={meanMedian.medianY} stroke="#10B981" strokeWidth={1.5} strokeDasharray="3 3" label={{ value: 'median y', fill: '#10B981', fontSize: 10, position: 'insideBottomRight' }} />
+              </>
             )}
           </ScatterChart>
         </ResponsiveContainer>

@@ -40,16 +40,47 @@ export default function DataTable({ dataset, rows, totalCount }: DataTableProps)
   const RENDER_LIMIT = 200;
   const visible = sorted.slice(0, RENDER_LIMIT);
 
+  const downloadCsv = () => {
+    const cols = dataset.attributes.map((a) => a.key);
+    const escape = (v: unknown) => {
+      const s = v == null ? '' : String(v);
+      // RFC 4180: quote if it contains comma, quote, or newline; double interior quotes.
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = cols.map(escape).join(',');
+    const body = sorted.map((r) => cols.map((c) => escape(r[c])).join(',')).join('\n');
+    const blob = new Blob([`${header}\n${body}\n`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    const filtered = rows.length !== totalCount ? '-filtered' : '';
+    a.href = url;
+    a.download = `${dataset.id}${filtered}-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="bg-white border-t border-slate-200">
-      <div className="px-4 py-2 flex items-center justify-between text-xs text-slate-500 bg-slate-50 border-b border-slate-200">
+      <div className="px-4 py-2 flex items-center justify-between gap-3 text-xs text-slate-500 bg-slate-50 border-b border-slate-200">
         <span>
           <span className="font-semibold text-slate-700">{rows.length}</span> rows
           {rows.length !== totalCount && <span> (filtered from {totalCount})</span>}
         </span>
-        {rows.length > RENDER_LIMIT && (
-          <span className="text-slate-400">showing first {RENDER_LIMIT}</span>
-        )}
+        <div className="flex items-center gap-3">
+          {rows.length > RENDER_LIMIT && (
+            <span className="text-slate-400">showing first {RENDER_LIMIT}</span>
+          )}
+          <button
+            onClick={downloadCsv}
+            className="px-2.5 py-1 rounded-md font-semibold text-brand-700 hover:text-brand-900 hover:bg-brand-50 border border-surface-line transition"
+            title={rows.length === totalCount ? 'Download all rows as CSV' : 'Download the filtered rows as CSV'}
+          >
+            Download CSV ↓
+          </button>
+        </div>
       </div>
       <div className="max-h-72 overflow-auto">
         <table className="w-full text-xs">
