@@ -865,6 +865,38 @@ export const CO2_DATASET: Dataset = {
     { key: 'co2', label: 'CO2', kind: 'numeric', unit: 'ppm', description: 'Atmospheric CO₂ concentration in parts per million by mole fraction (dry air). Measured by infrared absorption on air samples drawn at the Mauna Loa Observatory, 11,135 ft elevation. The seasonal sawtooth is northern-hemisphere plant respiration.' },
   ],
   featured: { x: 'decYear', y: 'co2' },
+  chapterFits: [
+    {
+      course: 'algebra2',
+      topic: 7,
+      topicName: 'Trigonometric Functions',
+      flagship: true,
+      mathFit: 'The cleanest "linear trend + sinusoidal cycle" in earth science. Slider-fit y = m·t + b + A·sin(2π·(t − φ)). Period 1 year, amplitude ~7 ppm.',
+      standards: ['HSF-TF.B.5', 'HSF-IF.B.4', 'HSF-BF.A.1b', 'S-ID.B.6a'],
+      objective: 'Students will decompose a real time series into a linear trend and a sinusoidal cycle, and identify period, amplitude, and phase from data.',
+      studentWhy: 'This data has two patterns at once — a slow climb and a yearly breath in and out. Your trig chapter gives you the tools to find both.',
+      minutes: 30,
+      discussion: [
+        'What is responsible for the annual breath? Why does it have that exact shape and phase?',
+        'If we plotted Southern Hemisphere CO₂, what would the seasonal cycle look like? Why?',
+        'You found amplitude ~7 ppm. The Northern Hemisphere has more land than the Southern. Is that related?',
+      ],
+    },
+    {
+      course: 'algebra2',
+      topic: 6,
+      topicName: 'Exponential and Logarithmic Functions',
+      mathFit: 'The trend has accelerated since 1960 — fit linear vs. exponential to the trend component. Which wins, and what does that mean about emissions?',
+      standards: ['HSF-LE.A.1', 'HSF-LE.A.2', 'HSF-LE.B.5'],
+      objective: 'Students will distinguish linear from exponential growth in real data, fit both, and interpret what the parameters say about the underlying process.',
+      studentWhy: 'Is CO₂ rising in a straight line, or is it speeding up? Same data, two models, very different futures. The math tells you which.',
+      minutes: 25,
+      discussion: [
+        'If the trend were purely linear, what would CO₂ be in 2100? If exponential? Which feels more plausible, and why?',
+        'A linear fit has one constant slope. An exponential has a constant doubling time. Which is easier to "feel" in everyday language?',
+      ],
+    },
+  ],
   rows: RAW.map((r) => ({
     year: r.year,
     month: r.month,

@@ -45,6 +45,42 @@ export interface StoryBeat {
   highlight?: string;
 }
 
+/** Which Savvas course an activity slots into. */
+export type Course = 'algebra1' | 'geometry' | 'algebra2';
+
+export const COURSE_LABEL: Record<Course, string> = {
+  algebra1: 'Algebra 1',
+  geometry: 'Geometry',
+  algebra2: 'Algebra 2',
+};
+
+/** One chapter this dataset earns its place in — teacher view + student view of
+ *  the same connection. Most datasets serve 2–4 chapters; each gets its own
+ *  ChapterFit entry. */
+export interface ChapterFit {
+  course: Course;
+  /** Topic number within the course (1-indexed, matches enVision Topic N). */
+  topic: number;
+  /** Display name of the topic, e.g. "Quadratic Functions". */
+  topicName: string;
+  /** Short statement of why the dataset fits this topic (the existing
+   *  chapter_dataset_map.md "math fit" cell). */
+  mathFit: string;
+  /** CCSS-M standards codes addressed (e.g. "HSF-IF.B.4"). */
+  standards: string[];
+  /** Plain-English student-facing one-liner: why is this dataset in their
+   *  chapter? Speaks directly to the student. */
+  studentWhy: string;
+  /** Teacher-facing objective in "Students will…" form. */
+  objective: string;
+  /** Estimated class minutes for the activity. */
+  minutes: number;
+  /** 1–3 discussion prompts the teacher can use live. */
+  discussion: string[];
+  /** Optional flag: this is the flagship pairing for this dataset. */
+  flagship?: boolean;
+}
+
 /** High-level subject family the dataset belongs to. Drives spine color in the
  *  library so reviewers can scan-read coverage by subject. */
 export type DatasetFamily = 'earth' | 'space' | 'life' | 'people' | 'technology';
@@ -83,6 +119,9 @@ export interface Dataset {
   rows: Row[];
   /** Optional canonical scatter view — used as the Explorer's default X/Y/color. */
   featured?: { x: string; y: string; color?: string };
+  /** Which Savvas chapters this dataset earns its place in. Each entry pairs
+   *  a chapter to a teacher-facing objective + student-facing why. */
+  chapterFits?: ChapterFit[];
 }
 
 /** Resolve the visual accent for a dataset — prefers family if set. */

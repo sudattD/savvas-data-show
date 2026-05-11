@@ -5,6 +5,7 @@ import type { Provenance, StoryBeat, DatasetFamily } from '../../lib/dataset';
 import { datasetAccent, FAMILY_LABEL } from '../../lib/dataset';
 import Masthead from '../../components/Masthead';
 import DatasetSparkline from '../../components/DatasetSparkline';
+import ChapterFitsSection from '../../components/ChapterFitsSection';
 import { useDocumentTitle } from '../../lib/useDocumentTitle';
 
 const ACCENT_BAR: Record<string, string> = {
@@ -128,6 +129,9 @@ export default function DatasetStory() {
             </div>
           </section>
         )}
+
+        {/* Chapter fits — teacher + student views */}
+        <ChapterFitsSection dataset={dataset} />
 
         {/* Provenance */}
         <ProvenanceCard provenance={dataset.provenance} />

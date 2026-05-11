@@ -397,6 +397,38 @@ export const PENGUINS_DATASET: Dataset = {
     { key: 'bodyMassG', label: 'Body mass', kind: 'numeric', unit: 'g', description: 'Body mass in grams. Gentoos are by far the heaviest of the three species; Adélies and Chinstraps overlap.' },
   ],
   featured: { x: 'billLengthMm', y: 'billDepthMm', color: 'species' },
+  chapterFits: [
+    {
+      course: 'algebra1',
+      topic: 11,
+      topicName: 'Statistics',
+      flagship: true,
+      mathFit: 'The classic teaching set for distributions, group comparison, and classification. Bill-length × bill-depth scatter colored by species shows three crisp clusters.',
+      standards: ['S-ID.A.1', 'S-ID.A.2', 'S-ID.A.3', 'S-ID.B.6a'],
+      objective: 'Students will use scatter plots, group comparisons, and summary statistics to characterize and distinguish three real-world populations.',
+      studentWhy: 'Three species of penguin, four measurements each. The math you use to tell them apart is the same math data scientists use every day.',
+      minutes: 20,
+      discussion: [
+        'Which two variables most cleanly separate the three species? Why might those features differ between species?',
+        'If you could only use one measurement to ID a penguin, which would you pick? What would you still get wrong?',
+        'Compare body-mass distributions for Gentoo vs. Adélie. What single number best captures the difference?',
+      ],
+    },
+    {
+      course: 'geometry',
+      topic: 7,
+      topicName: 'Similarity',
+      mathFit: 'Body mass scales with linear measurement cubed; bone strength only with the square. The gap between r³ and r² is biology — and why we do not have giants.',
+      standards: ['G-SRT.A.2', 'G-MG.A.1', 'G-MG.A.2'],
+      objective: 'Students will apply scale-factor reasoning to relate length, area, and volume in real biological data, and explain why similar shapes scale predictably.',
+      studentWhy: 'A bigger penguin is not just a stretched smaller penguin. Mass scales differently than length. The math says exactly how differently.',
+      minutes: 25,
+      discussion: [
+        'If you scaled a penguin up 2× in every dimension, how would mass change? Bone strength? Which one wins?',
+        'Why are the largest animals on Earth in the ocean, not on land? What does similarity have to do with that?',
+      ],
+    },
+  ],
   rows: RAW.map((r) => ({
     species: r.species,
     island: r.island,
