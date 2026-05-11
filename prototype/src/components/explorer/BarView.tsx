@@ -75,7 +75,7 @@ export default function BarView({ rows, xAttr }: BarViewProps) {
           />
           <Bar dataKey="count">
             {data.map((d) => (
-              <Cell key={d.cat} fill={categoryColor(d.cat, cats)} />
+              <Cell key={d.cat} fill={categoryColor(d.cat, cats, { ordinal: !!xAttr.ordinal })} />
             ))}
           </Bar>
         </BarChart>

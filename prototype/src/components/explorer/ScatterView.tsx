@@ -76,10 +76,11 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
         },
       ];
     }
-    const cats = uniqueValues(rows, colorAttr.key);
+    const isOrdinal = !!colorAttr.ordinal;
+    const cats = uniqueValues(rows, colorAttr.key, { ordinal: isOrdinal });
     return cats.map((c) => ({
       name: c,
-      color: categoryColor(c, cats),
+      color: categoryColor(c, cats, { ordinal: isOrdinal }),
       points: rows
         .filter((r) => String(r[colorAttr.key]) === c)
         .map((r) => ({ x: Number(r[xAttr.key]), y: Number(r[yAttr.key]), row: r })),

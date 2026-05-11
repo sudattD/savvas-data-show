@@ -54,10 +54,13 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
     return 2 + t * 7;
   };
 
+  const cats = useMemo(
+    () => (colorAttr ? uniqueValues(rows, colorAttr.key, { ordinal: !!colorAttr.ordinal }) : []),
+    [rows, colorAttr],
+  );
   const colorOf = (row: Row) => {
     if (!colorAttr) return DEFAULT_POINT;
-    const cats = uniqueValues(rows, colorAttr.key);
-    return categoryColor(String(row[colorAttr.key]), cats);
+    return categoryColor(String(row[colorAttr.key]), cats, { ordinal: !!colorAttr.ordinal });
   };
 
   const [hovered, setHovered] = useState<{ lat: number; lon: number; row: Row } | null>(null);

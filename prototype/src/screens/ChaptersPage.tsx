@@ -95,7 +95,7 @@ export default function ChaptersPage() {
 
   return (
     <div className="min-h-screen">
-      <Masthead section="Scope & Sequence" eyebrow="One activity per chapter · 3 courses · 35 chapters" />
+      <Masthead section="Scope & Sequence" eyebrow={`One activity per chapter · 3 courses · ${CHAPTERS.length} chapters`} />
 
       <section className="border-b border-surface-line bg-surface">
         <div className="max-w-6xl mx-auto px-6 pt-12 pb-8">

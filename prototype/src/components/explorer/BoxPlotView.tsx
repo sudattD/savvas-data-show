@@ -108,7 +108,7 @@ export default function BoxPlotView({ rows, yAttr, groupAttr }: BoxPlotViewProps
           const yMed = yScale(b.median, 320) + 10;
           const yQ3 = yScale(b.q3, 320) + 10;
           const yMaxPx = yScale(b.max, 320) + 10;
-          const color = categoryColor(b.group, allCats);
+          const color = categoryColor(b.group, allCats, { ordinal: !!groupAttr.ordinal });
           return (
             <g key={b.group}>
               {/* whiskers */}
