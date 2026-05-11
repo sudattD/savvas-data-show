@@ -7,16 +7,7 @@ interface VoiceWonderProps {
 
 export default function VoiceWonder({ onStart }: VoiceWonderProps) {
   const [notice, setNotice] = useState('');
-  const [wonder, setWonder] = useState('');
-  const [mainQuestion, setMainQuestion] = useState('Will my voice look the same every time I say the same vowel?');
   const [prediction, setPrediction] = useState('');
-  const [falsifier, setFalsifier] = useState('');
-
-  const valid =
-    notice.trim().length > 5 &&
-    wonder.trim().length > 5 &&
-    mainQuestion.trim().length > 5 &&
-    prediction.trim().length > 5;
 
   return (
     <div className="space-y-6">
@@ -36,95 +27,57 @@ export default function VoiceWonder({ onStart }: VoiceWonderProps) {
       </div>
 
       <HostBubble accent="purple" name="Sami">
-        Hey — I'm Sami. Here's a wild fact: when you say <em>"aaa,"</em> the
-        sound your voice makes has a shape. A picture. And every single human
-        on Earth has a slightly different shape, because it depends on the
-        exact size of your mouth, throat, and nasal passages. Today we're
-        going to <strong>see</strong> your voice. But before we turn on the
-        mic, look at these two real spectrograms — two different people
-        saying the same vowel — and tell me what you notice.
+        Two people just said <em>"aaa."</em> Their voices made these pictures.
+        Take ten seconds — what jumps out? Then we'll turn on the mic and
+        compare yours.
       </HostBubble>
 
       <TwoVoicesTeaser />
 
-      <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-5">
-        <Question n={1} label="Three things you NOTICE about the two spectrograms above.">
+      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+        <div>
+          <label className="text-sm font-semibold text-ink block mb-1.5">
+            What do you notice? <span className="text-[10px] text-slate-500 italic font-normal">(one line is fine)</span>
+          </label>
           <textarea
             value={notice}
             onChange={(e) => setNotice(e.target.value)}
-            placeholder="e.g. Both have horizontal stripes. Voice A's stripes are spaced closer together. Voice B is louder at the bottom."
+            placeholder="e.g. Both have stripes, but Voice A's are closer together."
             className="w-full p-3 rounded-md border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-sm resize-none"
-            rows={3}
+            rows={2}
           />
-        </Question>
+        </div>
 
-        <Question n={2} label="Three things you WONDER. Real questions, not rhetorical.">
-          <textarea
-            value={wonder}
-            onChange={(e) => setWonder(e.target.value)}
-            placeholder="e.g. Why are there stripes at all? Does pitch change the spacing? Can I see my own?"
-            className="w-full p-3 rounded-md border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-sm resize-none"
-            rows={3}
-          />
-        </Question>
-
-        <Question n={3} label="Of those wonderings, which ONE will you actually investigate today?">
+        <div className="border-t border-slate-100 pt-4">
+          <div className="text-[10px] font-semibold tracking-widest text-purple-700 mb-1">
+            TODAY'S QUESTION
+          </div>
+          <div className="text-sm font-semibold text-ink mb-3">
+            Will your voice look the same every time you say the same vowel?
+          </div>
+          <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+            Predict before you test <span className="text-[10px] text-slate-500 italic font-normal">(optional)</span>
+          </label>
           <input
-            value={mainQuestion}
-            onChange={(e) => setMainQuestion(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-md border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-sm"
-          />
-        </Question>
-
-        <Question n={4} label="What PATTERN do you expect to find? Commit before the data lands.">
-          <textarea
             value={prediction}
             onChange={(e) => setPrediction(e.target.value)}
-            placeholder="e.g. My 'aaa' will look like the same shape every time. Different vowels will look obviously different."
-            className="w-full p-3 rounded-md border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-sm resize-none"
-            rows={2}
+            placeholder="e.g. Same shape every time. Different vowels will look different."
+            className="w-full px-3 py-2 rounded-md border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-sm"
           />
-        </Question>
-
-        <Question n={5} label="What would CHANGE YOUR MIND? What evidence would you accept that your prediction is wrong?" optional>
-          <textarea
-            value={falsifier}
-            onChange={(e) => setFalsifier(e.target.value)}
-            placeholder="e.g. If I record 'aaa' five times and the spectrograms look completely different, I'd accept that voices vary even saying the same thing."
-            className="w-full p-3 rounded-md border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-sm resize-none"
-            rows={2}
-          />
-        </Question>
+        </div>
       </div>
 
-      <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 text-sm leading-relaxed">
-        <strong className="text-purple-900">A heads-up:</strong> next step needs
-        access to your <strong>microphone</strong>. Audio stays on your device
-        — nothing is uploaded.
-      </div>
-
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="text-xs text-slate-500">
+          Mic stays on your device — nothing uploaded.
+        </div>
         <button
           onClick={onStart}
-          disabled={!valid}
-          className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition disabled:from-slate-300 disabled:to-slate-400 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed"
+          className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition"
         >
           Turn on the mic →
         </button>
       </div>
-    </div>
-  );
-}
-
-function Question({ n, label, optional, children }: { n: number; label: string; optional?: boolean; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="flex items-baseline gap-2 mb-1.5">
-        <span className="text-[10px] font-mono text-slate-500">{n}</span>
-        <label className="text-sm font-semibold text-ink">{label}</label>
-        {optional && <span className="text-[10px] text-slate-500 italic">(optional)</span>}
-      </div>
-      {children}
     </div>
   );
 }
