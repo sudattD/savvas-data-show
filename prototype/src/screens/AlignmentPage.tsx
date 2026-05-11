@@ -1,17 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import Masthead from '../components/Masthead';
 import SavvasVideoEmbed from '../components/SavvasVideoEmbed';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
-import {
-  COURSE_TITLE,
-  chaptersForCourse,
-  chapterAnchorId,
-} from '../data/chapters';
+import { COURSE_TITLE, chaptersForCourse } from '../data/chapters';
 import type { CourseId, ChapterEntry } from '../data/chapters';
+import { DATASETS } from '../data/registry';
 import { ALIGNMENT, alignmentFor, strengthCount } from '../data/act1Alignment';
 import type { AlignmentStrength } from '../data/act1Alignment';
-import { DATASETS } from '../data/registry';
 
 const COURSE_ACCENT: Record<CourseId, { bar: string; text: string }> = {
   algebra1: { bar: 'bg-sky-500', text: 'text-sky-700' },
@@ -55,13 +49,23 @@ export default function AlignmentPage() {
 
   return (
     <div className="min-h-screen">
-      <Masthead section="3-Act + real data" eyebrow="An alignment between Savvas's Act 1 and a real-data Act 1.5" />
+      <header className="border-b border-surface-line bg-surface/90 backdrop-blur-sm sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex items-baseline gap-4">
+          <div className="font-display font-black text-brand-900 text-lg leading-none">
+            3-Act + real data
+          </div>
+          <div className="hidden md:block text-xs text-ink-muted">
+            An alignment proposal for enVision AGA 2024
+          </div>
+          <div className="ml-auto text-[11px] eyebrow text-ink-muted">working draft</div>
+        </div>
+      </header>
 
       <section className="border-b border-surface-line bg-surface">
         <div className="max-w-6xl mx-auto px-6 pt-12 pb-8">
           <div className="grid md:grid-cols-12 gap-6 items-end">
             <div className="md:col-span-8">
-              <div className="eyebrow text-accent-600 mb-3">The alternative approach</div>
+              <div className="eyebrow text-accent-600 mb-3">A proposal</div>
               <h1 className="editorial-hero text-4xl md:text-5xl text-brand-900 leading-tight">
                 Keep their <em className="not-italic text-accent-600">Act 1.</em><br />
                 Add <em className="not-italic text-emerald-700">Act 1.5</em> — real data.
@@ -76,10 +80,10 @@ export default function AlignmentPage() {
               <p className="mt-3 text-base md:text-lg text-ink-soft max-w-prose leading-relaxed">
                 Below: every Savvas Act 1 video paired with the real-data
                 continuation it implies. Strong fits ({strengthCount('strong')})
-                are ready or near-ready in our prototype. Possible fits
-                ({strengthCount('possible')}) need a small new dataset.
-                The rest ({strengthCount('weak')}) are pure-math hooks
-                without a natural real-world extension.
+                map directly to a real dataset; possible fits
+                ({strengthCount('possible')}) need a small new dataset; the
+                rest ({strengthCount('weak')}) are pure-math hooks without a
+                natural real-world extension.
               </p>
             </div>
             <div className="md:col-span-4 space-y-3">
@@ -88,12 +92,6 @@ export default function AlignmentPage() {
                 <Tile label="possible" value={strengthCount('possible')} tone="accent" />
                 <Tile label="abstract" value={strengthCount('weak')} tone="muted" />
               </div>
-              <Link
-                to="/chapters"
-                className="block text-center text-xs font-semibold text-brand-700 hover:text-accent-700 hover:underline"
-              >
-                See the full scope-and-sequence on /chapters →
-              </Link>
             </div>
           </div>
 
@@ -138,7 +136,7 @@ export default function AlignmentPage() {
       </main>
 
       <footer className="border-t border-surface-line py-6 text-center text-xs text-ink-muted">
-        Source: 35 official Savvas enVision AGA 2024 3-Act Math videos, captured from textbook QR codes and transcribed with Gemini 3 Flash · alignment analysis hand-authored in <code className="font-mono">data/act1Alignment.ts</code>
+        Source: 35 official Savvas enVision AGA 2024 3-Act Math videos captured from textbook QR codes · Transcribed with Gemini 3 Flash · Working draft, not for distribution
       </footer>
     </div>
   );
@@ -214,43 +212,27 @@ function AlignmentCard({ entry }: { entry: ChapterEntry }) {
           <p className="text-sm text-ink leading-relaxed mb-3">{a.exploration}</p>
 
           <div className="flex flex-wrap items-center gap-2 mt-3">
-            {entry.route && (
-              <Link
-                to={entry.route}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-900 text-white text-xs font-semibold hover:bg-brand-700 transition shadow-sm"
-              >
-                <span>Open activity</span>
-                <span aria-hidden>→</span>
-              </Link>
+            {datasetObjs.length > 0 && (
+              <span className="text-[11px] text-ink-muted">
+                Real data:{' '}
+                {datasetObjs.map((d, i) => (
+                  <span key={d.id} className="text-ink font-semibold">
+                    {d.name}{i < datasetObjs.length - 1 ? ' · ' : ''}
+                  </span>
+                ))}
+              </span>
             )}
-            {datasetObjs.map((d) => (
-              <Link
-                key={d.id}
-                to={`/explorer?dataset=${d.id}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-surface-raised border border-surface-line text-ink-soft text-[11px] font-semibold hover:bg-surface-subtle hover:text-brand-700 hover:border-brand-300 transition"
-                title={`Open the explorer with the ${d.name} dataset`}
-              >
-                <span>Explore {d.name}</span>
-                <span aria-hidden className="shrink-0">→</span>
-              </Link>
-            ))}
             {a.needsDataset && (
               <span
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-accent-50 border border-accent-200 text-accent-800 text-[11px] font-semibold"
-                title="Conceptually clear but the dataset isn't in our library yet"
+                title="Conceptually clear but the dataset would need to be built"
               >
                 Needs: {a.needsDataset}
               </span>
             )}
-            {datasetObjs.length === 0 && !a.needsDataset && !entry.route && (
+            {datasetObjs.length === 0 && !a.needsDataset && (
               <span className="text-[11px] text-ink-muted italic">No data extension</span>
             )}
-            <Link
-              to={`/chapters#${chapterAnchorId(entry)}`}
-              className="ml-auto text-[11px] text-ink-muted hover:text-brand-700 hover:underline"
-            >
-              Chapter row →
-            </Link>
           </div>
         </div>
       </div>
