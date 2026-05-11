@@ -660,7 +660,11 @@ export const SPOTIFY_DATASET: Dataset = {
     { key: 'loudness', label: 'Loudness', kind: 'numeric', unit: 'dB', description: 'Overall loudness in decibels relative to full scale (always negative; closer to 0 = louder). Modern masters cluster near –5 dB; older recordings sit lower — the "loudness war".' },
     { key: 'durationSec', label: 'Duration', kind: 'numeric', unit: 's', description: 'Track length in seconds. Streaming-era tracks have trended shorter over the last decade.' },
   ],
-  featured: { x: 'energy', y: 'valence', color: 'genre' },
+  // Energy × danceability separates the six genres visually far better than
+  // energy × valence does — EDM/Rap cluster high-high, Rock high-low danceability,
+  // R&B/Latin mid-mid. Students can switch to (energy, valence) for the mood-
+  // quadrant view once they have a foothold.
+  featured: { x: 'energy', y: 'danceability', color: 'genre' },
   chapterFits: [
     {
       course: 'algebra2',
