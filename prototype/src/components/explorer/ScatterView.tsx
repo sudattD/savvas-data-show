@@ -154,24 +154,6 @@ export default function ScatterView({
     [groups],
   );
 
-  // Fit the regression in the same coordinate space the user is viewing.
-  // When both axes are linear, this is raw x/y. When either is log, we
-  // transform that axis via log10 before computing slope, intercept, R².
-  // For Kepler's third law (solarSystem, log-log) this is what surfaces the
-  // slope of 1.5; for Kleiber's law (heartRate, log-log) the slope of −0.25.
-  const fitPoints = useMemo(() => {
-    return allPoints
-      .map((p) => {
-        const x = effectiveXScale === 'log' ? (p.x > 0 ? Math.log10(p.x) : NaN) : p.x;
-        const y = effectiveYScale === 'log' ? (p.y > 0 ? Math.log10(p.y) : NaN) : p.y;
-        return { x, y };
-      })
-      .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
-  }, [allPoints, effectiveXScale, effectiveYScale]);
-
-  const auto = useMemo(() => leastSquares(fitPoints), [fitPoints]);
-  const autoR2 = useMemo(() => (auto ? r2(fitPoints, auto.slope, auto.intercept) : 0), [fitPoints, auto]);
-
   // Data ranges for slider bounds.
   const ranges = useMemo(() => {
     if (allPoints.length === 0) return null;
@@ -184,24 +166,6 @@ export default function ScatterView({
     }
     return { xMin, xMax, yMin, yMax, xRange: xMax - xMin, yRange: yMax - yMin };
   }, [allPoints]);
-
-  // Slope slider: centered on auto.slope when available, bounded to 3× the
-  // natural rise/run so the line doesn't fly off-screen on extreme drags.
-  const slopeBounds = useMemo(() => {
-    if (!ranges || ranges.xRange === 0 || ranges.yRange === 0) return { min: -1, max: 1, step: 0.01 };
-    const natural = ranges.yRange / ranges.xRange;
-    const max = Math.max(Math.abs(natural * 3), Math.abs(auto?.slope ?? 0) * 2);
-    const step = max / 100;
-    return { min: -max, max, step };
-  }, [ranges, auto]);
-
-  const interceptBounds = useMemo(() => {
-    if (!ranges) return { min: -1, max: 1, step: 0.01 };
-    const pad = ranges.yRange;
-    const min = ranges.yMin - pad;
-    const max = ranges.yMax + pad;
-    return { min, max, step: (max - min) / 200 };
-  }, [ranges]);
 
   const [regressionOn, setRegressionOn] = useState(false);
   const [autoOverlay, setAutoOverlay] = useState(false);
@@ -242,6 +206,52 @@ export default function ScatterView({
   const yCanLog = ranges !== null && ranges.yMin > 0;
   const effectiveXScale = xCanLog ? xScale : 'linear';
   const effectiveYScale = yCanLog ? yScale : 'linear';
+
+  // Fit the regression in the same coordinate space the user is viewing.
+  // When both axes are linear, this is raw x/y. When either is log, we
+  // transform that axis via log10 before computing slope/intercept/R².
+  // For Kepler's third law (solarSystem, log-log) this surfaces the slope of
+  // 1.5; for Kleiber's law (heartRate, log-log) the slope of −0.25.
+  const fitPoints = useMemo(() => {
+    return allPoints
+      .map((p) => {
+        const x = effectiveXScale === 'log' ? (p.x > 0 ? Math.log10(p.x) : NaN) : p.x;
+        const y = effectiveYScale === 'log' ? (p.y > 0 ? Math.log10(p.y) : NaN) : p.y;
+        return { x, y };
+      })
+      .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+  }, [allPoints, effectiveXScale, effectiveYScale]);
+
+  const auto = useMemo(() => leastSquares(fitPoints), [fitPoints]);
+  const autoR2 = useMemo(() => (auto ? r2(fitPoints, auto.slope, auto.intercept) : 0), [fitPoints, auto]);
+
+  const fitRanges = useMemo(() => {
+    if (fitPoints.length === 0) return null;
+    let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+    for (const p of fitPoints) {
+      if (p.x < xMin) xMin = p.x;
+      if (p.x > xMax) xMax = p.x;
+      if (p.y < yMin) yMin = p.y;
+      if (p.y > yMax) yMax = p.y;
+    }
+    return { xMin, xMax, yMin, yMax, xRange: xMax - xMin, yRange: yMax - yMin };
+  }, [fitPoints]);
+
+  const slopeBounds = useMemo(() => {
+    if (!fitRanges || fitRanges.xRange === 0 || fitRanges.yRange === 0) return { min: -3, max: 3, step: 0.01 };
+    const natural = fitRanges.yRange / fitRanges.xRange;
+    const max = Math.max(Math.abs(natural * 3), Math.abs(auto?.slope ?? 0) * 2);
+    const step = max / 200;
+    return { min: -max, max, step };
+  }, [fitRanges, auto]);
+
+  const interceptBounds = useMemo(() => {
+    if (!fitRanges) return { min: -1, max: 1, step: 0.01 };
+    const pad = fitRanges.yRange;
+    const min = fitRanges.yMin - pad;
+    const max = fitRanges.yMax + pad;
+    return { min, max, step: (max - min) / 200 };
+  }, [fitRanges]);
 
   // Mean and median for both axes — for the cross-hair overlay.
   const meanMedian = useMemo(() => {
@@ -293,8 +303,8 @@ export default function ScatterView({
   const markerYPredicted = manualSlope * markerX + manualIntercept;
 
   const manualR2 = useMemo(
-    () => r2(allPoints, manualSlope, manualIntercept),
-    [allPoints, manualSlope, manualIntercept],
+    () => r2(fitPoints, manualSlope, manualIntercept),
+    [fitPoints, manualSlope, manualIntercept],
   );
 
   // Line endpoints for ReferenceLine: span the data x-range. The slope and
