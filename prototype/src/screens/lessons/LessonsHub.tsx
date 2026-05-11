@@ -16,9 +16,9 @@ interface LessonCard {
 export const LESSONS: LessonCard[] = [
   {
     to: '/lessons/slider-of-lies',
-    number: 'L1', family: 'VISUAL DECEPTION', title: 'The Slider of Lies',
-    body: 'Same dataset, two charts, opposite stories. Drag a single slider and watch the climate trend appear and disappear.',
-    concept: 'Truncated y-axis', duration: '~4 min', accent: 'rose',
+    number: 'L1', family: 'VISUAL DECEPTION', title: 'Same Data, Different Story',
+    body: 'Real CO₂ data, one chart, and two sliders for cropping the axes. Watch the climate trend look dramatic — or flat — without changing a number.',
+    concept: 'Cropping the axes', duration: '~4 min', accent: 'rose',
   },
   {
     to: '/lessons/walk-into-a-bar',

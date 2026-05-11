@@ -16,7 +16,7 @@ export interface CompanionLesson {
 }
 
 export const COMPANION_LESSONS: CompanionLesson[] = [
-  { id: 'slider-of-lies',   number: 'L1', title: 'The Slider of Lies',                concept: 'Truncated y-axis',       duration: '~4 min', family: 'Visual deception' },
+  { id: 'slider-of-lies',   number: 'L1', title: 'Same Data, Different Story',        concept: 'Cropping the axes',       duration: '~4 min', family: 'Visual deception' },
   { id: 'walk-into-a-bar',  number: 'L2', title: 'A Billionaire Walks Into a Bar',    concept: 'Mean vs median',          duration: '~3 min', family: 'Statistical thinking' },
   { id: 'tidy-data',        number: 'L3', title: 'Tidy Data',                          concept: 'Wide vs long format',     duration: '~5 min', family: 'Data hygiene' },
   { id: 'csv-from-hell',    number: 'L4', title: 'The CSV from Hell',                  concept: 'Real-world data cleaning', duration: '~6 min', family: 'Data hygiene' },

@@ -32,6 +32,7 @@ This file is appended as I go. Terminal Claude is free to start fixing the highe
   - For Moore, value range 1970–2024 mapped onto a 0–2024 domain explains the ~3% cluster at the right — possible the axis `domain` isn't being computed from data extent.
 - **Why this is a blocker:** Three of the four "specific scenarios" in the handoff (Penguins clusters / Moore exponential / Countries box plot) rely on the scatter working. The demo audience will try these. Wind works (and that's the featured 3-Act activity), but the Explorer story is "same engine, every dataset" — and right now half of them silently fail.
 - **Fix entry points to look at:** the chart component in `prototype/src/` that wraps Recharts ScatterChart — check whether XAxis gets `type="number"` and `domain={['dataMin', 'dataMax']}` (or computed extent). Also check the data-binding step where `xKey` is selected — make sure it's pulling the numeric value, not the column name string.
+- **[Cowork update, ~17:00] Verified visually:** with Penguins X=Bill length, Y=Bill depth, Color=Species, points DO render (3 clusters even distinguishable by color: blue Adelie ~38-46 / 17-21, orange Chinstrap ~46-55 / 17-21, green Gentoo ~42-52 / 13-17). BUT the axes both start at `0` — chart spans `0-60` for X and `0-24` for Y, so the actual data (X 32-60, Y 13-22) is squeezed into the upper-right ~40% of the canvas, leaving most of the chart empty. **So the real root cause is: axis `domain` is hard-coded `[0, max]` instead of `['dataMin', 'dataMax']` (or `['auto', 'auto']`).** That explains Moore too: years 1970-2024 mapped onto 0-2024 → ~3% of width on the right. Fix is probably a one-line Recharts XAxis prop change.
 
 ### B3. Chart legend overlaps x-axis label on Wind Explorer — **minor**
 - **Repro:** `/explorer?dataset=wind` (default). The horizontal legend strip ("cut-in · cut-out region · ramp-up · rated") sits on the same baseline as the axis label "Wind speed (m/s)" — visible collision on text.
@@ -96,8 +97,26 @@ This file is appended as I go. Terminal Claude is free to start fixing the highe
 | `/lessons/pick-your-story` | PARTIAL — slider+headline+presets work, chart line truncated (B7) |
 | `/lessons/survivorship-bias` | PARTIAL — click placement counts but isn't visible (B8); reveal works |
 | `/lessons/*` (×6) | not yet tested |
-| `/wind-turbine` | not yet tested |
-| `/voice-dna` | not yet tested |
+| `/wind-turbine` | **PASS** — full 3-act flow works, R² updates live, Submit transforms to "Submitted to class wall" |
+| `/voice-dna` Act 1 (Wonder) | PASS — gorgeous Sami intro, three preview cards, purple/pink design language |
+| `/voice-dna` Act 2 (Play) | PARTIAL — see B11; renders Act 2 but fails open with empty spectrogram when mic blocked |
+
+---
+
+## ADDITIONAL FINDINGS FROM COWORK (~17:30)
+
+### B11. Voice DNA mic-blocked state silently fails open — **important**
+- **Repro:** `/voice-dna` → "Turn on the mic →" in a remote/automated browser where mic permission is "prompt" (not granted). App advances to Act 2 "See your voice." anyway.
+- **Result:** Spectrogram canvas is empty/blank (300×150 default, never resized). "Capture a sample" disabled with subtext "Capture at least one sample" → user is stuck. No "Mic blocked" or "We need mic access" message.
+- **Why this matters:** Handoff explicitly said "If mic is unavailable, the page should show a clean error state ('Mic blocked')." Right now it shows a working-looking page that produces no data — demo risk if Savvas tests on a no-mic device or clicks "Block".
+- **Fix hint:** wrap `getUserMedia` in try/catch (or check `navigator.permissions.query({name:'microphone'})`) and render a "Mic blocked" panel with retry guidance.
+
+### Wind Turbine /wind-turbine — **all PASS, deserves a shoutout**
+- Act 1 (Identify): "Next: build a model" disabled until conjecture + bounds filled. After typing "500" / "1500" the button activates immediately. ✓
+- Act 2 (Model): R² = 0.019 at default → after setting a=12, R² = **0.964 "Excellent fit"** (green progress bar). Equation display updates live (`P = 12.00v² + 0.00v + 0.00`). Y-axis auto-rescaled from 1700 → 3888 as curve grows. Vertical dashed line at v=10 m/s (the bounds point) is a beautiful tutorial touch.
+- Act 3 (Interpret): three stat cards (bounds 500-1500 / measured 1660 "Inside your bounds" / model 1224 "R² of your fit = 0.964"). Long "Story behind the curve" with real physics (Betz limit 59%, kinetic energy in v³, blade-pitch spill at 12 m/s). Substantial editorial content, not filler.
+- Submit → green "Submitted to class wall" pill, button locks. ✓
+- **This is the demo-ready showcase.** If anything goes wrong with Explorer (B2/B5/B6), pivot the live demo to /wind-turbine.
 
 ---
 
