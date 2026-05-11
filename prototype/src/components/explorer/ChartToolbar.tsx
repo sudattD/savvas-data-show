@@ -2,12 +2,16 @@ import type { Dataset, Attribute } from '../../lib/dataset';
 import { getNumericAttrs, getCategoricalAttrs } from '../../lib/dataset';
 
 export type ChartType = 'scatter' | 'histogram' | 'bar' | 'box' | 'map';
+export type AxisScale = 'linear' | 'log';
 
 export interface ChartConfig {
   type: ChartType;
   xKey: string | null;
   yKey: string | null;
   colorKey: string | null;
+  /** Scatter view only — initial axis scale. Falls back to dataset.featured. */
+  xScale?: AxisScale;
+  yScale?: AxisScale;
 }
 
 interface ChartToolbarProps {

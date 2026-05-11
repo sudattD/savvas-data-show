@@ -4,7 +4,7 @@ import { DATASETS } from '../data/registry';
 import { applyFilters, attrByKey } from '../lib/dataset';
 import type { Filter, Dataset } from '../lib/dataset';
 import ChartToolbar from '../components/explorer/ChartToolbar';
-import type { ChartConfig } from '../components/explorer/ChartToolbar';
+import type { ChartConfig, ChartType, AxisScale } from '../components/explorer/ChartToolbar';
 import ScatterView from '../components/explorer/ScatterView';
 import HistogramView from '../components/explorer/HistogramView';
 import BarView from '../components/explorer/BarView';
@@ -17,6 +17,34 @@ import Masthead from '../components/Masthead';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { datasetAccent } from '../lib/dataset';
 import { Link } from 'react-router-dom';
+
+// ───────────────────────────────────────────────────────────────────────────
+//  Explorer URL parameters
+//  ────────────────────────
+//  The Explorer treats the URL as the source of truth for its view shape, so
+//  any view a teacher or student lands on is shareable by copying the URL.
+//
+//  Param      Meaning                                       Example
+//  ─────      ────────                                       ───────
+//  dataset    Dataset id (required)                         dataset=moore
+//  type       Chart type — scatter|histogram|bar|box|map    type=map
+//  x          X attribute key                                x=year
+//  y          Y attribute key                                y=transistors
+//  color      Color attribute key, or "none" to disable      color=manufacturer
+//  xScale     Scatter X scale — linear|log                   xScale=log
+//  yScale     Scatter Y scale — linear|log                   yScale=log
+//
+//  Defaults come from `dataset.featured` (per-dataset opening view). The URL
+//  only encodes values that DIFFER from those defaults, so canonical URLs
+//  stay short (e.g. /explorer?dataset=moore is enough to land on log-Y).
+//
+//  Fine-grained interactive state (regression toggle, slope/intercept slider
+//  values, marker x, filter chips, histogram bins) is intentionally NOT
+//  encoded — those stay session-local. If you want a regression snapshot
+//  shareable, screenshot it for now.
+// ───────────────────────────────────────────────────────────────────────────
+
+const CHART_TYPES = new Set<ChartType>(['scatter', 'histogram', 'bar', 'box', 'map']);
 
 function defaultConfig(d: Dataset): ChartConfig {
   const num = d.attributes.filter((a) => a.kind === 'numeric');
@@ -35,7 +63,53 @@ function defaultConfig(d: Dataset): ChartConfig {
     xKey: featuredX ?? num[0]?.key ?? null,
     yKey: featuredY ?? num[1]?.key ?? num[0]?.key ?? null,
     colorKey: featuredColor ?? null,
+    xScale: d.featured?.xScale ?? 'linear',
+    yScale: d.featured?.yScale ?? 'linear',
   };
+}
+
+function attrExists(d: Dataset, key: string | null): boolean {
+  if (!key) return false;
+  return d.attributes.some((a) => a.key === key);
+}
+
+function readConfigFromURL(d: Dataset, params: URLSearchParams): ChartConfig {
+  const base = defaultConfig(d);
+  const t = params.get('type');
+  const type =
+    t && CHART_TYPES.has(t as ChartType) && (t !== 'map' || d.geo) ? (t as ChartType) : base.type;
+
+  const x = params.get('x');
+  const y = params.get('y');
+  const color = params.get('color');
+  const xScale = params.get('xScale');
+  const yScale = params.get('yScale');
+
+  return {
+    type,
+    xKey: attrExists(d, x) ? x : base.xKey,
+    yKey: attrExists(d, y) ? y : base.yKey,
+    colorKey: color === 'none' ? null : attrExists(d, color) ? color : base.colorKey,
+    xScale: xScale === 'linear' || xScale === 'log' ? (xScale as AxisScale) : base.xScale,
+    yScale: yScale === 'linear' || yScale === 'log' ? (yScale as AxisScale) : base.yScale,
+  };
+}
+
+// Serialize a config to URL params. Only writes params that differ from the
+// dataset's featured defaults, so the URL stays minimal for canonical views.
+function configToParams(datasetId: string, c: ChartConfig, d: Dataset): URLSearchParams {
+  const base = defaultConfig(d);
+  const out = new URLSearchParams();
+  out.set('dataset', datasetId);
+  if (c.type !== base.type) out.set('type', c.type);
+  if (c.xKey && c.xKey !== base.xKey) out.set('x', c.xKey);
+  if (c.yKey && c.yKey !== base.yKey) out.set('y', c.yKey);
+  if (c.colorKey !== base.colorKey) {
+    out.set('color', c.colorKey ?? 'none');
+  }
+  if (c.xScale && c.xScale !== base.xScale) out.set('xScale', c.xScale);
+  if (c.yScale && c.yScale !== base.yScale) out.set('yScale', c.yScale);
+  return out;
 }
 
 export default function ExplorerPage() {
@@ -45,20 +119,27 @@ export default function ExplorerPage() {
   const [datasetId, setDatasetId] = useState(initial.id);
   const dataset = DATASETS.find((d) => d.id === datasetId)!;
 
-  const [config, setConfig] = useState<ChartConfig>(() => defaultConfig(dataset));
+  // Initial config: parse from URL params on first mount so deep-links land
+  // on the right view. After mount, config <-> URL stays in sync via the
+  // effect below.
+  const [config, setConfig] = useState<ChartConfig>(() => readConfigFromURL(dataset, searchParams));
   const [filters, setFilters] = useState<Filter[]>([]);
 
   useDocumentTitle(`Explorer · ${dataset.name}`);
 
-  // Update URL when dataset changes
+  // Sync the URL to the current config any time it changes. Only non-default
+  // values are written (see configToParams) so canonical URLs stay short.
   useEffect(() => {
-    if (searchParams.get('dataset') !== datasetId) {
-      setSearchParams({ dataset: datasetId }, { replace: true });
+    const next = configToParams(datasetId, config, dataset);
+    // Don't trigger a re-render loop: only update when the serialized form differs.
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [datasetId]);
+  }, [datasetId, config]);
 
-  // reset chart config + filters when dataset changes
+  // reset chart config + filters when dataset changes via the picker.
+  // (Deep-link navigation goes through the initial-mount path instead.)
   const handleDatasetChange = (id: string) => {
     const next = DATASETS.find((d) => d.id === id)!;
     setDatasetId(id);
@@ -100,7 +181,17 @@ export default function ExplorerPage() {
           <div className="flex-1 min-h-[420px] max-h-[640px] bg-surface-subtle/30 p-2">
             <div className="w-full h-full bg-surface-raised rounded-lg shadow-editorial border border-surface-line" style={{ minHeight: 400 }}>
               {config.type === 'scatter' && xAttr && yAttr && (
-                <ScatterView dataset={dataset} rows={filteredRows} xAttr={xAttr} yAttr={yAttr} colorAttr={colorAttr} />
+                <ScatterView
+                  dataset={dataset}
+                  rows={filteredRows}
+                  xAttr={xAttr}
+                  yAttr={yAttr}
+                  colorAttr={colorAttr}
+                  xScale={config.xScale ?? 'linear'}
+                  yScale={config.yScale ?? 'linear'}
+                  onXScaleChange={(s) => setConfig((c) => ({ ...c, xScale: s }))}
+                  onYScaleChange={(s) => setConfig((c) => ({ ...c, yScale: s }))}
+                />
               )}
               {config.type === 'histogram' && xAttr && (
                 <HistogramView dataset={dataset} rows={filteredRows} xAttr={xAttr} />

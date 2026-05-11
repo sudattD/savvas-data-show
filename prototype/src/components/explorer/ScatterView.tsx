@@ -19,6 +19,13 @@ interface ScatterViewProps {
   xAttr: Attribute;
   yAttr: Attribute;
   colorAttr?: Attribute | null;
+  /** Optional controlled scale state. When provided, ExplorerPage owns the
+   *  truth (so the URL can encode it). When omitted, ScatterView falls back
+   *  to its own state seeded from dataset.featured. */
+  xScale?: 'linear' | 'log';
+  yScale?: 'linear' | 'log';
+  onXScaleChange?: (s: 'linear' | 'log') => void;
+  onYScaleChange?: (s: 'linear' | 'log') => void;
 }
 
 function axisLabel(a: Attribute): string {
@@ -65,7 +72,12 @@ function r2(points: Array<{ x: number; y: number }>, slope: number, intercept: n
   return Math.max(0, Math.min(1, 1 - ssRes / ssTot));
 }
 
-export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: ScatterViewProps) {
+export default function ScatterView({
+  dataset, rows, xAttr, yAttr, colorAttr,
+  xScale: controlledXScale, yScale: controlledYScale,
+  onXScaleChange, onYScaleChange,
+}: ScatterViewProps) {
+  const isControlled = controlledXScale !== undefined && controlledYScale !== undefined;
   // Numeric color range — when colorAttr is numeric, we encode each point
   // individually instead of grouping. Compute the min/max once.
   const numericColorRange = useMemo(() => {
@@ -185,15 +197,29 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
   const [markerOn, setMarkerOn] = useState(false);
   const [markerX, setMarkerX] = useState(0);
   const [meansOn, setMeansOn] = useState(false);
-  const [xScale, setXScale] = useState<'linear' | 'log'>(dataset.featured?.xScale ?? 'linear');
-  const [yScale, setYScale] = useState<'linear' | 'log'>(dataset.featured?.yScale ?? 'linear');
+  const [internalXScale, setInternalXScale] = useState<'linear' | 'log'>(dataset.featured?.xScale ?? 'linear');
+  const [internalYScale, setInternalYScale] = useState<'linear' | 'log'>(dataset.featured?.yScale ?? 'linear');
 
   // When the dataset switches in the same Explorer session, pick up its
-  // preferred scales so the new view doesn't open looking wrong.
+  // preferred scales so the new view doesn't open looking wrong. Only fires
+  // in uncontrolled mode — the parent owns the truth otherwise.
   useEffect(() => {
-    setXScale(dataset.featured?.xScale ?? 'linear');
-    setYScale(dataset.featured?.yScale ?? 'linear');
-  }, [dataset.id]);
+    if (!isControlled) {
+      setInternalXScale(dataset.featured?.xScale ?? 'linear');
+      setInternalYScale(dataset.featured?.yScale ?? 'linear');
+    }
+  }, [dataset.id, isControlled]);
+
+  const xScale = controlledXScale ?? internalXScale;
+  const yScale = controlledYScale ?? internalYScale;
+  const setXScale = (s: 'linear' | 'log') => {
+    if (onXScaleChange) onXScaleChange(s);
+    else setInternalXScale(s);
+  };
+  const setYScale = (s: 'linear' | 'log') => {
+    if (onYScaleChange) onYScaleChange(s);
+    else setInternalYScale(s);
+  };
 
   // Log scale requires strictly-positive values. Disable the toggle when the
   // axis includes zero or negatives.
