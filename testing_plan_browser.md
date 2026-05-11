@@ -321,6 +321,104 @@ Especially watch for:
 
 ---
 
+## R6.2 · Histogram bin slider + marker (`/explorer?dataset=marathon` then chart=histogram)
+
+**Navigate:** `/explorer?dataset=marathon`. In the chart toolbar, click `Histogram`. Set X to `officialTime` (or whichever numeric attribute defaults).
+
+### Bin slider
+**Assertions:**
+- [ ] Above the chart, a `bins` slider exists with a numeric readout (default ~20)
+- [ ] Drag the slider to the minimum (`4`) — bars become wide and few
+- [ ] Drag to the maximum (`60`) — bars become narrow and many
+- [ ] Mean and median reference lines stay anchored to the data (don't shift as bins change)
+- [ ] R² readout / regression UI from R6.1 is NOT shown on histograms (regression is scatter-only)
+
+**Screenshot:** `screenshots/r6_2-bins.png`
+
+### Drop a marker
+**Click:** "Drop a marker"
+
+**Assertions:**
+- [ ] A `value` slider appears with numeric readout
+- [ ] A vertical reference line appears on the chart, initialized at the median
+- [ ] A right-aligned readout shows "`X.X% of data ≤ marker (NN of NNN)`"
+- [ ] Drag the value slider — percentile updates live, monotonically rising as you drag right
+- [ ] At slider minimum (= data min), percentile should be near 0%
+- [ ] At slider maximum (= data max), percentile should be 100%
+
+**Screenshot:** `screenshots/r6_2-marker.png`
+
+---
+
+## R6.3 · Scatter marker + regression interaction (`/explorer?dataset=wind`)
+
+**Navigate:** `/explorer?dataset=wind` (default chart should be scatter)
+
+### Marker alone
+**Click:** "Drop a marker"
+
+**Assertions:**
+- [ ] Rose-tinted vertical line appears, initialized at the midpoint of x
+- [ ] `x` slider appears with numeric readout
+- [ ] Drag x — line tracks, readout updates
+
+### Marker combined with regression
+**Click:** "Fit a line" (if not already on)
+
+**Assertions:**
+- [ ] When BOTH marker and regression are on, the marker readout adds `→ y = NN.NN` showing the predicted y from the manual line
+- [ ] Drag slope or intercept — predicted y at the marker updates live
+- [ ] Drag the marker x — predicted y updates correspondingly
+- [ ] The two reference lines (rose vertical marker + navy manual regression) don't visually collide with the amber auto-fit line when all three are shown
+
+**Screenshot:** `screenshots/r6_3-marker-and-line.png`
+
+---
+
+## R6.4 · Map view (`/explorer?dataset=earthquakes` then chart=map)
+
+**Navigate:** `/explorer?dataset=earthquakes`. The chart toolbar should show a `Map` button (only present for geo-enabled datasets).
+
+**Assertions:**
+- [ ] `Map` button is visible in the chart-type picker for earthquakes
+- [ ] `Map` button is NOT visible for datasets without geo (`/explorer?dataset=co2`, `/explorer?dataset=marathon`)
+- [ ] `Map` button IS visible for hurricanes (`/explorer?dataset=hurricanes`)
+
+### Click Map (earthquakes)
+**Click:** the `Map` button.
+
+**Assertions:**
+- [ ] A world map svg renders with:
+  - light blue ocean background
+  - a graticule (lat/lon grid) every 30°
+  - emphasized equator and prime meridian
+  - dashed tropics (±23.5°) and arctic/antarctic circles (±66.5°)
+  - axis labels reading `+90°N`, `–90°S`, `–90°W`, `+90°E`, `0° (equator)`, `0° (prime meridian)`
+- [ ] Earthquake points render across the map — should be visibly clustered in patterns matching the Ring of Fire (Pacific rim), Alpide belt (Mediterranean to Himalayas), mid-Atlantic ridge
+- [ ] No points appear above 90° lat or below –90° lat (validation working)
+- [ ] Hovering a point: bounding stroke appears + top bar shows `lat NN.NN° · lon NN.NN°`
+
+**Screenshot:** `screenshots/r6_4-earthquakes.png`
+
+### Switch to hurricanes
+**Navigate:** `/explorer?dataset=hurricanes`. Click `Map`.
+
+**Assertions:**
+- [ ] Points cluster between roughly 10° and 30°N (typical hurricane formation latitudes) and spread across the Atlantic (–90° to 0° longitude) and the Gulf
+- [ ] Almost no points south of the equator
+- [ ] Point sizes vary by peak wind (some visibly bigger than others)
+
+**Screenshot:** `screenshots/r6_4-hurricanes.png`
+
+### Color-by
+Use the chart toolbar's "Color by" picker (e.g. `type` for earthquakes, `category` for hurricanes).
+
+**Assertions:**
+- [ ] Points are colored by the category attribute (e.g. earthquake type)
+- [ ] If only one category exists in the filtered data, all points share a color (no legend needed)
+
+---
+
 ## R7 · Datasets Hub (`/datasets`)
 
 **Assertions:**
