@@ -42,7 +42,10 @@ async function readAll(): Promise<FeedbackItem[]> {
     const { blobs } = await list({ prefix: BLOB_KEY });
     const match = blobs.find((b) => b.pathname === BLOB_KEY);
     if (!match) return [];
-    const res = await fetch(match.url, { cache: 'no-store' });
+    // The Blob public URL is CDN-cached. Append a cache-busting param so
+    // append-after-append doesn't read a stale view of the file.
+    const bustUrl = `${match.url}?t=${Date.now()}`;
+    const res = await fetch(bustUrl, { cache: 'no-store' });
     if (!res.ok) return [];
     const data = (await res.json()) as FeedbackItem[];
     return Array.isArray(data) ? data : [];

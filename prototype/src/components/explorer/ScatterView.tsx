@@ -154,8 +154,23 @@ export default function ScatterView({
     [groups],
   );
 
-  const auto = useMemo(() => leastSquares(allPoints), [allPoints]);
-  const autoR2 = useMemo(() => (auto ? r2(allPoints, auto.slope, auto.intercept) : 0), [allPoints, auto]);
+  // Fit the regression in the same coordinate space the user is viewing.
+  // When both axes are linear, this is raw x/y. When either is log, we
+  // transform that axis via log10 before computing slope, intercept, R².
+  // For Kepler's third law (solarSystem, log-log) this is what surfaces the
+  // slope of 1.5; for Kleiber's law (heartRate, log-log) the slope of −0.25.
+  const fitPoints = useMemo(() => {
+    return allPoints
+      .map((p) => {
+        const x = effectiveXScale === 'log' ? (p.x > 0 ? Math.log10(p.x) : NaN) : p.x;
+        const y = effectiveYScale === 'log' ? (p.y > 0 ? Math.log10(p.y) : NaN) : p.y;
+        return { x, y };
+      })
+      .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
+  }, [allPoints, effectiveXScale, effectiveYScale]);
+
+  const auto = useMemo(() => leastSquares(fitPoints), [fitPoints]);
+  const autoR2 = useMemo(() => (auto ? r2(fitPoints, auto.slope, auto.intercept) : 0), [fitPoints, auto]);
 
   // Data ranges for slider bounds.
   const ranges = useMemo(() => {
@@ -282,26 +297,36 @@ export default function ScatterView({
     [allPoints, manualSlope, manualIntercept],
   );
 
-  // Line endpoints for ReferenceLine: span the data x-range.
+  // Line endpoints for ReferenceLine: span the data x-range. The slope and
+  // intercept are in fit-space (log if scales are log), so we map back to raw
+  // chart units when rendering.
+  const lineY = (slope: number, intercept: number, xRaw: number): number => {
+    const xFit = effectiveXScale === 'log' ? Math.log10(xRaw) : xRaw;
+    const yFit = slope * xFit + intercept;
+    return effectiveYScale === 'log' ? Math.pow(10, yFit) : yFit;
+  };
+
   const manualSegment = useMemo(() => {
     if (!ranges) return null;
     return {
       x1: ranges.xMin,
-      y1: manualSlope * ranges.xMin + manualIntercept,
+      y1: lineY(manualSlope, manualIntercept, ranges.xMin),
       x2: ranges.xMax,
-      y2: manualSlope * ranges.xMax + manualIntercept,
+      y2: lineY(manualSlope, manualIntercept, ranges.xMax),
     };
-  }, [ranges, manualSlope, manualIntercept]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ranges, manualSlope, manualIntercept, effectiveXScale, effectiveYScale]);
 
   const autoSegment = useMemo(() => {
     if (!ranges || !auto) return null;
     return {
       x1: ranges.xMin,
-      y1: auto.slope * ranges.xMin + auto.intercept,
+      y1: lineY(auto.slope, auto.intercept, ranges.xMin),
       x2: ranges.xMax,
-      y2: auto.slope * ranges.xMax + auto.intercept,
+      y2: lineY(auto.slope, auto.intercept, ranges.xMax),
     };
-  }, [ranges, auto]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ranges, auto, effectiveXScale, effectiveYScale]);
 
   const snapToAuto = () => {
     if (!auto) return;
@@ -480,7 +505,15 @@ export default function ScatterView({
               type="number"
               dataKey="x"
               scale={effectiveXScale}
-              domain={effectiveXScale === 'log' ? ['auto', 'auto'] : ['dataMin', 'dataMax']}
+              // Recharts' 'auto' domain on log scale ends up including 0 (which
+              // log can't render), so points silently drop out. When log is on,
+              // pin the domain to the actual positive data range with light
+              // padding — that's what gives the data back.
+              domain={
+                effectiveXScale === 'log' && ranges
+                  ? [ranges.xMin * 0.9, ranges.xMax * 1.1]
+                  : ['dataMin', 'dataMax']
+              }
               allowDataOverflow={false}
               tickFormatter={formatTick}
               stroke="#64748B"
@@ -496,7 +529,11 @@ export default function ScatterView({
               type="number"
               dataKey="y"
               scale={effectiveYScale}
-              domain={effectiveYScale === 'log' ? ['auto', 'auto'] : ['dataMin', 'dataMax']}
+              domain={
+                effectiveYScale === 'log' && ranges
+                  ? [ranges.yMin * 0.9, ranges.yMax * 1.1]
+                  : ['dataMin', 'dataMax']
+              }
               allowDataOverflow={false}
               tickFormatter={formatTick}
               reversed={yAttr.preferReversed === true}
@@ -539,7 +576,7 @@ export default function ScatterView({
                 ]}
                 stroke="#1A2A52"
                 strokeWidth={2.5}
-                ifOverflow="extendDomain"
+                ifOverflow="hidden"
               />
             )}
             {regressionOn && autoOverlay && autoSegment && (
@@ -551,7 +588,7 @@ export default function ScatterView({
                 stroke="#E18809"
                 strokeWidth={2.5}
                 strokeDasharray="6 4"
-                ifOverflow="extendDomain"
+                ifOverflow="hidden"
               />
             )}
             {markerOn && (

@@ -115,6 +115,46 @@ The reported best R² for the Preston curve view (GDP per capita × Life expecta
 
 This is a real bug but a contained one — the cold-open `/explorer?dataset=*` URLs all render correctly because the state model starts clean. It only surfaces when a user toggles chart types mid-session. Park is unlikely to do that scripted, but if he experiments, he'll see it.
 
+### Pass-5 findings (after new requests in expanded brief)
+
+The brief expanded with R6.1, R6.1b, R6.2, R6.3, R6.4, R6.5 and references 18 datasets (was 15), an Olympic 100m dataset, a Map view, mean/median crosshairs, x-marker, y-marker, Download CSV, and log-scale toggles. Tested what I could — focusing on R6.1 cross-dataset + the rendering issues:
+
+**R6.1 · Fit a line cross-dataset:**
+
+| Dataset | Best R² found | Brief expected | Verdict |
+|---|---|---|---|
+| `co2` (Decimal year × CO2) | **0.976** | > 0.95 | ✓ matches exactly |
+| `moore` (Year × Transistors, log Y default) | **0.184** | ~0.7 | ✗ doesn't match; see analysis below |
+| `wind` | not re-tested in this pass (verified earlier in R2 Act 2: R² = 0.964 with a=12) | > 0.5 | ✓ |
+
+The CO2 fit is the canonical case: linear regression on a near-linear time series gives R² ≈ 0.976. The slope is ~1.85 ppm/yr (matches real Keeling). Everything works.
+
+**The Moore's Law discrepancy is interesting.** Best R² = 0.184 suggests the Fit-a-line feature is fitting **raw transistors vs year** (linear-in-original-units), not **log(transistors) vs year** (linear-in-displayed-units), even though Y: log is the default toggle. A raw linear fit on exponential data gives terrible R² — which is arguably **the right pedagogical answer**: R²=0.18 tells the student "a linear model is the wrong functional form for this data," a great data-literacy lesson. But it diverges from the brief's "perhaps 0.7" expectation. Either the brief is stale, or the dev wants Fit-a-line to respect the displayed Y scale.
+
+**Decision needed for the dev:** Should "Fit a line" always fit in raw units (current behavior, teaches functional-form), or should it fit in displayed units (matches the brief, gives R² ≈ 0.99 for log-linear)? Both are defensible. Worth a one-line product call.
+
+**Real rendering bug found:**
+
+- **Y: log scale removes scatter points from DOM entirely.** On `/explorer?dataset=moore` with Y: log active (the default), `document.querySelectorAll('.recharts-scatter-symbol').length` returns **0**. Toggling Y back to linear restores 219 paths to DOM (matching the 219 rows). So the log-scale path in `ScatterView.tsx` isn't passing scatter data through to the renderer.
+- **Y: linear on Moore's Law renders points but they're invisible** because Recharts auto-fits the Y axis to the best-fit line's range (-14.8B to 146.0B) rather than the data's range (~2k to ~150B). Points crush to near-zero pixel height at the bottom.
+
+**Combined effect: Moore's Law `/explorer?dataset=moore` shows no visible scatter points in either Y mode.** This is a real visible bug — the dataset that was supposed to be the canonical exponential-growth demo currently shows only axes and (when Fit-a-line is on) two regression lines floating over empty space.
+
+**New features confirmed to exist (some I'd missed earlier):**
+
+- ✓ **Mean / median** toggle button — adds 4 reference lines (mean-x amber, median-x emerald, mean-y amber, median-y emerald). Not deeply tested but visible in toolbar.
+- ✓ **x-marker** / **y-marker** — separate from each other (R6.3 says they compose with regression: marker x slider should show predicted y when regression is on).
+- ✓ **X: linear** / **Y: log** — toggleable scale buttons. Y: log is the default on Moore's Law.
+- ✓ **Download CSV ↓** — visible next to "showing first 200" row count. Not actually downloaded in this pass.
+- ✓ **`/explorer?dataset=moore`** auto-applies log-Y per dataset config (excellent design, kills the entire "M9/I9 log scale toggle" issue from pass 3 — this is already shipped).
+- ⚠ **Olympic 100m, Map view, hurricanes/earthquakes map rendering** — brief asks for these to be tested but I didn't get to them. Olympic dataset URL `/explorer?dataset=olympic100m` likely exists; Map button on geo-enabled datasets likely exists. Worth one more 10-minute sweep when you have context budget.
+
+**Candidate issues to file:**
+
+- **I11 · Y: log scale on scatter renders no scatter points.** File: `src/components/explorer/ScatterView.tsx`. The log-scale path drops `<Scatter>` children. Possibly a Recharts version quirk with logarithmic axes + Scatter components — needs `allowDataOverflow={false}` or a manual data-transform. Highest priority of the new findings — it makes Moore's Law (a flagship demo dataset) show as empty.
+- **I12 · Fit a line uses raw-unit linear regression even with log scale active.** Product decision: pick one behavior, document it. Fix is one branch in the regression utility.
+- **M11 · Y axis auto-fits to model extent rather than data extent.** When Fit-a-line is on with bad slope/intercept, the Y domain blows up and crushes the data. Should probably clamp the Y domain to data ± 10% padding regardless of where the regression line goes.
+
 ### What this means for Wednesday
 
 The prototype is in **demo-ready** shape. The deploy went out, the visible empty-chart bugs are gone, the stats land their numbers, the explorer's "wow" views render on cold-open, and the dataset-story sparkline gives Jamal-persona students something to look at on first scroll. The one visible nit (masthead overlap on Explorer pages) is recoverable in a single CSS line if Tuesday has spare time; otherwise it's not the kind of thing that derails a Savvas pitch.
