@@ -44,7 +44,7 @@ export default function RareDiseaseTest() {
   };
 
   return (
-    <LessonShell number="L7" family="STATISTICAL THINKING" title="The Rare Disease Test" concept="Base-rate fallacy" accent="amber">
+    <LessonShell number="L7" family="STATISTICAL THINKING" title="The Rare Disease Test" concept="Base-rate fallacy" accent="amber" envisionChapter={{ course: 'algebra2', topic: 12 }}>
       <div className="space-y-6">
         <div>
           <h1 className="editorial-hero text-3xl md:text-5xl text-brand-900 leading-tight">

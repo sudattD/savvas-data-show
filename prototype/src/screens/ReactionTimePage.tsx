@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Masthead from '../components/Masthead';
 import ProgressDots from '../components/ProgressDots';
+import EnvisionVideoLink from '../components/EnvisionVideoLink';
 import ReactionIdentify from './reaction/ReactionIdentify';
 import ReactionPlay from './reaction/ReactionPlay';
 import ReactionInterpret from './reaction/ReactionInterpret';
@@ -33,7 +34,12 @@ export default function ReactionTimePage() {
       <Masthead
         section="Reaction Time Arena"
         eyebrow="Algebra 1 · Topic 11 · Statistics"
-        right={<ProgressDots current={act} />}
+        right={
+          <div className="flex items-center gap-4">
+            <EnvisionVideoLink course="algebra1" topic={11} />
+            <ProgressDots current={act} />
+          </div>
+        }
       />
       <main className="max-w-5xl mx-auto px-6 py-8">
         {act === 1 && (

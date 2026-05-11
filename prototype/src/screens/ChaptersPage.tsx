@@ -11,6 +11,7 @@ import {
   chaptersForCourse,
   chapterAnchorId,
   resolveTeacherInfo,
+  envisionVideoUrl,
 } from '../data/chapters';
 import type { CourseId, FormatCode, ChapterEntry } from '../data/chapters';
 import { DATASETS } from '../data/registry';
@@ -223,6 +224,7 @@ function ChapterRow({ entry, viewMode }: { entry: ChapterEntry; viewMode: ViewMo
   const accent = COURSE_ACCENT[entry.course];
   const datasetObjs = entry.datasets.map((id) => DATASETS.find((d) => d.id === id)).filter(Boolean) as { id: string; name: string }[];
   const isBuilt = !!entry.route;
+  const videoUrl = envisionVideoUrl(entry);
   const nothingToDo = !isBuilt && datasetObjs.length === 0;
 
   return (
@@ -316,6 +318,18 @@ function ChapterRow({ entry, viewMode }: { entry: ChapterEntry; viewMode: ViewMo
               <span aria-hidden className="shrink-0">→</span>
             </Link>
           ))}
+          {videoUrl && (
+            <a
+              href={videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-md bg-surface-raised border border-surface-line text-ink-soft text-xs font-semibold hover:bg-surface-subtle hover:text-brand-700 hover:border-brand-300 transition"
+              title="Open the Savvas enVision 3-Act Math video for this chapter (textbook QR target)"
+            >
+              <span className="truncate">enVision 3-Act video</span>
+              <span aria-hidden className="shrink-0">↗</span>
+            </a>
+          )}
           {nothingToDo && (
             <span className="text-[10px] eyebrow text-ink-muted text-center italic px-2 py-2">
               Concept · not yet built

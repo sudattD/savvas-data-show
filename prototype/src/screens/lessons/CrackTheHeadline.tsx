@@ -133,7 +133,7 @@ export default function CrackTheHeadline() {
   };
 
   return (
-    <LessonShell number="L8" family="STATISTICAL THINKING" title="Crack the Headline" concept="Algebra in disguise" accent="emerald">
+    <LessonShell number="L8" family="STATISTICAL THINKING" title="Crack the Headline" concept="Algebra in disguise" accent="emerald" envisionChapter={{ course: 'algebra1', topic: 1 }}>
       <div className="space-y-6">
         <div>
           <h1 className="editorial-hero text-3xl md:text-5xl text-brand-900 leading-tight">

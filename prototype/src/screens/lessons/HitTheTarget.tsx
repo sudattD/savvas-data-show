@@ -64,7 +64,7 @@ export default function HitTheTarget() {
   const equationNumeric = `y = ${m_term.toFixed(2)}·x − ${a_term.toFixed(4)}·x²`;
 
   return (
-    <LessonShell number="L9" family="STATISTICAL THINKING" title="Hit the Target" concept="Quadratic trajectories" accent="violet">
+    <LessonShell number="L9" family="STATISTICAL THINKING" title="Hit the Target" concept="Quadratic trajectories" accent="violet" envisionChapter={{ course: 'algebra1', topic: 9 }}>
       <div className="space-y-6">
         <div>
           <h1 className="editorial-hero text-3xl md:text-5xl text-brand-900 leading-tight">

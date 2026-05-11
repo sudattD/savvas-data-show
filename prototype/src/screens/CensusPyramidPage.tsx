@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Masthead from '../components/Masthead';
 import SeeAllDataLink from '../components/SeeAllDataLink';
+import EnvisionVideoLink from '../components/EnvisionVideoLink';
 import ProgressDots from '../components/ProgressDots';
 import CensusIdentify from './census/CensusIdentify';
 import CensusModel from './census/CensusModel';
@@ -31,6 +32,7 @@ export default function CensusPyramidPage() {
         eyebrow="Algebra 1 · Topic 12 · Distributions"
         right={
           <div className="flex items-center gap-4">
+            <EnvisionVideoLink course="algebra2" topic={10} />
             <SeeAllDataLink datasetId="population" label="Explore the data" compact />
             <ProgressDots current={act} />
           </div>

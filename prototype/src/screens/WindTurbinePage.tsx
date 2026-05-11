@@ -5,6 +5,7 @@ import Act2Model from './Act2Model';
 import Act3Interpret from './Act3Interpret';
 import Masthead from '../components/Masthead';
 import SeeAllDataLink from '../components/SeeAllDataLink';
+import EnvisionVideoLink from '../components/EnvisionVideoLink';
 import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { getDataset } from '../data/registry';
@@ -48,6 +49,7 @@ export default function WindTurbinePage() {
         eyebrow="Algebra 1 · Topic 8 · Quadratic Functions"
         right={
           <div className="flex items-center gap-4">
+            <EnvisionVideoLink course="algebra1" topic={8} />
             <SeeAllDataLink datasetId="wind" label="Explore the data" compact />
             <ProgressDots current={act} />
           </div>

@@ -52,6 +52,10 @@ export interface ChapterEntry {
   /** Design brief for concept rows — the Act-1 opening moment and the Act-3 reveal,
    *  in one or two sentences each. Lets unbuilt rows function as real specs. */
   design?: { hook: string; reveal: string };
+  /** Override URL for the Savvas enVision 3-Act Math video for this chapter.
+   *  Leave undefined to derive from the standard pattern in envisionVideoUrl().
+   *  Set to null to explicitly opt out (no video available for this chapter). */
+  envisionVideo?: string | null;
   /** Teacher-facing pedagogical metadata — used by the Teacher view on /chapters.
    *  All fields optional; rows fall back to sensible defaults when missing. */
   teacher?: {
@@ -606,3 +610,17 @@ export function chapterAnchorId(entry: Pick<ChapterEntry, 'course' | 'topic'>): 
 }
 
 export const BUILT_COUNT = CHAPTERS.filter((c) => c.route).length;
+
+// Savvas enVision 3-Act Math video for the chapter, extracted from QR codes
+// in the official textbook (May 2026). URL pattern is deterministic per course
+// and zero-padded topic number — see docs/archive/qr_codes_extracted.md.
+export function envisionVideoUrl(entry: Pick<ChapterEntry, 'course' | 'topic' | 'envisionVideo'>): string | null {
+  if (entry.envisionVideo === null) return null;
+  if (entry.envisionVideo) return entry.envisionVideo;
+  const segment =
+    entry.course === 'algebra1' ? 'Algebra_1/ENVAGA24_SE_A1' :
+    entry.course === 'algebra2' ? 'Algebra_2/ENVAGA24_SE_A2' :
+    'Geometry/ENVAGA24_SE_GM';
+  const nn = String(entry.topic).padStart(2, '0');
+  return `https://media.pk12ls.com/curriculum/math/enVisionAGA_2024/QR/${segment}_${nn}_3AM_QR.html`;
+}
