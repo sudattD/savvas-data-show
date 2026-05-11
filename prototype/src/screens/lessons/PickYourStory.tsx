@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceArea } from 'recharts';
 import LessonShell from '../../components/LessonShell';
-import SeeAllDataLink from '../../components/SeeAllDataLink';
 import { CO2_DATASET } from '../../data/co2Dataset';
 
 interface SeriesRow { decYear: number; co2: number; }
@@ -75,7 +74,7 @@ export default function PickYourStory() {
   const yMax = Math.ceil(Math.max(...all.map((d) => d.co2)) / 5) * 5;
 
   return (
-    <LessonShell number="L5" family="VISUAL DECEPTION" title="Pick Your Story" concept="Cherry-picked time windows" accent="rose">
+    <LessonShell number="L5" family="VISUAL DECEPTION" title="Pick Your Story" concept="Cherry-picked time windows" accent="rose" exploreDataset="co2">
       <div className="space-y-6">
         <div>
           <h1 className="font-display text-3xl md:text-4xl font-bold text-ink leading-tight">
@@ -176,13 +175,6 @@ export default function PickYourStory() {
             "paused" since 1998. The pause vanished when you looked at any
             window starting just 2 years earlier or ending 2 years later.
           </div>
-        </div>
-
-        <div className="pt-2 border-t border-surface-line flex flex-wrap items-baseline justify-between gap-3">
-          <div className="text-xs text-ink-muted">
-            Data behind this lesson · NOAA Mauna Loa Observatory · 1958–present
-          </div>
-          <SeeAllDataLink datasetId="co2" />
         </div>
       </div>
     </LessonShell>

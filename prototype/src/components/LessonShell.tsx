@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Masthead from './Masthead';
+import SeeAllDataLink from './SeeAllDataLink';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 interface LessonShellProps {
@@ -9,6 +10,9 @@ interface LessonShellProps {
   concept: string;
   children: ReactNode;
   accent?: string;
+  /** When set, render a prominent "Explore the data →" link in the masthead
+   *  that opens the Explorer with this dataset id. */
+  exploreDataset?: string;
 }
 
 const SPINE: Record<string, string> = {
@@ -22,11 +26,15 @@ const FAMILY_TONE: Record<string, string> = {
   'DATA HYGIENE': 'text-emerald-700',
 };
 
-export default function LessonShell({ number, family, title, concept, children, accent = 'sky' }: LessonShellProps) {
+export default function LessonShell({ number, family, title, concept, children, accent = 'sky', exploreDataset }: LessonShellProps) {
   useDocumentTitle(title);
   return (
     <div className="min-h-screen">
-      <Masthead section={title} eyebrow={`Lesson ${number} · ${concept}`} />
+      <Masthead
+        section={title}
+        eyebrow={`Lesson ${number} · ${concept}`}
+        right={exploreDataset ? <SeeAllDataLink datasetId={exploreDataset} label="Explore the data" compact /> : undefined}
+      />
       <div className={`h-1 ${SPINE[accent] ?? 'bg-brand-500'}`} />
       <main className="max-w-4xl mx-auto px-6 py-10">
         <div className="mb-6 eyebrow flex items-center gap-3">

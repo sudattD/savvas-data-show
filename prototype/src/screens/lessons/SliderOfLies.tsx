@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceLine } from 'recharts';
 import LessonShell from '../../components/LessonShell';
-import SeeAllDataLink from '../../components/SeeAllDataLink';
 import { CO2_DATASET } from '../../data/co2Dataset';
 
 // Build a clean annual series from the monthly CO2 dataset for a single chart.
@@ -43,7 +42,7 @@ export default function SliderOfLies() {
       : { tone: 'rose', label: 'Misleading', note: 'Y-axis is heavily cropped. The trend looks much steeper than it is.' };
 
   return (
-    <LessonShell number="L1" family="VISUAL DECEPTION" title="The Slider of Lies" concept="Truncated y-axis" accent="rose">
+    <LessonShell number="L1" family="VISUAL DECEPTION" title="The Slider of Lies" concept="Truncated y-axis" accent="rose" exploreDataset="co2">
       <div className="space-y-6">
         <div>
           <h1 className="font-display text-3xl md:text-4xl font-bold text-ink leading-tight">
@@ -129,13 +128,6 @@ export default function SliderOfLies() {
             time you see a chart on social media, look at the bottom of the
             y-axis first.
           </div>
-        </div>
-
-        <div className="pt-2 border-t border-surface-line flex flex-wrap items-baseline justify-between gap-3">
-          <div className="text-xs text-ink-muted">
-            Data behind this lesson · NOAA Mauna Loa Observatory · 1958–present
-          </div>
-          <SeeAllDataLink datasetId="co2" />
         </div>
       </div>
     </LessonShell>
