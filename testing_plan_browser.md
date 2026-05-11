@@ -22,6 +22,39 @@
 
 ---
 
+## Visual quality checklist (apply to every screenshot)
+
+Functional assertions confirm an element exists. This checklist catches the
+"it renders but it looks broken" class of failure. Apply it to each
+screenshot you capture. Treat it as judgment, not pixel-precision — flag
+anything a reviewer would notice in a 1-second glance.
+
+For **charts** specifically:
+- [ ] Axis tick labels don't overlap each other (e.g., x-axis dates colliding)
+- [ ] Axis labels aren't clipped at the edge of the chart container
+- [ ] No bars / lines / points are flush against the chart's outer edge with no margin
+- [ ] Legend (if any) doesn't overlap the plot area
+- [ ] Chart height is at least ~120px (anything shorter suggests a collapsed flex/grid cell)
+- [ ] No data labels or tooltips are stacked on top of each other unreadably
+- [ ] Axis titles, when present, are positioned outside the plot area, not inside it
+
+For **layout & typography** generally:
+- [ ] No text wraps mid-word or at awkward points (suggests too-narrow container)
+- [ ] No element visibly clipped (a button cut off, a card content overflowing)
+- [ ] Hero text doesn't overflow into the next section
+- [ ] No overlapping elements (z-index collisions)
+- [ ] Cards / tiles in a grid are roughly even height (no obvious jaggedness)
+- [ ] Buttons and links look interactive (not blending into background)
+- [ ] Disabled-state buttons are visually distinct from enabled (greyed out or similar)
+- [ ] Numbers in a column line up (tabular-nums working)
+
+If a screenshot fails any of these, file under "visual issues" in the
+report with the screenshot filename and a one-line description of what
+looks wrong. Don't try to fix layout issues yourself — they often need
+design judgment.
+
+---
+
 ## R1 · Homepage (`/`)
 
 **Navigate:** `/`
@@ -314,15 +347,20 @@ Return the report as a single markdown block at the end. Structure:
 
 ### Per-route results
 
-| Route | Result | Failures | Screenshot |
-|---|---|---|---|
-| R1 Homepage | ✓ pass | — | r1-homepage.png |
-| R2 Wind Turbine | ✗ fail | Act 2 slider doesn't update R² | r2-act2.png |
+| Route | Functional | Visual | Failures | Screenshot |
+|---|---|---|---|---|
+| R1 Homepage | ✓ pass | ✓ pass | — | r1-homepage.png |
+| R2 Wind Turbine | ✗ fail | ✓ pass | Act 2 slider doesn't update R² | r2-act2.png |
+| R5 Census | ✓ pass | ✗ visual | 1900 pyramid x-axis tick labels collide | r5-act1.png |
 | ...
 
 ### Demo-blockers (fix before May 13)
 
 1. [route] [description] [file:line if known]
+
+### Visual issues (screenshots + one-line description)
+
+1. [screenshot file] [what looks wrong, e.g. "axis labels overlapping at <500px"]
 
 ### Non-blockers (file as post-demo work)
 
