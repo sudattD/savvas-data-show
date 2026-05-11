@@ -15,6 +15,8 @@ import { HURRICANES_DATASET } from './hurricanesDataset';
 import { SPOTIFY_DATASET } from './spotifyDataset';
 import { POPULATION_DATASET } from './populationDataset';
 import { OLYMPIC_100M_DATASET } from './olympic100mDataset';
+import { HEART_RATE_DATASET } from './heartRateDataset';
+import { SOLAR_SYSTEM_DATASET } from './solarSystemDataset';
 
 export const DATASETS: Dataset[] = [
   WIND_TURBINE_DATASET,
@@ -23,9 +25,11 @@ export const DATASETS: Dataset[] = [
   COUNTRIES_DATASET,
   EARTHQUAKES_DATASET,
   HURRICANES_DATASET,
+  SOLAR_SYSTEM_DATASET,
   EXOPLANETS_DATASET,
   STARS_DATASET,
   PENGUINS_DATASET,
+  HEART_RATE_DATASET,
   BABY_NAMES_DATASET,
   POPULATION_DATASET,
   NEO_DATASET,

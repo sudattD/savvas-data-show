@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
-import type { Dataset, Row, Filter, NumericFilter, CategoricalFilter } from '../../lib/dataset';
+import { useMemo, useState } from 'react';
+import type { Dataset, Row, Filter, NumericFilter, CategoricalFilter, Attribute } from '../../lib/dataset';
 import { numericStats, categoricalCounts } from '../../lib/dataset';
+
+const CHIPS_COLLAPSED = 12;
 
 interface FilterPanelProps {
   dataset: Dataset;
@@ -74,30 +76,89 @@ export default function FilterPanel({ dataset, allRows, filters, onChange }: Fil
           const f = catFilters.find((cf) => cf.attrKey === a.key);
           const excluded = f?.excluded ?? new Set<string>();
           return (
-            <div key={a.key} className="rounded-lg border border-slate-200 p-3 bg-white">
-              <div className="text-xs font-semibold text-ink mb-2">{a.label}</div>
-              <div className="flex flex-wrap gap-1">
-                {sorted.map(([cat, n]) => {
-                  const off = excluded.has(cat);
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => toggleCategory(a.key, cat)}
-                      className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
-                        off
-                          ? 'bg-slate-100 text-slate-400 line-through'
-                          : 'bg-sky-100 text-sky-800 hover:bg-sky-200'
-                      }`}
-                    >
-                      {cat} <span className="text-[9px] opacity-60">{n}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <CategoryFilter
+              key={a.key}
+              attr={a}
+              sorted={sorted}
+              excluded={excluded}
+              onToggle={(cat) => toggleCategory(a.key, cat)}
+            />
           );
         }
       })}
+    </div>
+  );
+}
+
+function CategoryFilter({
+  attr,
+  sorted,
+  excluded,
+  onToggle,
+}: {
+  attr: Attribute;
+  sorted: Array<[string, number]>;
+  excluded: Set<string>;
+  onToggle: (cat: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [query, setQuery] = useState('');
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return sorted;
+    const q = query.toLowerCase();
+    return sorted.filter(([cat]) => cat.toLowerCase().includes(q));
+  }, [sorted, query]);
+
+  const overflow = filtered.length > CHIPS_COLLAPSED;
+  const visible = expanded || query.trim() ? filtered : filtered.slice(0, CHIPS_COLLAPSED);
+  const hiddenCount = filtered.length - visible.length;
+  const showSearch = sorted.length > CHIPS_COLLAPSED;
+
+  return (
+    <div className="rounded-lg border border-slate-200 p-3 bg-white">
+      <div className="flex items-baseline justify-between mb-2 gap-2">
+        <div className="text-xs font-semibold text-ink">{attr.label}</div>
+        <div className="text-[10px] text-slate-400 font-mono shrink-0">{sorted.length} values</div>
+      </div>
+      {showSearch && (
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="search…"
+          className="w-full mb-2 px-2 py-1 text-xs rounded border border-slate-200 bg-slate-50 focus:bg-white focus:border-sky-500 focus:ring-1 focus:ring-sky-100 outline-none"
+        />
+      )}
+      <div className="flex flex-wrap gap-1">
+        {visible.map(([cat, n]) => {
+          const off = excluded.has(cat);
+          return (
+            <button
+              key={cat}
+              onClick={() => onToggle(cat)}
+              className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+                off
+                  ? 'bg-slate-100 text-slate-400 line-through'
+                  : 'bg-sky-100 text-sky-800 hover:bg-sky-200'
+              }`}
+            >
+              {cat} <span className="text-[9px] opacity-60">{n}</span>
+            </button>
+          );
+        })}
+      </div>
+      {overflow && !query.trim() && (
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-2 text-[10px] eyebrow text-brand-700 hover:text-accent-700 hover:underline"
+        >
+          {expanded ? 'show fewer' : `+${hiddenCount} more`}
+        </button>
+      )}
+      {query.trim() && filtered.length === 0 && (
+        <div className="text-[10px] text-slate-400 italic mt-1">No matches.</div>
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
-import { categoryColor, uniqueValues, DEFAULT_POINT } from './ColorScale';
+import { categoryColor, uniqueValues, DEFAULT_POINT, numericColor, numericRampStops } from './ColorScale';
 
 interface ScatterViewProps {
   dataset: Dataset;

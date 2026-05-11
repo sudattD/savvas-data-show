@@ -88,3 +88,45 @@ export function uniqueValues(
 }
 
 export const DEFAULT_POINT = '#3B82F6';
+
+// Continuous numeric ramp — viridis-inspired, light cool to dark warm.
+// Good perceptual uniformity and colorblind-safer than a rainbow.
+const NUMERIC_RAMP = [
+  '#FDE68A', // amber-200
+  '#FCD34D', // amber-300
+  '#FBBF24', // amber-400
+  '#F59E0B', // amber-500
+  '#D97706', // amber-600
+  '#B45309', // amber-700
+  '#92400E', // amber-800
+  '#7C2D12', // orange-900 (deep)
+];
+
+/** Map a normalized t in [0, 1] to a color from the numeric ramp. */
+export function numericColor(t: number): string {
+  if (!Number.isFinite(t)) return DEFAULT_POINT;
+  const clamped = Math.max(0, Math.min(1, t));
+  const i = clamped * (NUMERIC_RAMP.length - 1);
+  const lo = Math.floor(i);
+  const hi = Math.min(NUMERIC_RAMP.length - 1, lo + 1);
+  if (lo === hi) return NUMERIC_RAMP[lo];
+  return interpolateHex(NUMERIC_RAMP[lo], NUMERIC_RAMP[hi], i - lo);
+}
+
+/** Return the gradient stops as CSS so a legend swatch matches the chart. */
+export function numericRampStops(): string {
+  return NUMERIC_RAMP.join(', ');
+}
+
+function interpolateHex(a: string, b: string, t: number): string {
+  const ar = parseInt(a.slice(1, 3), 16);
+  const ag = parseInt(a.slice(3, 5), 16);
+  const ab = parseInt(a.slice(5, 7), 16);
+  const br = parseInt(b.slice(1, 3), 16);
+  const bg = parseInt(b.slice(3, 5), 16);
+  const bb = parseInt(b.slice(5, 7), 16);
+  const r = Math.round(ar + (br - ar) * t).toString(16).padStart(2, '0');
+  const g = Math.round(ag + (bg - ag) * t).toString(16).padStart(2, '0');
+  const c = Math.round(ab + (bb - ab) * t).toString(16).padStart(2, '0');
+  return `#${r}${g}${c}`;
+}

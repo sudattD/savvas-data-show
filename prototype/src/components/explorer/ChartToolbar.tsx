@@ -116,7 +116,7 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
       {(config.type === 'scatter' || config.type === 'map') && (
         <>
           <Sep />
-          <AttrPicker label="Color by" attrs={cat} value={config.colorKey} onChange={(k) => setKey('color', k)} allowNone />
+          <AttrPicker label="Color by" attrs={[...cat, ...num]} value={config.colorKey} onChange={(k) => setKey('color', k)} allowNone />
         </>
       )}
     </div>
