@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import {
   BarChart,
   Bar,
@@ -8,10 +8,11 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  ReferenceArea,
 } from 'recharts';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
 import { numericStats } from '../../lib/dataset';
-import { niceTicks, niceLogTicks } from '../../lib/niceTicks';
+import { niceTicks, niceTicksWithin, niceLogTicks } from '../../lib/niceTicks';
 
 interface HistogramViewProps {
   dataset: Dataset;
@@ -92,12 +93,85 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
     }));
   }, [values, stats, bins, effectiveLog]);
 
+  // Box-zoom (same pattern as ScatterView): drag a rectangle to zoom in,
+  // double-click or "Reset zoom ↺" to return to the full extent.
+  const [zoomDomain, setZoomDomain] = useState<{ x: [number, number]; y: [number, number] } | null>(null);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragEnd, setDragEnd] = useState<{ x: number; y: number } | null>(null);
+  const chartWrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setZoomDomain(null);
+  }, [xAttr.key, effectiveLog]);
+
+  const maxCount = useMemo(() => {
+    let m = 0;
+    for (const b of binsData) if (b.count > m) m = b.count;
+    return m;
+  }, [binsData]);
+
   const xTickConfig = useMemo(() => {
     if (!stats) return null;
+    if (zoomDomain) {
+      const [lo, hi] = zoomDomain.x;
+      return { domain: [lo, hi] as [number, number], ticks: niceTicksWithin(lo, hi) };
+    }
     return effectiveLog
       ? niceLogTicks(stats.min, stats.max)
       : niceTicks(stats.min, stats.max);
-  }, [stats, effectiveLog]);
+  }, [stats, effectiveLog, zoomDomain]);
+
+  const yTickConfig = useMemo(() => {
+    if (maxCount === 0) return null;
+    if (zoomDomain) {
+      const [lo, hi] = zoomDomain.y;
+      return { domain: [lo, hi] as [number, number], ticks: niceTicksWithin(lo, hi) };
+    }
+    return niceTicks(0, maxCount);
+  }, [maxCount, zoomDomain]);
+
+  const CHART_MARGIN = { top: 16, right: 24, bottom: 36, left: 24 };
+  function pixelToData(chartX: number, chartY: number): { x: number; y: number } | null {
+    const wrapper = chartWrapperRef.current;
+    if (!wrapper || !xTickConfig || !yTickConfig) return null;
+    const w = wrapper.clientWidth;
+    const h = wrapper.clientHeight;
+    const plotW = w - CHART_MARGIN.left - CHART_MARGIN.right;
+    const plotH = h - CHART_MARGIN.top - CHART_MARGIN.bottom;
+    const px = chartX - CHART_MARGIN.left;
+    const py = chartY - CHART_MARGIN.top;
+    if (px < 0 || px > plotW || py < 0 || py > plotH) return null;
+    const [x0, x1] = xTickConfig.domain;
+    const [y0, y1] = yTickConfig.domain;
+    const dataX = effectiveLog
+      ? Math.pow(10, Math.log10(x0) + (px / plotW) * (Math.log10(x1) - Math.log10(x0)))
+      : x0 + (px / plotW) * (x1 - x0);
+    const dataY = y1 - (py / plotH) * (y1 - y0);
+    return { x: dataX, y: dataY };
+  }
+
+  function commitZoom() {
+    if (!dragStart || !dragEnd || !xTickConfig || !yTickConfig) {
+      setDragStart(null);
+      setDragEnd(null);
+      return;
+    }
+    const x1 = Math.min(dragStart.x, dragEnd.x);
+    const x2 = Math.max(dragStart.x, dragEnd.x);
+    const y1 = Math.max(0, Math.min(dragStart.y, dragEnd.y));
+    const y2 = Math.max(dragStart.y, dragEnd.y);
+    const [xd0, xd1] = xTickConfig.domain;
+    const [yd0, yd1] = yTickConfig.domain;
+    if (Math.abs(x2 - x1) < Math.abs(xd1 - xd0) * 0.02 ||
+        Math.abs(y2 - y1) < Math.abs(yd1 - yd0) * 0.02) {
+      setDragStart(null);
+      setDragEnd(null);
+      return;
+    }
+    setZoomDomain({ x: [x1, x2], y: [y1, y2] });
+    setDragStart(null);
+    setDragEnd(null);
+  }
 
   // Count below the marker value.
   const belowCount = useMemo(
@@ -170,9 +244,38 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
         )}
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 relative" ref={chartWrapperRef}>
+        {zoomDomain && (
+          <button
+            type="button"
+            onClick={() => setZoomDomain(null)}
+            className="absolute top-2 right-2 z-10 text-xs font-semibold px-2.5 py-1 rounded-md bg-brand-900 text-white hover:bg-brand-700 shadow-sm"
+            title="Return to the full data extent"
+          >
+            Reset zoom ↺
+          </button>
+        )}
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={binsData} margin={{ top: 16, right: 24, bottom: 36, left: 24 }}>
+          <BarChart
+            data={binsData}
+            margin={{ top: 16, right: 24, bottom: 36, left: 24 }}
+            onMouseDown={(e: any) => {
+              if (!e || e.chartX == null || e.chartY == null) return;
+              const p = pixelToData(e.chartX, e.chartY);
+              if (!p) return;
+              setDragStart(p);
+              setDragEnd(p);
+            }}
+            onMouseMove={(e: any) => {
+              if (!dragStart || !e || e.chartX == null || e.chartY == null) return;
+              const p = pixelToData(e.chartX, e.chartY);
+              if (p) setDragEnd(p);
+            }}
+            onMouseUp={commitZoom}
+            onMouseLeave={commitZoom}
+            onDoubleClick={() => setZoomDomain(null)}
+            style={{ cursor: 'crosshair' }}
+          >
             <CartesianGrid stroke="#E5EFFB" strokeDasharray="3 3" />
             <XAxis
               dataKey="bin"
@@ -191,6 +294,9 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
             />
             <YAxis
               stroke="#64748B"
+              domain={yTickConfig ? yTickConfig.domain : undefined}
+              ticks={yTickConfig?.ticks}
+              allowDataOverflow={!!zoomDomain}
               label={{
                 value: 'Count',
                 angle: -90,
@@ -221,6 +327,20 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
               />
             )}
             <Bar dataKey="count" fill="#3B82F6" fillOpacity={0.85} />
+            {dragStart && dragEnd && (
+              <ReferenceArea
+                x1={Math.min(dragStart.x, dragEnd.x)}
+                x2={Math.max(dragStart.x, dragEnd.x)}
+                y1={Math.min(dragStart.y, dragEnd.y)}
+                y2={Math.max(dragStart.y, dragEnd.y)}
+                fill="#60A5FA"
+                fillOpacity={0.15}
+                stroke="#3B82F6"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                ifOverflow="visible"
+              />
+            )}
           </BarChart>
         </ResponsiveContainer>
       </div>
