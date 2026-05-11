@@ -13,7 +13,7 @@
 // auto-provisioned; no code change needed.
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { put, list } from '@vercel/blob';
+import { put, list, del } from '@vercel/blob';
 
 interface FeedbackItem {
   type: 'text-edit' | 'comment';
@@ -28,7 +28,12 @@ interface FeedbackItem {
   comment?: string;
 }
 
-const BLOB_KEY = 'input/feedback.json';
+// One blob per item — keys sort lexicographically by timestamp + suffix so
+// GET enumerates in order. This avoids the read-modify-write race that bit
+// us with the single-blob-array pattern (Vercel Blob's CDN serves stale
+// reads of public URLs, so two POSTs in rapid succession each saw [] and
+// the last write won).
+const PREFIX = 'input/items/';
 const RING: FeedbackItem[] = [];
 const MAX_RING = 500;
 
@@ -36,21 +41,33 @@ function blobEnabled(): boolean {
   return !!process.env.BLOB_READ_WRITE_TOKEN;
 }
 
+function itemKey(item: FeedbackItem): string {
+  // ts then random suffix lets duplicate-timestamp posts coexist.
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `${PREFIX}${item.timestamp}-${rand}.json`;
+}
+
 async function readAll(): Promise<FeedbackItem[]> {
   if (!blobEnabled()) return [...RING];
   try {
-    const { blobs } = await list({ prefix: BLOB_KEY });
-    const match = blobs.find((b) => b.pathname === BLOB_KEY);
-    if (!match) return [];
-    // The Blob public URL is CDN-cached. Append a cache-busting param so
-    // append-after-append doesn't read a stale view of the file.
-    const bustUrl = `${match.url}?t=${Date.now()}`;
-    const res = await fetch(bustUrl, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const data = (await res.json()) as FeedbackItem[];
-    return Array.isArray(data) ? data : [];
+    const { blobs } = await list({ prefix: PREFIX });
+    if (blobs.length === 0) return [];
+    // Sort newest-first by pathname (which starts with the ISO timestamp).
+    const sorted = [...blobs].sort((a, b) => (a.pathname < b.pathname ? 1 : -1));
+    const items = await Promise.all(
+      sorted.map(async (b) => {
+        try {
+          const res = await fetch(`${b.url}?t=${Date.now()}`, { cache: 'no-store' });
+          if (!res.ok) return null;
+          return (await res.json()) as FeedbackItem;
+        } catch {
+          return null;
+        }
+      }),
+    );
+    return items.filter((i): i is FeedbackItem => i !== null);
   } catch (e) {
-    console.error('[input] blob read failed:', e);
+    console.error('[input] blob list failed:', e);
     return [];
   }
 }
@@ -61,15 +78,14 @@ async function append(item: FeedbackItem): Promise<number> {
     if (RING.length > MAX_RING) RING.shift();
     return RING.length;
   }
-  const current = await readAll();
-  current.push(item);
-  await put(BLOB_KEY, JSON.stringify(current), {
+  await put(itemKey(item), JSON.stringify(item), {
     access: 'public',
     contentType: 'application/json',
     addRandomSuffix: false,
-    allowOverwrite: true,
   });
-  return current.length;
+  // Don't re-list to get the count; that's another CDN hit. Just return -1
+  // to signal "stored, count unknown from this request".
+  return -1;
 }
 
 async function clearAll(): Promise<void> {
@@ -77,12 +93,9 @@ async function clearAll(): Promise<void> {
     RING.length = 0;
     return;
   }
-  await put(BLOB_KEY, '[]', {
-    access: 'public',
-    contentType: 'application/json',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  });
+  const { blobs } = await list({ prefix: PREFIX });
+  if (blobs.length === 0) return;
+  await del(blobs.map((b) => b.url));
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

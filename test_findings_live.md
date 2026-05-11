@@ -48,7 +48,18 @@ This file is appended as I go. Terminal Claude is free to start fixing the highe
 - **Why this is a blocker:** the Countries-by-Region life-expectancy box plot is one of the four prescribed demo scenarios. Audience will hit this exact view.
 - **Hypothesis:** same family of bugs as B5 — chart type swaps but the underlying SVG render is unimplemented or broken for some types.
 
-### B7. Chart-type tab icons use Braille / block / geometric Unicode (⠠⠂ ▁▃▅▆▃▁ ▌▌ ▭) — **judgment-call / minor**
+### B7. L1 Slider-of-Lies & L5 Pick-Your-Story charts only render a tiny X-segment — **important**
+- Same family as B2. The CO2 line in L1 only spans roughly 1958–1968 visually (full data is 1958–2025). On L5, the line is visible only at the start of the time range and seems to clip out of bounds. Slider/verdict/headline calculations are correct (so model layer is fine), it's the visualization that's truncated.
+- **Note:** L1 visual-steepness verdict ("Misleading 90%" at floor=315) and L5 headline ("rose 114.8 ppm... 1.66 ppm/year") update correctly with sliders. Pedagogically the lesson can still be delivered, but the chart is the artifact that sells it.
+
+### B8. L6 Survivorship Bias — placed armor squares don't render visually — **minor**
+- **Repro:** click on the plane 3 times → "your armor" counter goes 0→3 → Reveal still works (shows correct cockpit/engines amber squares). But the user's 3 placed-armor squares are never visible on the plane SVG.
+- **Fix hint:** an SVG `<rect>` array bound to a state `armor[]` is probably either rendering with `fill="transparent"` or off-canvas. Compare to the rendering path that shows the answer squares (those work).
+
+### B9. L4 problem counter starts at 14, not 17 — **info only**
+- The handoff says "problem counter goes from 17 → 0". Live counter starts at 14 (the breakdown: whitespace 1 + dates 4 + units 3 + missing 3 + duplicates 2 + outlier 1 = 14). Probably an iteration since the handoff was written. Not a bug — just calling out the spec drift.
+
+### B10. Chart-type tab icons use Braille / block / geometric Unicode (⠠⠂ ▁▃▅▆▃▁ ▌▌ ▭) — **judgment-call / minor**
 - The design spec says "no emoji rendered anywhere." These aren't technically emoji (no emoji presentation, no U+FE0F selector, in BMP Geometric Shapes / Braille blocks) but they read as decorative icon characters. Probably intentional — they're charming and on-brand. **No action unless** you specifically intended only word labels here.
 
 ---
@@ -77,7 +88,13 @@ This file is appended as I go. Terminal Claude is free to start fixing the highe
 | `/explorer?dataset=tides` | PASS scatter (377 pts spread 759 px) |
 | `/explorer` Histogram mode | **FAIL** B5 (no bars rendered) |
 | `/explorer` Box plot mode | **FAIL** B6 (no boxes rendered) |
-| `/lessons` | not yet tested |
+| `/lessons` | PASS (6 cards, color-coded by family, beautiful) |
+| `/lessons/slider-of-lies` | PARTIAL — slider/verdict work, chart truncated (B7) |
+| `/lessons/walk-into-a-bar` | PASS — slider drags billionaire, mean explodes, median barely moves |
+| `/lessons/tidy-data` | PASS — WIDE→LONG toggle reveals bar chart |
+| `/lessons/csv-from-hell` | PASS — counter 14→13 on Trim Whitespace click (B9 spec drift) |
+| `/lessons/pick-your-story` | PARTIAL — slider+headline+presets work, chart line truncated (B7) |
+| `/lessons/survivorship-bias` | PARTIAL — click placement counts but isn't visible (B8); reveal works |
 | `/lessons/*` (×6) | not yet tested |
 | `/wind-turbine` | not yet tested |
 | `/voice-dna` | not yet tested |
