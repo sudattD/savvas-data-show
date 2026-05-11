@@ -15,7 +15,6 @@ function aggregateBands(year: number) {
     if (r.sex === 'Male') slot.male += r.population;
     else slot.female += r.population;
   }
-  // Collapse 80+ for compact teaser
   return order
     .map((ageGroup) => ({ ageGroup, ...(map.get(ageGroup) as { male: number; female: number }) }))
     .filter((b) => b.male + b.female > 0);
@@ -39,19 +38,22 @@ interface IdentifyProps {
 }
 
 export default function CensusIdentify({ onNext }: IdentifyProps) {
-  const [firstQuestion, setFirstQuestion] = useState('');
-  const [mainQuestion, setMainQuestion] = useState('How has the age shape of America changed?');
+  const [notice, setNotice] = useState('');
   const [whoChangedMore, setWhoChangedMore] = useState<'under18' | 'over65' | ''>('');
   const [seniorChangePp, setSeniorChangePp] = useState('');
-  const [reasoning, setReasoning] = useState('');
-  const [tooLow, setTooLow] = useState('');
-  const [tooHigh, setTooHigh] = useState('');
 
-  const c = parseFloat(seniorChangePp);
-  const lo = parseFloat(tooLow);
-  const hi = parseFloat(tooHigh);
-  const valid = firstQuestion.trim().length > 2 && mainQuestion.trim().length > 2 && whoChangedMore !== ''
-    && Number.isFinite(c) && Number.isFinite(lo) && Number.isFinite(hi) && lo < hi;
+  const finish = () => {
+    const c = parseFloat(seniorChangePp);
+    onNext({
+      firstQuestion: notice,
+      mainQuestion: 'How has the age shape of America changed?',
+      whoChangedMore,
+      seniorChangePp: Number.isFinite(c) ? c : 0,
+      reasoning: '',
+      tooLow: 0,
+      tooHigh: 0,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -65,135 +67,83 @@ export default function CensusIdentify({ onNext }: IdentifyProps) {
           <h1 className="font-display text-2xl md:text-3xl font-bold text-brand-900 leading-tight">
             Same country. 120 years apart.
           </h1>
-          <p className="text-sm text-ink-soft">Compare two snapshots and commit to what changed.</p>
+          <p className="text-sm text-ink-soft">Look at 1900, commit to a guess, then see 2020.</p>
         </div>
       </div>
 
       <HostBubble accent="rose" name="Maya">
-        Here are two snapshots of the United States. In 1900 the country had
-        76 million people. In 2020 it had 331 million. We can plot the
-        population as a <em>pyramid</em> — ages on the vertical axis, count on
-        the horizontal, men on the left, women on the right. The 1900 picture
-        is a real pyramid: wide bottom, narrow top. Before we look at 2020,
-        I want you to commit: how do you think the shape changed, and which
-        end shifted more?
+        Two snapshots of the United States. In 1900 the country had 76 million
+        people; in 2020, 331 million. Here's 1900 as a <em>pyramid</em> — ages
+        up the side, men on the left, women on the right. Take a quick look,
+        then commit to a guess about how it changed.
       </HostBubble>
 
-      {/* 1900 pyramid teaser */}
       <PyramidTeaser />
 
-      <div className="bg-surface-raised border border-surface-line rounded-lg p-6 space-y-5">
-        <Question n={1} label="What is the first question that comes to mind?">
+      <div className="bg-surface-raised border border-surface-line rounded-lg p-5 space-y-4">
+        <div>
+          <label className="text-sm font-semibold text-ink block mb-1.5">
+            What do you notice or wonder? <span className="text-[10px] text-ink-muted italic font-normal">(one line is fine)</span>
+          </label>
           <textarea
-            value={firstQuestion}
-            onChange={(e) => setFirstQuestion(e.target.value)}
+            value={notice}
+            onChange={(e) => setNotice(e.target.value)}
             placeholder="e.g. Why is the bottom so much wider? Did everyone have lots of kids?"
             className="w-full p-3 rounded-md border border-surface-line focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none text-sm resize-none"
             rows={2}
           />
-        </Question>
+        </div>
 
-        <Question n={2} label="Write down the main question you will investigate.">
-          <input
-            value={mainQuestion}
-            onChange={(e) => setMainQuestion(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-md border border-surface-line focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none text-sm"
-          />
-        </Question>
-
-        <Question n={3} label="Which group's share of the population changed MORE between 1900 and 2020?">
-          <div className="grid grid-cols-2 gap-3">
-            <ChoiceCard
-              selected={whoChangedMore === 'under18'}
-              onClick={() => setWhoChangedMore('under18')}
-              title="Kids (under 18)"
-              subtitle="The bottom of the pyramid"
-            />
-            <ChoiceCard
-              selected={whoChangedMore === 'over65'}
-              onClick={() => setWhoChangedMore('over65')}
-              title="Seniors (65+)"
-              subtitle="The top of the pyramid"
-            />
+        <div className="border-t border-surface-line pt-4 space-y-4">
+          <div>
+            <div className="eyebrow text-rose-700 mb-1">TODAY'S QUESTION</div>
+            <div className="text-sm font-semibold text-ink mb-3">
+              Which end of the pyramid changed more between 1900 and 2020?
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <ChoiceCard
+                selected={whoChangedMore === 'under18'}
+                onClick={() => setWhoChangedMore(whoChangedMore === 'under18' ? '' : 'under18')}
+                title="Kids (under 18)"
+                subtitle="The bottom of the pyramid"
+              />
+              <ChoiceCard
+                selected={whoChangedMore === 'over65'}
+                onClick={() => setWhoChangedMore(whoChangedMore === 'over65' ? '' : 'over65')}
+                title="Seniors (65+)"
+                subtitle="The top of the pyramid"
+              />
+            </div>
           </div>
-        </Question>
 
-        <Question n={4} label="In 1900, seniors (65+) were about 4% of the US. What % are they today?">
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              step="0.1"
-              value={seniorChangePp}
-              onChange={(e) => setSeniorChangePp(e.target.value)}
-              placeholder="e.g. 12"
-              className="w-32 px-3 py-2.5 rounded-md border border-surface-line focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none font-mono tabular-nums"
-            />
-            <span className="text-sm text-ink-muted">% of population in 2020</span>
-          </div>
-        </Question>
-
-        <Question n={5} label="Explain your reasoning." optional>
-          <textarea
-            value={reasoning}
-            onChange={(e) => setReasoning(e.target.value)}
-            placeholder="What do you know about life expectancy, family size, immigration?"
-            className="w-full p-3 rounded-md border border-surface-line focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none text-sm resize-none"
-            rows={2}
-          />
-        </Question>
-
-        <div className="border-t border-surface-line pt-5">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <Question n={6} label="A senior share that's too small (%).">
+          <div>
+            <label className="text-xs font-semibold text-ink-soft block mb-1.5">
+              In 1900, seniors (65+) were ~4%. What % are they today? <span className="text-[10px] text-ink-muted italic font-normal">(optional)</span>
+            </label>
+            <div className="flex items-center gap-2">
               <input
                 type="number"
                 step="0.1"
-                value={tooLow}
-                onChange={(e) => setTooLow(e.target.value)}
-                placeholder="e.g. 5"
-                className="w-full px-3 py-2.5 rounded-md border border-surface-line focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none font-mono"
+                value={seniorChangePp}
+                onChange={(e) => setSeniorChangePp(e.target.value)}
+                placeholder="e.g. 12"
+                className="w-32 px-3 py-2 rounded-md border border-surface-line focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none font-mono tabular-nums"
               />
-            </Question>
-            <Question n={7} label="A senior share that's too large (%).">
-              <input
-                type="number"
-                step="0.1"
-                value={tooHigh}
-                onChange={(e) => setTooHigh(e.target.value)}
-                placeholder="e.g. 35"
-                className="w-full px-3 py-2.5 rounded-md border border-surface-line focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none font-mono"
-              />
-            </Question>
+              <span className="text-sm text-ink-muted">% in 2020</span>
+            </div>
           </div>
-          <p className="text-xs text-ink-muted mt-2 italic">Bracket the answer — you don't have to guess it exactly.</p>
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="text-xs text-ink-muted">Commit before the data lands — being wrong is the point.</div>
         <button
-          disabled={!valid}
-          onClick={() => onNext({
-            firstQuestion, mainQuestion, whoChangedMore: whoChangedMore as 'under18' | 'over65',
-            seniorChangePp: c, reasoning, tooLow: lo, tooHigh: hi,
-          })}
-          className="px-6 py-3 rounded-md bg-brand-900 text-white font-semibold shadow-editorial hover:bg-brand-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition"
+          onClick={finish}
+          className="px-6 py-3 rounded-md bg-brand-900 text-white font-semibold shadow-editorial hover:bg-brand-700 transition"
         >
           Next: see the pyramids →
         </button>
       </div>
-    </div>
-  );
-}
-
-function Question({ n, label, optional, children }: { n: number; label: string; optional?: boolean; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="flex items-baseline gap-2 mb-1.5">
-        <span className="text-[10px] font-mono text-ink-muted">{n}</span>
-        <label className="text-sm font-semibold text-ink">{label}</label>
-        {optional && <span className="text-[10px] text-ink-muted italic">(optional)</span>}
-      </div>
-      {children}
     </div>
   );
 }

@@ -32,10 +32,13 @@ const WHO_CHANGED_MORE: 'under18' | 'over65' = UNDER18_DROP > OVER65_GAIN ? 'und
 export default function CensusInterpret({ identify, onRestart }: InterpretProps) {
   const [submitted, setSubmitted] = useState(false);
 
+  const hasGuess = identify.seniorChangePp > 0;
+  const hasBracket = identify.tooLow > 0 && identify.tooHigh > 0;
+  const hasPick = identify.whoChangedMore !== '';
   const pickedRight = identify.whoChangedMore === WHO_CHANGED_MORE;
-  const actualInBracket = OVER65_2020 >= identify.tooLow && OVER65_2020 <= identify.tooHigh;
+  const actualInBracket = hasBracket && OVER65_2020 >= identify.tooLow && OVER65_2020 <= identify.tooHigh;
   const closeness = Math.abs(identify.seniorChangePp - OVER65_2020);
-  const closenessLabel =
+  const closenessLabel = !hasGuess ? '' :
     closeness < 2 ? 'Right on the money.' :
     closeness < 5 ? 'Pretty close.' :
     closeness < 10 ? 'In the right neighborhood.' :
@@ -58,11 +61,15 @@ export default function CensusInterpret({ identify, onRestart }: InterpretProps)
       </div>
 
       <HostBubble accent="rose" name="Maya">
-        You predicted that <strong>{identify.whoChangedMore === 'under18' ? 'kids under 18' : 'seniors 65+'}</strong>{' '}
-        changed share more, and that seniors are about{' '}
-        <strong>{identify.seniorChangePp}%</strong> of the US today (between{' '}
-        <strong>{identify.tooLow}%</strong> and <strong>{identify.tooHigh}%</strong>).
-        Here's what the census actually says. {closenessLabel}
+        {hasPick ? (
+          <>You predicted that <strong>{identify.whoChangedMore === 'under18' ? 'kids under 18' : 'seniors 65+'}</strong> changed share more. </>
+        ) : null}
+        {hasGuess ? (
+          <>You said seniors are about <strong>{identify.seniorChangePp}%</strong> of the US today
+          {hasBracket ? <> (between <strong>{identify.tooLow}%</strong> and <strong>{identify.tooHigh}%</strong>)</> : null}.
+          {' '}{closenessLabel}{' '}</>
+        ) : null}
+        Here's what the census actually says.
       </HostBubble>
 
       {/* The reveal card */}
@@ -84,23 +91,29 @@ export default function CensusInterpret({ identify, onRestart }: InterpretProps)
       </div>
 
       {/* Verdict on student commits */}
-      <div className="grid md:grid-cols-2 gap-3">
-        <Verdict
-          ok={pickedRight}
-          title={pickedRight ? `Right — ${WHO_CHANGED_MORE === 'under18' ? 'kids' : 'seniors'} changed more` : `Other group changed more`}
-          body={pickedRight
-            ? `Kids' share dropped ${UNDER18_DROP.toFixed(1)} pp while seniors' share grew ${OVER65_GAIN.toFixed(1)} pp. The bigger absolute swing was at the ${WHO_CHANGED_MORE === 'under18' ? 'bottom of the pyramid' : 'top of the pyramid'}.`
-            : `Kids' share dropped ${UNDER18_DROP.toFixed(1)} pp; seniors' share grew ${OVER65_GAIN.toFixed(1)} pp. The bigger absolute swing was at the ${WHO_CHANGED_MORE === 'under18' ? 'bottom of the pyramid' : 'top of the pyramid'}.`}
-        />
-        <Verdict
-          ok={actualInBracket}
-          title={actualInBracket ? `Actual senior share (${OVER65_2020.toFixed(1)}%) is inside your bracket` : `Actual senior share (${OVER65_2020.toFixed(1)}%) is outside your bracket`}
-          body={`You bracketed ${identify.tooLow}% to ${identify.tooHigh}%. Your point guess was ${identify.seniorChangePp}% — off by ${closeness.toFixed(1)} pp.`}
-          warn={!actualInBracket}
-        />
-      </div>
+      {(hasPick || hasGuess) && (
+        <div className={`grid ${hasPick && hasGuess ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-3`}>
+          {hasPick && (
+            <Verdict
+              ok={pickedRight}
+              title={pickedRight ? `Right — ${WHO_CHANGED_MORE === 'under18' ? 'kids' : 'seniors'} changed more` : `Other group changed more`}
+              body={`Kids' share dropped ${UNDER18_DROP.toFixed(1)} pp; seniors' share grew ${OVER65_GAIN.toFixed(1)} pp. The bigger absolute swing was at the ${WHO_CHANGED_MORE === 'under18' ? 'bottom of the pyramid' : 'top of the pyramid'}.`}
+            />
+          )}
+          {hasGuess && (
+            <Verdict
+              ok={hasBracket ? actualInBracket : closeness < 5}
+              title={`Senior share is actually ${OVER65_2020.toFixed(1)}%`}
+              body={hasBracket
+                ? `You bracketed ${identify.tooLow}% to ${identify.tooHigh}%. Your point guess was ${identify.seniorChangePp}% — off by ${closeness.toFixed(1)} pp.`
+                : `Your guess was ${identify.seniorChangePp}% — off by ${closeness.toFixed(1)} pp.`}
+              warn={hasBracket && !actualInBracket}
+            />
+          )}
+        </div>
+      )}
 
-      {!pickedRight && (
+      {hasPick && !pickedRight && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-900">
           <strong>Surprise:</strong> most people guess seniors, since "the country is aging"
           is the headline you hear. But the bottom of the pyramid moved more

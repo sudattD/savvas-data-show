@@ -8,101 +8,70 @@ interface Act1Props {
 }
 
 export default function Act1Identify({ onNext }: Act1Props) {
-  const [conjecture, setConjecture] = useState('');
-  const [low, setLow] = useState<string>('');
-  const [high, setHigh] = useState<string>('');
+  const [notice, setNotice] = useState('');
+  const [guess, setGuess] = useState('');
 
-  const lowN = parseFloat(low);
-  const highN = parseFloat(high);
-  const valid =
-    conjecture.trim().length > 0 &&
-    !isNaN(lowN) &&
-    !isNaN(highN) &&
-    lowN >= 0 &&
-    highN > lowN;
+  const finish = () => {
+    const g = parseFloat(guess);
+    onNext({ conjecture: notice, low: Number.isFinite(g) ? g : 0, high: Number.isFinite(g) ? g : 0 });
+  };
 
   return (
     <div className="space-y-6">
       <ActHeader
         act={1}
         title="What's the question?"
-        subtitle="Watch, wonder, and make a first guess."
+        subtitle="Look at the scatter, make a quick guess."
       />
 
       <HostBubble accent="sky">
-        Hey — I'm Casey. Imagine a wind turbine spinning out on a hill. Bigger
-        gusts make more electricity, right? Until they don't. Today we're
-        figuring out exactly how much power a real turbine makes at different
-        wind speeds. Here's data from one — every dot is one minute of one
-        turbine's life.
+        Hey — I'm Casey. Every dot is one minute of one wind turbine's life:
+        the wind speed it saw, and the power it made. Take ten seconds with
+        the scatter, then make a guess.
       </HostBubble>
 
       <WindChart showModel={false} />
 
-      <div className="bg-white rounded-2xl shadow-sm border border-sky-100 p-6 space-y-5">
+      <div className="bg-white rounded-2xl shadow-sm border border-sky-100 p-5 space-y-4">
         <div>
-          <h2 className="font-display text-lg font-bold text-ink mb-1">
-            Make a conjecture.
-          </h2>
-          <p className="text-sm text-slate-600 mb-2">
-            What does the relationship between wind speed and power look like
-            to you? One sentence.
-          </p>
+          <label className="text-sm font-semibold text-ink block mb-1.5">
+            What do you notice? <span className="text-[10px] text-slate-500 italic font-normal">(one line is fine)</span>
+          </label>
           <textarea
-            value={conjecture}
-            onChange={(e) => setConjecture(e.target.value)}
-            placeholder="As wind speed goes up, power…"
+            value={notice}
+            onChange={(e) => setNotice(e.target.value)}
+            placeholder="e.g. Power climbs steeply, then flattens out near the top."
             className="w-full p-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none text-sm resize-none"
             rows={2}
           />
         </div>
 
-        <div className="border-t border-slate-100 pt-5">
-          <h2 className="font-display text-lg font-bold text-ink mb-1">
-            Set your bounds.
-          </h2>
-          <p className="text-sm text-slate-600 mb-3">
-            <span className="font-semibold">If the wind blows at 10 m/s</span>{' '}
-            (about 22 mph — a strong breeze), how much power do you think this
-            turbine produces?
-          </p>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block uppercase tracking-wide">
-                Too low (kW)
-              </label>
-              <input
-                type="number"
-                value={low}
-                onChange={(e) => setLow(e.target.value)}
-                placeholder="e.g. 200"
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none font-mono"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-slate-500 mb-1 block uppercase tracking-wide">
-                Too high (kW)
-              </label>
-              <input
-                type="number"
-                value={high}
-                onChange={(e) => setHigh(e.target.value)}
-                placeholder="e.g. 3000"
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none font-mono"
-              />
-            </div>
+        <div className="border-t border-slate-100 pt-4">
+          <div className="text-[10px] font-semibold tracking-widest text-sky-700 mb-1">TODAY'S QUESTION</div>
+          <div className="text-sm font-semibold text-ink mb-3">
+            At a strong breeze (10 m/s ≈ 22 mph), how many kilowatts does this turbine make?
           </div>
-          <p className="text-xs text-slate-500 mt-2 italic">
-            You're not trying to be right — you're bracketing the answer.
-          </p>
+          <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+            Predict before you test <span className="text-[10px] text-slate-500 italic font-normal">(optional)</span>
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              value={guess}
+              onChange={(e) => setGuess(e.target.value)}
+              placeholder="e.g. 800"
+              className="w-32 px-3 py-2 rounded-md border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none font-mono tabular-nums"
+            />
+            <span className="text-sm text-slate-600">kW</span>
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="text-xs text-slate-500">You're not trying to be right — just commit before the model lands.</div>
         <button
-          disabled={!valid}
-          onClick={() => valid && onNext({ conjecture, low: lowN, high: highN })}
-          className="px-6 py-3 rounded-xl bg-sky-600 text-white font-semibold shadow-md hover:bg-sky-700 transition disabled:bg-slate-300 disabled:cursor-not-allowed"
+          onClick={finish}
+          className="px-6 py-3 rounded-xl bg-sky-600 text-white font-semibold shadow-md hover:bg-sky-700 transition"
         >
           Next: build a model →
         </button>

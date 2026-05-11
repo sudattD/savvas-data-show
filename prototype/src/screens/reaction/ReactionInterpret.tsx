@@ -1,27 +1,42 @@
 import { useState } from 'react';
 import HostBubble from '../../components/HostBubble';
 import type { IdentifyState } from './ReactionIdentify';
+import type { ReactionTrials } from './ReactionPlay';
 
 interface InterpretProps {
   identify: IdentifyState;
-  trials: number[];
+  trials: ReactionTrials;
   onRestart: () => void;
 }
 
-// Published research: median simple visual reaction time is ~270ms in adults (Deary et al 2001; Woods et al 2015)
-const CANONICAL_MEDIAN = 270;
+// Published research: simple visual ~270ms, simple auditory ~160ms (Woods et al 2015).
+const CANONICAL_VISUAL = 270;
+const CANONICAL_AUDIO = 160;
 
-export default function ReactionInterpret({ identify, trials, onRestart }: InterpretProps) {
-  const sorted = [...trials].sort((a, b) => a - b);
+function summarize(arr: number[]) {
+  if (arr.length === 0) return { median: 0, mean: 0, fastest: 0, slowest: 0, stdDev: 0 };
+  const sorted = [...arr].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)];
-  const mean = trials.reduce((s, x) => s + x, 0) / trials.length;
+  const mean = arr.reduce((s, x) => s + x, 0) / arr.length;
   const fastest = sorted[0];
   const slowest = sorted[sorted.length - 1];
-  const stdDev = Math.sqrt(trials.reduce((s, x) => s + (x - mean) ** 2, 0) / trials.length);
+  const stdDev = Math.sqrt(arr.reduce((s, x) => s + (x - mean) ** 2, 0) / arr.length);
+  return { median, mean, fastest, slowest, stdDev };
+}
 
-  const inBounds = median >= identify.tooLow && median <= identify.tooHigh;
-  const closeness = Math.abs(median - identify.conjecture);
-  const closenessLabel = closeness < 30 ? 'Right on the money.' : closeness < 80 ? 'Pretty close.' : 'A long way off your guess.';
+export default function ReactionInterpret({ identify, trials, onRestart }: InterpretProps) {
+  const v = summarize(trials.visual);
+  const a = summarize(trials.audio);
+  const audioFasterBy = v.median - a.median;
+
+  const hasGuess = identify.conjecture > 0;
+  const hasBounds = identify.tooLow > 0 && identify.tooHigh > 0;
+  const inBounds = hasBounds && v.median >= identify.tooLow && v.median <= identify.tooHigh;
+  const closeness = Math.abs(v.median - identify.conjecture);
+  const closenessLabel = !hasGuess ? '' :
+    closeness < 30 ? 'Right on the money.' :
+    closeness < 80 ? 'Pretty close.' :
+    'A long way off your guess.';
 
   const [submitted, setSubmitted] = useState(false);
 
@@ -35,132 +50,149 @@ export default function ReactionInterpret({ identify, trials, onRestart }: Inter
         <div>
           <div className="eyebrow text-violet-700">INTERPRET THE RESULTS</div>
           <h1 className="font-display text-2xl md:text-3xl font-bold text-brand-900 leading-tight">
-            What does it mean?
+            Eyes vs. ears.
           </h1>
-          <p className="text-sm text-ink-soft">Compare your data, your guess, and the published research.</p>
+          <p className="text-sm text-ink-soft">Compare your two distributions and the published research.</p>
         </div>
       </div>
 
       <HostBubble accent="emerald" name="Alex">
-        You played {trials.length} trials. Your median reaction time was{' '}
-        <strong>{median} ms</strong>. Your guess was{' '}
-        <strong>{identify.conjecture} ms</strong>. You said the answer would
-        be between <strong>{identify.tooLow}</strong> and{' '}
-        <strong>{identify.tooHigh} ms</strong>. {closenessLabel}
+        Your visual median was <strong>{v.median} ms</strong>. Your audio median
+        was <strong>{a.median} ms</strong>. {audioFasterBy > 0 ? (
+          <>That's <strong>{audioFasterBy} ms faster</strong> with your ears than your eyes — sound takes a shorter path.</>
+        ) : audioFasterBy < 0 ? (
+          <>That's <strong>{Math.abs(audioFasterBy)} ms faster</strong> with your eyes than your ears — unusual, but possible.</>
+        ) : (
+          <>Your two medians came in identical — very unusual!</>
+        )}
+        {hasGuess && <> You guessed <strong>{identify.conjecture} ms</strong>. {closenessLabel}</>}
       </HostBubble>
 
       {/* Comparison stats */}
       <div className="grid md:grid-cols-3 gap-3">
-        <Stat label="Your bounds" value={`${identify.tooLow} – ${identify.tooHigh}`} unit="ms" tone="amber" />
         <Stat
-          label="Your median"
-          value={`${median}`}
+          label="Visual median"
+          value={`${v.median}`}
           unit="ms"
-          tone={inBounds ? 'emerald' : 'rose'}
-          sub={inBounds ? 'Inside your bounds' : 'Outside your bounds'}
+          tone={inBounds ? 'emerald' : hasBounds ? 'rose' : 'brand'}
+          sub={`research ${CANONICAL_VISUAL} ms`}
         />
         <Stat
-          label="Research median"
-          value={`${CANONICAL_MEDIAN}`}
+          label="Audio median"
+          value={`${a.median}`}
           unit="ms"
-          tone="brand"
-          sub="adults, Woods et al. 2015"
+          tone="emerald"
+          sub={`research ${CANONICAL_AUDIO} ms`}
+        />
+        <Stat
+          label={audioFasterBy >= 0 ? 'Audio is faster by' : 'Visual is faster by'}
+          value={`${Math.abs(audioFasterBy)}`}
+          unit="ms"
+          tone="amber"
+          sub={`research gap ${CANONICAL_VISUAL - CANONICAL_AUDIO} ms`}
         />
       </div>
 
-      {/* Full distribution viz */}
+      {/* Distribution viz — both rounds on one axis */}
       <div className="bg-surface-raised border border-surface-line rounded-lg p-5">
-        <div className="eyebrow text-ink-muted mb-3">YOUR DISTRIBUTION · {trials.length} TRIALS</div>
-        <div className="relative h-48">
-          <svg viewBox="0 0 600 200" preserveAspectRatio="none" className="w-full h-full">
+        <div className="eyebrow text-ink-muted mb-3">DISTRIBUTIONS · {trials.visual.length} VISUAL + {trials.audio.length} AUDIO TRIALS</div>
+        <div className="relative h-56">
+          <svg viewBox="0 0 600 230" preserveAspectRatio="none" className="w-full h-full">
             {/* Axis */}
-            <line x1={20} x2={580} y1={170} y2={170} stroke="#94A3B8" strokeWidth={1} />
-            {/* Ticks */}
+            <line x1={20} x2={580} y1={200} y2={200} stroke="#94A3B8" strokeWidth={1} />
             {[100, 200, 300, 400, 500, 600].map((ms) => {
               const x = 20 + ((ms - 50) / 600) * 560;
               return (
                 <g key={ms}>
-                  <line x1={x} x2={x} y1={170} y2={175} stroke="#94A3B8" strokeWidth={1} />
-                  <text x={x} y={188} textAnchor="middle" fontSize="9" fill="#64748B" fontFamily="monospace">{ms}</text>
+                  <line x1={x} x2={x} y1={200} y2={205} stroke="#94A3B8" strokeWidth={1} />
+                  <text x={x} y={218} textAnchor="middle" fontSize="9" fill="#64748B" fontFamily="monospace">{ms}</text>
                 </g>
               );
             })}
-            <text x={580} y={188} textAnchor="end" fontSize="9" fill="#64748B" fontFamily="monospace" fontWeight="700">ms</text>
+            <text x={580} y={218} textAnchor="end" fontSize="9" fill="#64748B" fontFamily="monospace" fontWeight="700">ms</text>
 
-            {/* Bounds shading */}
-            <rect
-              x={20 + ((identify.tooLow - 50) / 600) * 560}
-              y={20}
-              width={Math.max(2, ((identify.tooHigh - identify.tooLow) / 600) * 560)}
-              height={150}
-              fill="#FBD78A"
-              fillOpacity={0.18}
-              stroke="#E18809"
-              strokeOpacity={0.3}
-              strokeDasharray="4 3"
-            />
+            {/* Bounds shading (if set) */}
+            {hasBounds && (
+              <rect
+                x={20 + ((identify.tooLow - 50) / 600) * 560}
+                y={20}
+                width={Math.max(2, ((identify.tooHigh - identify.tooLow) / 600) * 560)}
+                height={180}
+                fill="#FBD78A"
+                fillOpacity={0.18}
+                stroke="#E18809"
+                strokeOpacity={0.3}
+                strokeDasharray="4 3"
+              />
+            )}
 
-            {/* Trial dots */}
-            {trials.map((t, i) => {
+            {/* Lanes label */}
+            <text x={24} y={86} fontSize="9" fontFamily="monospace" fill="#7C3AED" fontWeight="700">VISUAL</text>
+            <text x={24} y={156} fontSize="9" fontFamily="monospace" fill="#0F766E" fontWeight="700">AUDIO</text>
+
+            {/* Visual trial dots */}
+            {trials.visual.map((t, i) => {
               const x = 20 + ((t - 50) / 600) * 560;
               return (
-                <circle key={i} cx={x} cy={130 + (i % 5) * 6} r={5} fill="#7C3AED" fillOpacity={0.7} />
+                <circle key={`v-${i}`} cx={x} cy={75 + (i % 4) * 6} r={4.5} fill="#7C3AED" fillOpacity={0.7} />
+              );
+            })}
+            {/* Audio trial dots */}
+            {trials.audio.map((t, i) => {
+              const x = 20 + ((t - 50) / 600) * 560;
+              return (
+                <circle key={`a-${i}`} cx={x} cy={145 + (i % 4) * 6} r={4.5} fill="#0F766E" fillOpacity={0.7} />
               );
             })}
 
-            {/* Your median */}
-            <line
-              x1={20 + ((median - 50) / 600) * 560}
-              x2={20 + ((median - 50) / 600) * 560}
-              y1={30} y2={170}
-              stroke="#1A2A52" strokeWidth={2.5}
-            />
-            <text x={20 + ((median - 50) / 600) * 560} y={24} textAnchor="middle" fontSize="11" fill="#1A2A52" fontWeight="700">your median {median}</text>
-
-            {/* Research median */}
-            <line
-              x1={20 + ((CANONICAL_MEDIAN - 50) / 600) * 560}
-              x2={20 + ((CANONICAL_MEDIAN - 50) / 600) * 560}
-              y1={50} y2={170}
-              stroke="#E18809" strokeWidth={2} strokeDasharray="4 3"
-            />
-            <text x={20 + ((CANONICAL_MEDIAN - 50) / 600) * 560} y={46} textAnchor="middle" fontSize="11" fill="#E18809" fontWeight="700">research {CANONICAL_MEDIAN}</text>
+            {/* Medians */}
+            {v.median > 0 && (
+              <>
+                <line x1={20 + ((v.median - 50) / 600) * 560} x2={20 + ((v.median - 50) / 600) * 560} y1={50} y2={110} stroke="#5B21B6" strokeWidth={2.5} />
+                <text x={20 + ((v.median - 50) / 600) * 560} y={44} textAnchor="middle" fontSize="11" fill="#5B21B6" fontWeight="700">visual {v.median}</text>
+              </>
+            )}
+            {a.median > 0 && (
+              <>
+                <line x1={20 + ((a.median - 50) / 600) * 560} x2={20 + ((a.median - 50) / 600) * 560} y1={120} y2={180} stroke="#0F766E" strokeWidth={2.5} />
+                <text x={20 + ((a.median - 50) / 600) * 560} y={194} textAnchor="middle" fontSize="11" fill="#0F766E" fontWeight="700">audio {a.median}</text>
+              </>
+            )}
           </svg>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 text-xs">
-          <Mini label="Median" value={`${median} ms`} />
-          <Mini label="Mean" value={`${mean.toFixed(0)} ms`} />
-          <Mini label="Range" value={`${fastest}–${slowest}`} />
-          <Mini label="Std dev" value={`${stdDev.toFixed(0)} ms`} />
+          <Mini label="Visual median" value={`${v.median} ms`} />
+          <Mini label="Audio median" value={`${a.median} ms`} />
+          <Mini label="Visual range" value={`${v.fastest}–${v.slowest}`} />
+          <Mini label="Audio range" value={`${a.fastest}–${a.slowest}`} />
         </div>
       </div>
 
       {/* Story */}
       <div className="bg-surface-raised border border-surface-line rounded-lg p-6 space-y-3">
-        <h2 className="font-display text-xl font-bold text-brand-900">The story behind the number</h2>
+        <h2 className="font-display text-xl font-bold text-brand-900">Why audio is faster</h2>
         <p className="text-sm text-ink leading-relaxed">
-          Where does the ~250 ms come from? Light hits your retina and triggers
-          a signal in about <strong>30 ms</strong>. That signal races up the
-          optic nerve to your visual cortex, where your brain notices and
-          decides to react in about <strong>150 ms</strong>. A motor command
-          then travels back down through your arm to your finger in about{' '}
-          <strong>70 ms</strong>. Add it up and you get roughly a quarter of
-          a second.
+          Sound takes a more direct neural path than vision. A loud tone
+          triggers brainstem-level reflexes in <strong>8–10 ms</strong>; light
+          first has to be processed by the retina and travel through several
+          visual relays, taking <strong>30+ ms</strong>. By the time the brain
+          decides and the motor signal heads to your finger, audio reactions
+          land roughly <strong>{CANONICAL_VISUAL - CANONICAL_AUDIO} ms ahead</strong>
+          {' '}of visual ones, on average.
         </p>
         <p className="text-sm text-ink leading-relaxed">
-          Your distribution isn't a single number — it's a <strong>shape</strong>.
-          The median tells you the typical trial. The standard deviation tells
-          you how consistent you are. The fastest trial is probably near your
-          biological limit; the slowest reveals when you got distracted. Real
-          psychology research reports BOTH median and spread, because the
-          single "your reaction time is X" is an oversimplification.
+          That's not the whole story. Your distribution isn't a single number —
+          it's a <strong>shape</strong>. The median tells you the typical trial,
+          the spread tells you how consistent you are. Both medians and both
+          spreads matter. Real labs always report both.
         </p>
         <div className="bg-violet-50 border border-violet-200 rounded-md p-3 text-sm">
           <strong className="text-violet-900">A statistics moment:</strong>{' '}
-          your 10 trials are a <em>sample</em>. The median you computed
-          estimates your <em>true</em> median if you played thousands of
-          trials. With 10 trials, the estimate has uncertainty. How wide is
-          that uncertainty? That's a chapter for another day.
+          comparing two medians is the simplest two-sample test there is. If
+          you ran 1000 trials of each, you'd be looking at the difference in
+          population medians. With 10 trials each, the gap could partly be
+          luck. How would you know if it's real? That's hypothesis testing —
+          another day.
         </div>
       </div>
 
@@ -174,7 +206,7 @@ export default function ReactionInterpret({ identify, trials, onRestart }: Inter
             <div className="eyebrow text-violet-200 mb-1">DATA CARD · ALG 1 · TOPIC 11 · STATISTICS</div>
             <h3 className="font-display text-2xl font-bold mb-1">Reaction Time Arena</h3>
             <p className="text-sm text-violet-100 mb-4">
-              You generated your own dataset of {trials.length} trials. Median {median} ms; research median {CANONICAL_MEDIAN} ms.
+              You generated two datasets of {trials.visual.length} trials each. Visual median {v.median} ms; audio median {a.median} ms.
             </p>
             <div className="flex flex-wrap gap-2">
               {!submitted ? (

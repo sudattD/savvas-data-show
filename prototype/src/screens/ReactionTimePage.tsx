@@ -5,22 +5,25 @@ import ReactionIdentify from './reaction/ReactionIdentify';
 import ReactionPlay from './reaction/ReactionPlay';
 import ReactionInterpret from './reaction/ReactionInterpret';
 import type { IdentifyState } from './reaction/ReactionIdentify';
+import type { ReactionTrials } from './reaction/ReactionPlay';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 const EMPTY: IdentifyState = {
   firstQuestion: '', mainQuestion: '', conjecture: 0, reasoning: '', tooLow: 0, tooHigh: 0,
 };
 
+const EMPTY_TRIALS: ReactionTrials = { visual: [], audio: [] };
+
 export default function ReactionTimePage() {
   useDocumentTitle('Reaction Time');
   const [act, setAct] = useState<1 | 2 | 3>(1);
   const [identify, setIdentify] = useState<IdentifyState>(EMPTY);
-  const [trials, setTrials] = useState<number[]>([]);
+  const [trials, setTrials] = useState<ReactionTrials>(EMPTY_TRIALS);
 
   const restart = () => {
     setAct(1);
     setIdentify(EMPTY);
-    setTrials([]);
+    setTrials(EMPTY_TRIALS);
   };
 
   return (
@@ -50,7 +53,7 @@ export default function ReactionTimePage() {
         {act === 3 && <ReactionInterpret identify={identify} trials={trials} onRestart={restart} />}
       </main>
       <footer className="border-t border-surface-line mt-16 py-6 text-center text-xs text-ink-muted">
-        Prototype · all data stays on your device · ~250 ms is the published adult median.
+        Prototype · all data stays on your device · visual ~270 ms · audio ~160 ms (Woods et al. 2015).
       </footer>
     </div>
   );

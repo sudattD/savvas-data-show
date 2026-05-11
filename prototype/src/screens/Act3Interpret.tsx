@@ -30,7 +30,9 @@ export default function Act3Interpret({ state, onRestart }: Act3Props) {
   }, []);
 
   const ratedPower = 1500;
-  const inBounds = predicted10 >= low && predicted10 <= high;
+  const hasGuess = low > 0 || high > 0;
+  const guessVal = hasGuess ? (low + high) / 2 : 0;
+  const inBounds = hasGuess && predicted10 >= low && predicted10 <= high;
   const [submitted, setSubmitted] = useState(false);
 
   return (
@@ -42,22 +44,36 @@ export default function Act3Interpret({ state, onRestart }: Act3Props) {
       />
 
       <HostBubble accent="sky">
-        Let's see how you did. You said the answer would be between{' '}
-        <strong>{low.toFixed(0)}</strong> and{' '}
-        <strong>{high.toFixed(0)}</strong> kW at 10 m/s. Your quadratic model
-        predicts <strong>{predicted10.toFixed(0)} kW</strong>. The real
-        turbine, averaged over many readings near 10 m/s, was{' '}
-        <strong>{measuredAt10?.toFixed(0)} kW</strong>.
+        {hasGuess ? (
+          <>
+            You guessed <strong>{guessVal.toFixed(0)} kW</strong> at 10 m/s.
+            Your quadratic model predicts <strong>{predicted10.toFixed(0)} kW</strong>.
+            The real turbine, averaged over many readings near 10 m/s, was{' '}
+            <strong>{measuredAt10?.toFixed(0)} kW</strong>.
+          </>
+        ) : (
+          <>
+            Your quadratic model predicts <strong>{predicted10.toFixed(0)} kW</strong>
+            {' '}at 10 m/s. The real turbine, averaged over many readings near
+            10 m/s, was <strong>{measuredAt10?.toFixed(0)} kW</strong>.
+          </>
+        )}
       </HostBubble>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <Stat label="Your bounds" value={`${low.toFixed(0)} – ${high.toFixed(0)}`} unit="kW" tone="amber" />
+      <div className={`grid ${hasGuess ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
+        {hasGuess && (
+          <Stat
+            label="Your guess"
+            value={guessVal.toFixed(0)}
+            unit="kW"
+            tone={inBounds ? 'emerald' : 'amber'}
+          />
+        )}
         <Stat
           label="Your model says"
           value={predicted10.toFixed(0)}
           unit="kW"
-          tone={inBounds ? 'emerald' : 'rose'}
-          sub={inBounds ? 'Inside your bounds' : 'Outside your bounds'}
+          tone="brand"
         />
         <Stat
           label="The real turbine"
@@ -68,7 +84,7 @@ export default function Act3Interpret({ state, onRestart }: Act3Props) {
         />
       </div>
 
-      <WindChart model={model} showModel guessLow={low} guessHigh={high} highlightWindSpeed={10} />
+      <WindChart model={model} showModel guessLow={hasGuess ? low : 0} guessHigh={hasGuess ? high : 0} highlightWindSpeed={10} />
 
       <div className="bg-white rounded-2xl shadow-sm border border-sky-100 p-6 space-y-3">
         <h2 className="font-display text-xl font-bold text-ink">
@@ -149,7 +165,7 @@ function Stat({
   label: string;
   value: string;
   unit: string;
-  tone: 'amber' | 'emerald' | 'rose' | 'sky';
+  tone: 'amber' | 'emerald' | 'rose' | 'sky' | 'brand';
   sub?: string;
 }) {
   const toneClass = {
@@ -157,6 +173,7 @@ function Stat({
     emerald: 'border-emerald-200 bg-emerald-50 text-emerald-900',
     rose: 'border-rose-200 bg-rose-50 text-rose-900',
     sky: 'border-sky-200 bg-sky-50 text-sky-900',
+    brand: 'border-slate-200 bg-slate-50 text-slate-900',
   }[tone];
   return (
     <div className={`rounded-xl border p-4 ${toneClass}`}>
