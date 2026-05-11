@@ -125,12 +125,13 @@ function ChapterRow({ entry }: { entry: ChapterEntry }) {
   const accent = COURSE_ACCENT[entry.course];
   const datasetObjs = entry.datasets.map((id) => DATASETS.find((d) => d.id === id)).filter(Boolean) as { id: string; name: string }[];
   const isBuilt = !!entry.route;
+  const nothingToDo = !isBuilt && datasetObjs.length === 0;
 
   return (
     <article
       className={`group bg-surface-raised border ${isBuilt ? 'border-surface-line hover:border-brand-300' : 'border-surface-line/70'} rounded-lg overflow-hidden transition`}
     >
-      <div className="grid md:grid-cols-[140px_1fr_auto] gap-0 items-stretch">
+      <div className="grid md:grid-cols-[120px_1fr_220px] gap-0 items-stretch">
         {/* Topic label */}
         <div className={`px-4 py-4 md:py-5 border-b md:border-b-0 md:border-r border-surface-line ${accent.chip} flex md:flex-col md:items-start items-baseline gap-2 md:gap-1`}>
           <div className="eyebrow text-[10px] opacity-70">Topic</div>
@@ -161,41 +162,35 @@ function ChapterRow({ entry }: { entry: ChapterEntry }) {
                 {f}
               </span>
             ))}
-            {datasetObjs.length > 0 && (
-              <>
-                <span className="text-surface-line mx-1">·</span>
-                {datasetObjs.map((d) => (
-                  <Link
-                    key={d.id}
-                    to={`/datasets/${d.id}`}
-                    className="text-[11px] px-2 py-0.5 rounded bg-surface-subtle border border-surface-line text-ink-soft hover:bg-surface-raised hover:text-brand-700 font-mono"
-                  >
-                    {d.name}
-                  </Link>
-                ))}
-              </>
-            )}
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="px-5 py-4 md:py-5 border-t md:border-t-0 md:border-l border-surface-line bg-surface-subtle/30 flex items-center justify-center min-w-[160px]">
-          {isBuilt ? (
+        {/* CTA stack */}
+        <div className="px-4 py-4 md:py-5 border-t md:border-t-0 md:border-l border-surface-line bg-surface-subtle/30 flex flex-col gap-2 items-stretch justify-center">
+          {isBuilt && (
             <Link
               to={entry.route!}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-brand-900 text-white text-sm font-semibold hover:bg-brand-700 transition whitespace-nowrap shadow-sm"
+              className="inline-flex items-center justify-between gap-1.5 px-3 py-2 rounded-md bg-brand-900 text-white text-sm font-semibold hover:bg-brand-700 transition shadow-sm"
             >
-              Open activity <span aria-hidden>→</span>
+              <span>Open activity</span>
+              <span aria-hidden>→</span>
             </Link>
-          ) : datasetObjs.length > 0 ? (
+          )}
+          {datasetObjs.map((d) => (
             <Link
-              to={`/datasets/${datasetObjs[0].id}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-surface-raised border border-surface-line text-ink-soft text-sm font-semibold hover:bg-surface-subtle hover:text-brand-700 transition whitespace-nowrap"
+              key={d.id}
+              to={`/explorer?dataset=${d.id}`}
+              className="inline-flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-md bg-surface-raised border border-surface-line text-ink-soft text-xs font-semibold hover:bg-surface-subtle hover:text-brand-700 hover:border-brand-300 transition"
+              title={`Open the explorer with the ${d.name} dataset`}
             >
-              Explore dataset <span aria-hidden>→</span>
+              <span className="truncate">Explore {d.name}</span>
+              <span aria-hidden className="shrink-0">→</span>
             </Link>
-          ) : (
-            <span className="text-[10px] eyebrow text-ink-muted px-3 py-2 italic">Concept · not yet built</span>
+          ))}
+          {nothingToDo && (
+            <span className="text-[10px] eyebrow text-ink-muted text-center italic px-2 py-2">
+              Concept · not yet built
+            </span>
           )}
         </div>
       </div>
