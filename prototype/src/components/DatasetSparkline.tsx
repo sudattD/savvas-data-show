@@ -90,6 +90,7 @@ export default function DatasetSparkline({ dataset, height = 160 }: Props) {
             type="number"
             dataKey="y"
             domain={['dataMin', 'dataMax']}
+            reversed={y.preferReversed === true}
             stroke="#94A3B8"
             tick={{ fontSize: 10, fill: '#64748B' }}
             width={32}

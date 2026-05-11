@@ -844,13 +844,13 @@ export const MARATHON_DATASET: Dataset = {
   ],
   attributes: [
     { key: 'gender', label: 'Gender', kind: 'categorical', description: 'Gender division the runner competed in (M / F), as recorded by the BAA.' },
-    { key: 'ageGroup', label: 'Age group', kind: 'categorical', description: 'BAA five-year age bracket (e.g. 30–34, 35–39 …). The bands competing runners are scored within.' },
+    { key: 'ageGroup', label: 'Age group', kind: 'categorical', ordinal: true, description: 'BAA five-year age bracket (e.g. 30–34, 35–39 …). The bands competing runners are scored within.' },
     { key: 'country', label: 'Country', kind: 'categorical', description: '3-letter country code of the runner\'s registered nationality.' },
     { key: 'state', label: 'US state', kind: 'categorical', description: 'US state abbreviation if the runner is a US resident; blank otherwise.' },
     { key: 'age', label: 'Age', kind: 'numeric', unit: 'years', description: 'Runner\'s age on race day in years, from official BAA results.' },
-    { key: 'officialTime', label: 'Official time', kind: 'numeric', unit: 'min', description: 'Net finishing time from start mat to finish line, in decimal minutes (e.g. 220.5 = 3:40:30). Lower is faster.' },
-    { key: 'halfTime', label: 'Half-marathon split', kind: 'numeric', unit: 'min', description: 'Time at the half-marathon timing mat (mile 13.1), in decimal minutes. Pair with officialTime to compute a positive- or negative-split.' },
-    { key: 'paceMinPerMile', label: 'Pace', kind: 'numeric', unit: 'min/mi', description: 'Average pace over the full 26.2 miles, in minutes per mile (e.g. 8.42 ≈ 8:25/mi). Computed as officialTime / 26.2.' },
+    { key: 'officialTime', label: 'Official time', kind: 'numeric', unit: 'min', axisHint: 'lower = faster', description: 'Net finishing time from start mat to finish line, in decimal minutes (e.g. 220.5 = 3:40:30). Lower is faster.' },
+    { key: 'halfTime', label: 'Half-marathon split', kind: 'numeric', unit: 'min', axisHint: 'lower = faster', description: 'Time at the half-marathon timing mat (mile 13.1), in decimal minutes. Pair with officialTime to compute a positive- or negative-split.' },
+    { key: 'paceMinPerMile', label: 'Pace', kind: 'numeric', unit: 'min/mi', axisHint: 'lower = faster', description: 'Average pace over the full 26.2 miles, in minutes per mile (e.g. 8.42 ≈ 8:25/mi). Computed as officialTime / 26.2.' },
   ],
   featured: { x: 'age', y: 'officialTime', color: 'gender' },
   chapterFits: [

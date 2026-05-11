@@ -45,6 +45,19 @@ export default function BoxPlotView({ rows, yAttr, groupAttr }: BoxPlotViewProps
         count: s.count,
       });
     }
+    if (groupAttr.ordinal) {
+      const order: string[] = [];
+      const seen = new Set<string>();
+      for (const r of rows) {
+        const k = String(r[groupAttr.key]);
+        if (!seen.has(k) && grouped.has(k)) {
+          seen.add(k);
+          order.push(k);
+        }
+      }
+      const idx = new Map(order.map((k, i) => [k, i]));
+      return out.sort((a, b) => (idx.get(a.group) ?? 999) - (idx.get(b.group) ?? 999));
+    }
     return out.sort((a, b) => b.median - a.median);
   }, [rows, yAttr, groupAttr]);
 

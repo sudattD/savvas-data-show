@@ -650,7 +650,7 @@ export const SPOTIFY_DATASET: Dataset = {
     { key: 'title', label: 'Title', kind: 'categorical', description: 'Track title as it appears on Spotify.' },
     { key: 'artist', label: 'Artist', kind: 'categorical', description: 'Primary artist credit. Collaborations use the lead artist only.' },
     { key: 'genre', label: 'Genre', kind: 'categorical', description: 'Coarse genre tag (pop, rock, hip-hop, country, …). Spotify\'s underlying tags are very fine-grained; this is the bucketed version.' },
-    { key: 'decade', label: 'Decade', kind: 'categorical', description: 'Decade label for the release year (1960s, 1970s, …). A coarser grouping than year.' },
+    { key: 'decade', label: 'Decade', kind: 'categorical', ordinal: true, description: 'Decade label for the release year (1960s, 1970s, …). A coarser grouping than year.' },
     { key: 'year', label: 'Year', kind: 'numeric', description: 'Release year of the track. Plot on the X axis to see how audio features have drifted over time.' },
     { key: 'popularity', label: 'Popularity', kind: 'numeric', description: 'Spotify\'s popularity score, 0–100 — a recency-weighted measure of recent stream count. Old hits often score lower than current chart fodder.' },
     { key: 'danceability', label: 'Danceability', kind: 'numeric', description: 'Spotify audio-feature score 0.0–1.0 measuring how suitable the track is for dancing (tempo regularity, beat strength, rhythm stability).' },

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceArea } from 'recharts';
 import LessonShell from '../../components/LessonShell';
+import SeeAllDataLink from '../../components/SeeAllDataLink';
 import { CO2_DATASET } from '../../data/co2Dataset';
 
 interface SeriesRow { decYear: number; co2: number; }
@@ -175,6 +176,13 @@ export default function PickYourStory() {
             "paused" since 1998. The pause vanished when you looked at any
             window starting just 2 years earlier or ending 2 years later.
           </div>
+        </div>
+
+        <div className="pt-2 border-t border-surface-line flex flex-wrap items-baseline justify-between gap-3">
+          <div className="text-xs text-ink-muted">
+            Data behind this lesson · NOAA Mauna Loa Observatory · 1958–present
+          </div>
+          <SeeAllDataLink datasetId="co2" />
         </div>
       </div>
     </LessonShell>

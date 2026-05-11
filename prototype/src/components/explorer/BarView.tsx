@@ -22,10 +22,25 @@ interface BarViewProps {
 export default function BarView({ rows, xAttr }: BarViewProps) {
   const data = useMemo(() => {
     const counts = categoricalCounts(rows.map((r) => (r[xAttr.key] as string | number | null)));
-    const sorted = Array.from(counts.entries())
+    if (xAttr.ordinal) {
+      // Use first-occurrence order from the rows. Preserves natural ordering
+      // (decades chronological, hurricane categories TS→5, age bands ascending).
+      const order: string[] = [];
+      const seen = new Set<string>();
+      for (const r of rows) {
+        const v = r[xAttr.key];
+        if (v === null || v === undefined) continue;
+        const k = String(v);
+        if (!seen.has(k) && counts.has(k)) {
+          seen.add(k);
+          order.push(k);
+        }
+      }
+      return order.map((cat) => ({ cat, count: counts.get(cat) ?? 0 }));
+    }
+    return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
       .map(([cat, count]) => ({ cat, count }));
-    return sorted;
   }, [rows, xAttr]);
 
   const cats = data.map((d) => d.cat);

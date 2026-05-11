@@ -4,6 +4,7 @@ import Act1Identify from './Act1Identify';
 import Act2Model from './Act2Model';
 import Act3Interpret from './Act3Interpret';
 import Masthead from '../components/Masthead';
+import SeeAllDataLink from '../components/SeeAllDataLink';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 interface RunState {
@@ -66,8 +67,11 @@ export default function WindTurbinePage() {
         {act === 3 && <Act3Interpret state={state} onRestart={handleRestart} />}
       </main>
 
-      <footer className="border-t border-surface-line mt-16 py-6 text-center text-xs text-ink-muted">
-        Prototype · real SCADA data · 3-act format aligned with enVision Mathematical Modeling.
+      <footer className="border-t border-surface-line mt-16 py-6">
+        <div className="max-w-5xl mx-auto px-6 flex flex-wrap items-baseline justify-between gap-3 text-xs text-ink-muted">
+          <div>Prototype · real SCADA data · 3-act format aligned with enVision Mathematical Modeling.</div>
+          <SeeAllDataLink datasetId="wind" compact />
+        </div>
       </footer>
     </div>
   );

@@ -9,6 +9,15 @@ export interface Attribute {
   kind: AttributeKind;
   unit?: string;
   description?: string;
+  /** When this numeric attribute is plotted on the Y axis, prefer inverted
+   *  direction. Used for astronomy magnitudes where smaller = brighter. */
+  preferReversed?: boolean;
+  /** Short clarification rendered next to the axis label, e.g.
+   *  "(lower = faster)" or "(brighter ↑)". */
+  axisHint?: string;
+  /** This categorical attribute has a meaningful natural order. BarView and
+   *  BoxPlotView use it instead of count-sort. */
+  ordinal?: boolean;
 }
 
 export type Row = Record<string, number | string | null>;

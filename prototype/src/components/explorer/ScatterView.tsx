@@ -20,6 +20,11 @@ interface ScatterViewProps {
   colorAttr?: Attribute | null;
 }
 
+function axisLabel(a: Attribute): string {
+  const base = `${a.label}${a.unit ? ` (${a.unit})` : ''}`;
+  return a.axisHint ? `${base} · ${a.axisHint}` : base;
+}
+
 export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: ScatterViewProps) {
   const groups = useMemo(() => {
     if (!colorAttr) {
@@ -52,7 +57,7 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
             domain={['dataMin', 'dataMax']}
             stroke="#64748B"
             label={{
-              value: `${xAttr.label}${xAttr.unit ? ` (${xAttr.unit})` : ''}`,
+              value: axisLabel(xAttr),
               position: 'insideBottom',
               offset: -16,
               fill: '#475569',
@@ -63,9 +68,10 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
             type="number"
             dataKey="y"
             domain={['dataMin', 'dataMax']}
+            reversed={yAttr.preferReversed === true}
             stroke="#64748B"
             label={{
-              value: `${yAttr.label}${yAttr.unit ? ` (${yAttr.unit})` : ''}`,
+              value: axisLabel(yAttr),
               angle: -90,
               position: 'insideLeft',
               offset: 8,

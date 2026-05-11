@@ -267,7 +267,7 @@ export const MOORE_LAW_DATASET: Dataset = {
   attributes: [
     { key: 'name', label: 'Chip', kind: 'categorical', description: 'Marketing name of the processor (e.g. "Intel 4004", "Apple M2 Ultra"). One row per major release that Wikipedia tracks.' },
     { key: 'manufacturer', label: 'Manufacturer', kind: 'categorical', description: 'Company that designed the chip — Intel, AMD, Apple, IBM, NVIDIA, etc. Useful for color-grouping points.' },
-    { key: 'decade', label: 'Decade', kind: 'categorical', description: 'Decade label for the introduction year (1970s, 1980s, …). A coarser grouping than year.' },
+    { key: 'decade', label: 'Decade', kind: 'categorical', ordinal: true, description: 'Decade label for the introduction year (1970s, 1980s, …). A coarser grouping than year.' },
     { key: 'year', label: 'Year introduced', kind: 'numeric', description: 'Year the chip was first released to market. The X axis for any Moore\'s-law plot.' },
     { key: 'transistors', label: 'Transistors', kind: 'numeric', description: 'Total number of transistors in the chip. Spans 7 orders of magnitude (thousands to hundreds of billions) — use a log Y axis to make the curve readable.' },
     { key: 'processNm', label: 'Process node', kind: 'numeric', unit: 'nm', description: 'Manufacturing process node, in nanometres (e.g. 10000 = 10 µm in 1971; 3 = TSMC N3 in 2022). Smaller is newer; the number is a marketing label, not a literal feature size.' },

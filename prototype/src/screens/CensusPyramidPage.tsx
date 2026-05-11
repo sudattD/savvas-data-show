@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Masthead from '../components/Masthead';
+import SeeAllDataLink from '../components/SeeAllDataLink';
 import ProgressDots from '../components/ProgressDots';
 import CensusIdentify from './census/CensusIdentify';
 import CensusModel from './census/CensusModel';
@@ -40,8 +41,11 @@ export default function CensusPyramidPage() {
         {act === 2 && <CensusModel onNext={() => setAct(3)} />}
         {act === 3 && <CensusInterpret identify={identify} onRestart={restart} />}
       </main>
-      <footer className="border-t border-surface-line mt-16 py-6 text-center text-xs text-ink-muted">
-        Prototype · US Census Bureau · 1900 decennial census + 2020 population estimates (vintage 2024).
+      <footer className="border-t border-surface-line mt-16 py-6">
+        <div className="max-w-5xl mx-auto px-6 flex flex-wrap items-baseline justify-between gap-3 text-xs text-ink-muted">
+          <div>Prototype · US Census Bureau · 1900 decennial census + 2020 population estimates (vintage 2024).</div>
+          <SeeAllDataLink datasetId="population" compact />
+        </div>
       </footer>
     </div>
   );
