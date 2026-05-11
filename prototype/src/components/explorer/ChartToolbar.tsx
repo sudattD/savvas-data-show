@@ -28,6 +28,22 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
   const num = getNumericAttrs(dataset);
   const cat = getCategoricalAttrs(dataset);
 
+  // Pick a sensible default categorical for box-plot grouping: lowest
+  // cardinality with at least 2 and at most 12 unique values. Without this,
+  // datasets like Countries (199 unique country names) produce 199 empty
+  // single-point "boxes" — Cowork browser pass found this.
+  const pickBoxPlotGroup = (): string | null => {
+    const candidates = cat
+      .map((a) => {
+        const seen = new Set<string>();
+        for (const r of dataset.rows) seen.add(String(r[a.key]));
+        return { key: a.key, n: seen.size };
+      })
+      .filter((c) => c.n >= 2 && c.n <= 12)
+      .sort((a, b) => a.n - b.n);
+    return candidates[0]?.key ?? cat[0]?.key ?? null;
+  };
+
   const setType = (t: ChartType) => {
     // sensible default attribute when switching type
     const next: ChartConfig = { ...config, type: t };
@@ -42,7 +58,8 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
       next.yKey = null;
     } else if (t === 'box') {
       if (!num.find((a) => a.key === next.yKey)) next.yKey = num[0]?.key ?? null;
-      if (!cat.find((a) => a.key === next.xKey)) next.xKey = cat[0]?.key ?? null;
+      // Use the low-cardinality picker — see pickBoxPlotGroup above.
+      next.xKey = pickBoxPlotGroup();
     } else if (t === 'map') {
       // Map view reads lat/lon from dataset.geo and color from config.colorKey.
       // x/y are irrelevant for the map; clear them so other types don't inherit stale picks.

@@ -22,12 +22,25 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
   const [bins, setBins] = useState(20);
   const [markerOn, setMarkerOn] = useState(false);
   const [markerValue, setMarkerValue] = useState(0);
+  const [logScale, setLogScale] = useState(false);
 
   const values = useMemo(
     () => rows.map((r) => Number(r[xAttr.key])).filter((n) => Number.isFinite(n)),
     [rows, xAttr],
   );
   const stats = useMemo(() => numericStats(values), [values]);
+
+  // Log scale needs strictly-positive values. Disable the toggle otherwise.
+  const canLog = stats !== null && stats.min > 0;
+  const effectiveLog = canLog && logScale;
+
+  // Detect heavy long-tail skew (mean way past median, or one bin holds >70%
+  // of the data) — suggest log scale visually.
+  const longTail = useMemo(() => {
+    if (!stats || !canLog) return false;
+    if (stats.max / Math.max(stats.median, 1e-9) > 100) return true;
+    return false;
+  }, [stats, canLog]);
 
   // Initialize marker to the median the first time the feature is toggled on.
   useEffect(() => {
@@ -39,6 +52,30 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
 
   const binsData = useMemo(() => {
     if (!stats || values.length === 0) return [];
+    // In log mode, bin in log-space so each bar covers an equal multiplicative
+    // factor (e.g. 1-10, 10-100, 100-1000…) — that's what unsquashes long-tail
+    // distributions like GDP per capita.
+    if (effectiveLog) {
+      const lmin = Math.log10(stats.min);
+      const lmax = Math.log10(stats.max);
+      const lw = (lmax - lmin) / bins;
+      const counts = new Array(bins).fill(0);
+      for (const v of values) {
+        if (v <= 0) continue;
+        let i = Math.floor((Math.log10(v) - lmin) / lw);
+        if (i === bins) i = bins - 1;
+        if (i >= 0 && i < bins) counts[i]++;
+      }
+      return counts.map((count, i) => {
+        const lo = Math.pow(10, lmin + i * lw);
+        const hi = Math.pow(10, lmin + (i + 1) * lw);
+        return {
+          bin: (lo + hi) / 2,
+          label: `${formatBinEdge(lo)}–${formatBinEdge(hi)}`,
+          count,
+        };
+      });
+    }
     const range = stats.max - stats.min;
     const w = range / bins;
     const counts = new Array(bins).fill(0);
@@ -52,7 +89,7 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
       label: `${(stats.min + i * w).toFixed(1)}–${(stats.min + (i + 1) * w).toFixed(1)}`,
       count,
     }));
-  }, [values, stats, bins]);
+  }, [values, stats, bins, effectiveLog]);
 
   // Count below the marker value.
   const belowCount = useMemo(
@@ -88,6 +125,20 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
         >
           {markerOn ? 'Drop a marker ✓' : 'Drop a marker'}
         </button>
+
+        {canLog && (
+          <button
+            onClick={() => setLogScale((v) => !v)}
+            className={`px-3 py-1.5 rounded-md font-semibold transition ${
+              logScale
+                ? 'bg-indigo-700 text-white shadow-editorial'
+                : 'bg-surface-raised border border-surface-line text-ink hover:border-indigo-300'
+            }`}
+            title="Bin in log space — useful when one value dominates"
+          >
+            {logScale ? 'Log scale ✓' : longTail ? 'Try log scale' : 'Log scale'}
+          </button>
+        )}
 
         {markerOn && stats && (
           <>
@@ -173,5 +224,15 @@ function formatScalar(s: number): string {
   if (abs === 0) return '0';
   if (abs >= 1000) return s.toFixed(0);
   if (abs >= 10) return s.toFixed(1);
+  return s.toFixed(2);
+}
+
+function formatBinEdge(s: number): string {
+  const abs = Math.abs(s);
+  if (abs === 0) return '0';
+  if (abs >= 1_000_000) return `${(s / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `${(s / 1_000).toFixed(1)}k`;
+  if (abs >= 10) return s.toFixed(0);
+  if (abs >= 1) return s.toFixed(1);
   return s.toFixed(2);
 }
