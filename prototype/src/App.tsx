@@ -9,6 +9,7 @@ import DatasetsHub from './screens/datasets/DatasetsHub';
 import DatasetStory from './screens/datasets/DatasetStory';
 import DatasetDictionary from './screens/datasets/DatasetDictionary';
 import LessonsHub from './screens/lessons/LessonsHub';
+import ChaptersPage from './screens/ChaptersPage';
 import SliderOfLies from './screens/lessons/SliderOfLies';
 import WalkIntoABar from './screens/lessons/WalkIntoABar';
 import TidyData from './screens/lessons/TidyData';
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/reaction-time" element={<ReactionTimePage />} />
         <Route path="/census-pyramid" element={<CensusPyramidPage />} />
         <Route path="/explorer" element={<ExplorerPage />} />
+        <Route path="/chapters" element={<ChaptersPage />} />
         <Route path="/datasets" element={<DatasetsHub />} />
         <Route path="/datasets/:id" element={<DatasetStory />} />
         <Route path="/datasets/:id/dictionary" element={<DatasetDictionary />} />

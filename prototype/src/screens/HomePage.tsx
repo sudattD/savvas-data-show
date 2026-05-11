@@ -47,7 +47,15 @@ export default function HomePage() {
             <h2 className="font-display text-3xl md:text-4xl font-bold text-brand-900">Three doors in.</h2>
             <div className="eyebrow text-ink-muted hidden sm:block">the show, in pieces</div>
           </div>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Pillar
+              to="/chapters"
+              kicker="The Map"
+              title="Chapters"
+              body="One activity per chapter — Algebra 1, Geometry, and Algebra 2. Built activities open in-app; concept chapters route to the dataset they hinge on."
+              cta="See the map"
+              tone="navy"
+            />
             <Pillar
               to="/datasets"
               kicker="The Library"

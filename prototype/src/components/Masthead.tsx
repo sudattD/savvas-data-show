@@ -10,6 +10,7 @@ interface MastheadProps {
 }
 
 const NAV = [
+  { to: '/chapters', label: 'Chapters' },
   { to: '/datasets', label: 'Datasets' },
   { to: '/explorer', label: 'Explorer' },
   { to: '/lessons', label: 'Lessons' },
