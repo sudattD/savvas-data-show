@@ -189,7 +189,7 @@ function PyramidTeaser() {
         <text x={10 + sideW + labelW + sideW / 2} y={14} textAnchor="middle" fontSize="11" fontWeight="700" fill="#9F1239">WOMEN</text>
 
         {bands.map((b, i) => {
-          const y = 24 + i * (barH + gap);
+          const y = 24 + (bands.length - 1 - i) * (barH + gap);
           const mw = (b.male / maxVal) * sideW;
           const fw = (b.female / maxVal) * sideW;
           return (

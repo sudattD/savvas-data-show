@@ -193,7 +193,7 @@ function PyramidPanel({ title, subtitle, bands, color1900 }: { title: string; su
         <text x={10 + sideW / 2} y={14} textAnchor="middle" fontSize="11" fontWeight="700" fill={maleColor}>MEN</text>
         <text x={10 + sideW + labelW + sideW / 2} y={14} textAnchor="middle" fontSize="11" fontWeight="700" fill={femaleColor}>WOMEN</text>
         {bands.map((b, i) => {
-          const y = 24 + i * (barH + gap);
+          const y = 24 + (bands.length - 1 - i) * (barH + gap);
           const mw = (b.male / maxVal) * sideW;
           const fw = (b.female / maxVal) * sideW;
           return (
@@ -239,7 +239,7 @@ function OverlayPanel({ shares1900, shares2020 }: { shares1900: Array<{ ageGroup
         <text x={10 + sideW + labelW + sideW / 2} y={14} textAnchor="middle" fontSize="11" fontWeight="700" fill="#9F1239">WOMEN (share %)</text>
         {shares1900.map((b, i) => {
           const b20 = shares2020[i];
-          const y = 24 + i * (barH + gap);
+          const y = 24 + (shares1900.length - 1 - i) * (barH + gap);
           const mw1 = (b.malePct / maxPct) * sideW;
           const fw1 = (b.femalePct / maxPct) * sideW;
           const mw2 = (b20.malePct / maxPct) * sideW;
