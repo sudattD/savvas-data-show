@@ -11,6 +11,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
+import { niceTicks, niceLogTicks } from '../../lib/niceTicks';
 import { categoryColor, uniqueValues, DEFAULT_POINT, numericColor, numericRampStops } from './ColorScale';
 
 interface ScatterViewProps {
@@ -665,37 +666,6 @@ function formatScalar(s: number): string {
 
 // Axis tick formatter — clean integers for whole-number-ish data, otherwise
 // minimal decimals. Compact notation for big magnitudes.
-function niceTicks(min: number, max: number, targetCount = 5): { domain: [number, number]; ticks: number[] } {
-  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) {
-    const pad = Math.abs(min) > 0 ? Math.abs(min) * 0.1 : 1;
-    return { domain: [min - pad, max + pad], ticks: [min] };
-  }
-  const range = max - min;
-  const rough = range / Math.max(1, targetCount - 1);
-  const mag = Math.pow(10, Math.floor(Math.log10(rough)));
-  const norm = rough / mag;
-  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag;
-  const niceMin = Math.floor(min / step) * step;
-  const niceMax = Math.ceil(max / step) * step;
-  const decimals = Math.max(0, -Math.floor(Math.log10(step)));
-  const ticks: number[] = [];
-  for (let v = niceMin; v <= niceMax + step / 2; v += step) {
-    ticks.push(Number(v.toFixed(decimals + 6)));
-  }
-  return { domain: [niceMin, niceMax], ticks };
-}
-
-function niceLogTicks(min: number, max: number): { domain: [number, number]; ticks: number[] } {
-  if (!Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max <= 0) {
-    return { domain: [min, max], ticks: [] };
-  }
-  const lo = Math.floor(Math.log10(min));
-  const hi = Math.ceil(Math.log10(max));
-  const ticks: number[] = [];
-  for (let p = lo; p <= hi; p++) ticks.push(Math.pow(10, p));
-  return { domain: [Math.pow(10, lo), Math.pow(10, hi)], ticks };
-}
-
 function formatTick(v: number): string {
   if (v === 0) return '0';
   const abs = Math.abs(v);

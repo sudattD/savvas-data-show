@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceArea } from 'recharts';
 import LessonShell from '../../components/LessonShell';
 import { CO2_DATASET } from '../../data/co2Dataset';
+import { niceTicksWithin } from '../../lib/niceTicks';
 
 interface SeriesRow { decYear: number; co2: number; }
 
@@ -72,6 +73,8 @@ export default function PickYourStory() {
 
   const yMin = Math.floor(Math.min(...all.map((d) => d.co2)) / 5) * 5;
   const yMax = Math.ceil(Math.max(...all.map((d) => d.co2)) / 5) * 5;
+  const yearTicks = useMemo(() => niceTicksWithin(minYear, maxYear, 9), [minYear, maxYear]);
+  const yTicks = useMemo(() => niceTicksWithin(yMin, yMax, 6), [yMin, yMax]);
 
   return (
     <LessonShell number="L5" family="VISUAL DECEPTION" title="Pick Your Story" concept="Cherry-picked time windows" accent="rose" exploreDataset="co2">
@@ -92,8 +95,8 @@ export default function PickYourStory() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={all} margin={{ top: 12, right: 16, bottom: 24, left: 16 }}>
                 <CartesianGrid stroke="#E5EFFB" strokeDasharray="3 3" />
-                <XAxis dataKey="decYear" type="number" domain={[minYear, maxYear]} stroke="#64748B" tickCount={9} />
-                <YAxis domain={[yMin, yMax]} stroke="#64748B" label={{ value: 'CO₂ (ppm)', angle: -90, position: 'insideLeft', offset: 8, fill: '#475569', fontSize: 13 }} />
+                <XAxis dataKey="decYear" type="number" domain={[minYear, maxYear]} ticks={yearTicks} stroke="#64748B" />
+                <YAxis domain={[yMin, yMax]} ticks={yTicks} stroke="#64748B" label={{ value: 'CO₂ (ppm)', angle: -90, position: 'insideLeft', offset: 8, fill: '#475569', fontSize: 13 }} />
                 <ReferenceArea x1={start} x2={end} fill="#fda4af" fillOpacity={0.2} stroke="#fb7185" strokeOpacity={0.5} />
                 <Line type="monotone" dataKey="co2" stroke="#0F172A" strokeWidth={1.4} dot={false} />
               </LineChart>

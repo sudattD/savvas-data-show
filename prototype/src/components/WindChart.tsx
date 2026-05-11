@@ -14,6 +14,7 @@ import {
 import { WIND_DATA } from '../data/windTurbine';
 import { modelLinePoints } from '../lib/fit';
 import type { ModelFn } from '../lib/fit';
+import { niceTicks } from '../lib/niceTicks';
 
 interface WindChartProps {
   model?: ModelFn | null;
@@ -33,6 +34,8 @@ export default function WindChart({
   const xMin = 0;
   const xMax = 18;
   const yMax = 1700;
+  const xTicks = useMemo(() => niceTicks(xMin, xMax, 10), []);
+  const yTicks = useMemo(() => niceTicks(0, yMax, 5), []);
 
   const modelPoints = useMemo(() => {
     if (!model || !showModel) return [];
@@ -47,14 +50,15 @@ export default function WindChart({
           <XAxis
             dataKey="windSpeed"
             type="number"
-            domain={[xMin, xMax]}
-            tickCount={10}
+            domain={xTicks.domain}
+            ticks={xTicks.ticks}
             stroke="#64748B"
             label={{ value: 'Wind speed (m/s)', position: 'insideBottom', offset: -16, fill: '#475569', fontSize: 13 }}
           />
           <YAxis
             type="number"
-            domain={[0, yMax]}
+            domain={yTicks.domain}
+            ticks={yTicks.ticks}
             stroke="#64748B"
             label={{
               value: 'Power output (kW)',

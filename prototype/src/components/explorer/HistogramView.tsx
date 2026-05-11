@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
 import { numericStats } from '../../lib/dataset';
+import { niceTicks, niceLogTicks } from '../../lib/niceTicks';
 
 interface HistogramViewProps {
   dataset: Dataset;
@@ -91,6 +92,13 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
     }));
   }, [values, stats, bins, effectiveLog]);
 
+  const xTickConfig = useMemo(() => {
+    if (!stats) return null;
+    return effectiveLog
+      ? niceLogTicks(stats.min, stats.max)
+      : niceTicks(stats.min, stats.max);
+  }, [stats, effectiveLog]);
+
   // Count below the marker value.
   const belowCount = useMemo(
     () => values.filter((v) => v <= markerValue).length,
@@ -169,7 +177,8 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
             <XAxis
               dataKey="bin"
               type="number"
-              domain={['dataMin', 'dataMax']}
+              domain={xTickConfig ? xTickConfig.domain : ['dataMin', 'dataMax']}
+              ticks={xTickConfig?.ticks}
               stroke="#64748B"
               tickFormatter={(v) => Number(v).toFixed(1)}
               label={{

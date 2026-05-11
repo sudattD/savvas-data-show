@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceLine } from 'recharts';
 import LessonShell from '../../components/LessonShell';
 import { CO2_DATASET } from '../../data/co2Dataset';
+import { niceTicksWithin } from '../../lib/niceTicks';
 
 // Build a clean annual series from the monthly CO2 dataset for a single chart.
 function getAnnualSeries() {
@@ -35,10 +36,13 @@ export default function SliderOfLies() {
 
   const yearStart = data[0].year;
   const yearEnd = data[data.length - 1].year;
+  const yearTicks = useMemo(() => niceTicksWithin(yearStart, yearEnd, 6), [yearStart, yearEnd]);
+  const honestYTicks = useMemo(() => niceTicksWithin(0, yHonestHigh, 6), [yHonestHigh]);
 
   const [yLow, setYLow] = useState(0);
   const [chartW, setChartW] = useState(DEFAULT_WIDTH);
   const [chartH, setChartH] = useState(DEFAULT_HEIGHT);
+  const lyingYTicks = useMemo(() => niceTicksWithin(yLow, yHonestHigh, 6), [yLow, yHonestHigh]);
 
   // Apparent slope on screen, as pixels of Y rise per pixel of X. Compares
   // the on-canvas rise/run for the same underlying data change. Higher number
@@ -115,11 +119,12 @@ export default function SliderOfLies() {
                     dataKey="year"
                     type="number"
                     domain={[yearStart, yearEnd]}
+                    ticks={yearTicks}
                     stroke="#64748B"
-                    tickCount={6}
                   />
                   <YAxis
                     domain={[yLow, yHonestHigh]}
+                    ticks={lyingYTicks}
                     stroke="#64748B"
                     label={{ value: 'CO₂ (ppm)', angle: -90, position: 'insideLeft', offset: 8, fill: '#475569', fontSize: 13 }}
                   />
@@ -222,11 +227,12 @@ export default function SliderOfLies() {
                     dataKey="year"
                     type="number"
                     domain={[yearStart, yearEnd]}
+                    ticks={yearTicks}
                     stroke="#64748B"
-                    tickCount={6}
                   />
                   <YAxis
                     domain={[0, yHonestHigh]}
+                    ticks={honestYTicks}
                     stroke="#64748B"
                   />
                   <Line type="monotone" dataKey="co2" stroke="#10B981" strokeWidth={2.5} dot={false} />

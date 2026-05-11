@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import type { Dataset } from '../lib/dataset';
 import { attrByKey, datasetAccent } from '../lib/dataset';
+import { niceTicks } from '../lib/niceTicks';
 
 interface Props {
   dataset: Dataset;
@@ -50,6 +51,18 @@ export default function DatasetSparkline({ dataset, height = 160 }: Props) {
     return out;
   }, [dataset, x, y]);
 
+  const ticks = useMemo(() => {
+    if (points.length === 0) return null;
+    let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+    for (const p of points) {
+      if (p.x < xMin) xMin = p.x;
+      if (p.x > xMax) xMax = p.x;
+      if (p.y < yMin) yMin = p.y;
+      if (p.y > yMax) yMax = p.y;
+    }
+    return { x: niceTicks(xMin, xMax, 4), y: niceTicks(yMin, yMax, 4) };
+  }, [points]);
+
   if (!x || !y || points.length === 0) {
     return (
       <div
@@ -74,10 +87,10 @@ export default function DatasetSparkline({ dataset, height = 160 }: Props) {
           <XAxis
             type="number"
             dataKey="x"
-            domain={['dataMin', 'dataMax']}
+            domain={ticks ? ticks.x.domain : ['dataMin', 'dataMax']}
+            ticks={ticks?.x.ticks}
             stroke="#94A3B8"
             tick={{ fontSize: 10, fill: '#64748B' }}
-            tickCount={5}
             label={{
               value: `${x.label}${x.unit ? ` (${x.unit})` : ''}`,
               position: 'insideBottom',
@@ -89,7 +102,8 @@ export default function DatasetSparkline({ dataset, height = 160 }: Props) {
           <YAxis
             type="number"
             dataKey="y"
-            domain={['dataMin', 'dataMax']}
+            domain={ticks ? ticks.y.domain : ['dataMin', 'dataMax']}
+            ticks={ticks?.y.ticks}
             reversed={y.preferReversed === true}
             stroke="#94A3B8"
             tick={{ fontSize: 10, fill: '#64748B' }}
