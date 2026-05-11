@@ -24,13 +24,13 @@ export default function StatsPanel({ dataset, rows }: StatsPanelProps) {
                 {a.unit && <span className="text-xs text-slate-400 font-normal ml-1.5">({a.unit})</span>}
                 <span className="ml-1.5 text-[9px] text-slate-400 uppercase tracking-wider">num</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs font-mono text-slate-700 tabular-nums">
-                <span className="text-slate-500">mean</span><span>{s.mean.toFixed(2)}</span>
-                <span className="text-slate-500">median</span><span>{s.median.toFixed(2)}</span>
-                <span className="text-slate-500">min</span><span>{s.min.toFixed(2)}</span>
-                <span className="text-slate-500">max</span><span>{s.max.toFixed(2)}</span>
-                <span className="text-slate-500">sd</span><span>{s.sd.toFixed(2)}</span>
-                <span className="text-slate-500">n</span><span>{s.count}</span>
+              <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs font-mono text-slate-700 tabular-nums">
+                <span className="text-slate-500">mean</span><span className="text-right">{s.mean.toFixed(2)}</span>
+                <span className="text-slate-500">median</span><span className="text-right">{s.median.toFixed(2)}</span>
+                <span className="text-slate-500">min</span><span className="text-right">{s.min.toFixed(2)}</span>
+                <span className="text-slate-500">max</span><span className="text-right">{s.max.toFixed(2)}</span>
+                <span className="text-slate-500">sd</span><span className="text-right">{s.sd.toFixed(2)}</span>
+                <span className="text-slate-500">n</span><span className="text-right">{s.count.toLocaleString()}</span>
               </div>
             </div>
           );

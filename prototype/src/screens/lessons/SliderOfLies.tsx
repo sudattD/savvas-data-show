@@ -75,7 +75,7 @@ export default function SliderOfLies() {
                 {yLow > 0 && (
                   <ReferenceLine y={yLow} stroke="#FB7185" strokeDasharray="3 3" label={{ value: 'truncated here', fill: '#FB7185', fontSize: 11, position: 'insideTopLeft' }} />
                 )}
-                <Line type="monotone" dataKey="co2" stroke="#0F172A" strokeWidth={2.5} dot={false} />
+                <Line type="monotone" dataKey="co2" stroke="#0F172A" strokeWidth={3.5} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

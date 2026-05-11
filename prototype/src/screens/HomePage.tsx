@@ -170,9 +170,14 @@ export default function HomePage() {
       </section>
 
       <footer className="py-12">
-        <div className="max-w-6xl mx-auto px-6 flex items-baseline justify-between text-xs text-ink-muted">
-          <div>Prototype · built May 2026</div>
-          <div className="font-mono">v0.4 · {datasetCount} datasets · {lessonCount} lessons · 3 acts</div>
+        <div className="max-w-6xl mx-auto px-6 space-y-3 text-xs text-ink-muted">
+          <div className="text-center eyebrow leading-relaxed">
+            Sources · NOAA · NASA · USGS · World Bank · Wikipedia · Palmer LTER · Caltech · BAA · US Census · Social Security Administration
+          </div>
+          <div className="flex items-baseline justify-between border-t border-surface-line pt-3">
+            <div>Prototype · built May 2026</div>
+            <div className="font-mono">v0.4 · {datasetCount} datasets · {lessonCount} lessons · 3 acts</div>
+          </div>
         </div>
       </footer>
     </div>

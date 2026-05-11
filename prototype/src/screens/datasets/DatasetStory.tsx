@@ -101,18 +101,26 @@ export default function DatasetStory() {
             <div className="space-y-5">
               {visibleBeats.map((b, i) => <Beat key={i} beat={b} accent={accent} />)}
             </div>
-            {moreToShow ? (
-              <div className="mt-6 flex justify-center">
-                <button
-                  onClick={() => setStep((s) => Math.min(s + 1, totalSteps - 1))}
-                  className="px-6 py-2.5 rounded-md bg-brand-900 text-white font-semibold text-sm hover:bg-brand-700 transition flex items-center gap-2"
-                >
-                  Continue <span aria-hidden>→</span>
-                </button>
+            <div className="mt-6 min-h-[44px] relative flex justify-center items-center">
+              <button
+                onClick={() => setStep((s) => Math.min(s + 1, totalSteps - 1))}
+                aria-hidden={!moreToShow}
+                tabIndex={moreToShow ? 0 : -1}
+                className={`px-6 py-2.5 rounded-md bg-brand-900 text-white font-semibold text-sm hover:bg-brand-700 transition-opacity duration-200 flex items-center gap-2 ${
+                  moreToShow ? 'opacity-100' : 'opacity-0 pointer-events-none absolute'
+                }`}
+              >
+                Continue <span aria-hidden>→</span>
+              </button>
+              <div
+                aria-hidden={moreToShow}
+                className={`text-center text-xs eyebrow text-ink-muted transition-opacity duration-200 ${
+                  moreToShow ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'
+                }`}
+              >
+                End of story · provenance below
               </div>
-            ) : (
-              <div className="mt-6 text-center text-xs eyebrow text-ink-muted">End of story · provenance below</div>
-            )}
+            </div>
           </section>
         )}
 
