@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Dataset, Attribute } from '../../lib/dataset';
 import { getNumericAttrs, getCategoricalAttrs } from '../../lib/dataset';
 
@@ -123,7 +124,61 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
           <AttrPicker label="Color by" attrs={[...cat, ...num]} value={config.colorKey} onChange={(k) => setKey('color', k)} allowNone />
         </>
       )}
+
+      <div className="ml-auto">
+        <ShareLink />
+      </div>
     </div>
+  );
+}
+
+function ShareLink() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const url = window.location.href;
+    const done = () => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url).then(done, done);
+    } else {
+      // Legacy fallback for older browsers / non-HTTPS environments.
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch { /* swallow */ }
+      document.body.removeChild(ta);
+      done();
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copy a link to this exact view. The URL encodes chart type, axes, color, and scale — paste it anywhere to share."
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold border transition ${
+        copied
+          ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+          : 'bg-surface-raised border-surface-line text-ink-soft hover:border-brand-300 hover:text-brand-900'
+      }`}
+    >
+      {copied ? (
+        <>
+          <span aria-hidden>✓</span>
+          <span>Link copied</span>
+        </>
+      ) : (
+        <>
+          <span aria-hidden className="font-mono opacity-60">⎘</span>
+          <span>Copy link</span>
+        </>
+      )}
+    </button>
   );
 }
 
