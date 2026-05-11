@@ -272,7 +272,7 @@ export const MOORE_LAW_DATASET: Dataset = {
     { key: 'transistors', label: 'Transistors', kind: 'numeric', description: 'Total number of transistors in the chip. Spans 7 orders of magnitude (thousands to hundreds of billions) — use a log Y axis to make the curve readable.' },
     { key: 'processNm', label: 'Process node', kind: 'numeric', unit: 'nm', description: 'Manufacturing process node, in nanometres (e.g. 10000 = 10 µm in 1971; 3 = TSMC N3 in 2022). Smaller is newer; the number is a marketing label, not a literal feature size.' },
   ],
-  featured: { x: 'year', y: 'transistors', color: 'manufacturer' },
+  featured: { x: 'year', y: 'transistors', color: 'manufacturer', yScale: 'log' },
   chapterFits: [
     {
       course: 'algebra2',

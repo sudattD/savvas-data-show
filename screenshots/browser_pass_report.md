@@ -86,6 +86,23 @@ None observed across all 11 routes. Console reads were performed at R1 (cleared 
 - One new question for the dev — is the beat-dot forward-locking intentional? If yes, the brief should be updated. If no, it's a small bug to file (M-tier).
 - The masthead overlap I previously flagged at R6 was not reproducible in the continuation pass (screenshot ss_65800htks shows clean "DATA DICTIONARY →"). May have been a transient initial-render state. Worth one more spot-check before filing.
 
+### Pass-3 findings (22:30 UTC) — Explorer chart-type switches
+
+| Test | Result | Detail |
+|---|---|---|
+| `/explorer?dataset=countries` cold-open (Scatter) | ✓ pass | Default X=GDP per capita, Y=Life expectancy, Color=Region. 199 scatter points render. Preston-curve view. **Two previously-unnoticed features visible:** "Fit a line" and "Drop a marker" buttons above the chart — major affordances the brief never mentioned testing. |
+| Switch to Histogram on GDP per capita | △ visual fail | 18 `recharts-bar-rectangle` elements exist in DOM; bins slider = 20; mean+median reference lines visible. **But the bars themselves are not visible in the chart canvas.** Zoom confirms only the two dashed reference lines. Probably a long-tail issue (GDP from ~$240 to ~$240k packs almost everything into the leftmost bin). Bars may be 1px tall or have invisible fill. Worth investigating. |
+| Switch to Box plot on Country × Population | ✗ render fail | Default GROUP=Country, which has 199 unique values → 199 single-point "boxes" that can't form box-and-whiskers. Canvas empty. **Box plot's auto-default needs to pick a low-cardinality categorical** (Region, Income group), not the first one. Same pattern as B2 but for chart-type switches. |
+| Set GROUP=Region manually, keep Y=Population | △ partial | 7 rect elements in DOM (one per region) but chart still visually empty. Population's 14,000× range (Niue to China) needs log scale or filtering; linear Population on a box plot crushes 6 regions into invisibility. Either set Y default smarter, default to log-scale, or note in the data dictionary. |
+
+**Three new candidate issues** from pass 3 — all in the same family of "Explorer chart-type defaults need per-dataset thought":
+
+- **M7-or-I7 · Histogram bars invisible on long-tail numeric attributes.** Files: `src/components/explorer/HistogramView.tsx`. Either auto-detect long-tail and apply log-scale, or render bars with a minimum visible height of 2px. Affects: Countries · GDP / Population, Exoplanets · Orbital period / Radius, Marathon · Finish time, Earthquakes · Magnitude.
+- **M8-or-I8 · Box plot default GROUP picks any categorical including high-cardinality ones.** Files: `src/components/explorer/BoxPlotView.tsx` and `ExplorerPage.defaultConfig()`. Add a heuristic — prefer categoricals with `uniqueValues.length <= 12`. Or add a "featuredBoxGroup" to dataset registry.
+- **M9-or-I9 · Linear-only Y axes on numeric attributes with huge dynamic range.** Populations, GDPs, transistor counts, orbital periods, etc. all have multi-order-of-magnitude spread. A "log scale" toggle in the toolbar (or auto-detected) would lift these.
+
+None of these are demo-blockers individually — Park is most likely to play with Scatter (which works), and the bug surfaces only when he switches to Histogram or Box plot on a long-tail dataset. But if he does, the page reads as broken. Worth a few hours' fix; deferrable if Tuesday is tight.
+
 ### What this means for Wednesday
 
 The prototype is in **demo-ready** shape. The deploy went out, the visible empty-chart bugs are gone, the stats land their numbers, the explorer's "wow" views render on cold-open, and the dataset-story sparkline gives Jamal-persona students something to look at on first scroll. The one visible nit (masthead overlap on Explorer pages) is recoverable in a single CSS line if Tuesday has spare time; otherwise it's not the kind of thing that derails a Savvas pitch.

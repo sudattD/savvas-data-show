@@ -656,7 +656,7 @@ export const EXOPLANETS_DATASET: Dataset = {
     { key: 'massEarth', label: 'Mass', kind: 'numeric', unit: 'Earth masses', description: 'Planet mass in units of Earth masses (1.0 = one Earth). Jupiter is ~318. Many transit-only detections lack a mass measurement.' },
     { key: 'eqTempK', label: 'Equilibrium temp', kind: 'numeric', unit: 'K', description: 'Equilibrium temperature in Kelvin assuming a black-body planet with no atmosphere — a rough proxy for "how hot is it from its star". Earth\'s value is ~255 K (–18 °C).' },
   ],
-  featured: { x: 'orbitalPeriod', y: 'radiusEarth', color: 'method' },
+  featured: { x: 'orbitalPeriod', y: 'radiusEarth', color: 'method', xScale: 'log', yScale: 'log' },
   chapterFits: [
     {
       course: 'algebra2',

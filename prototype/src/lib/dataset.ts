@@ -126,8 +126,20 @@ export interface Dataset {
   story?: StoryBeat[];
   attributes: Attribute[];
   rows: Row[];
-  /** Optional canonical scatter view — used as the Explorer's default X/Y/color. */
-  featured?: { x: string; y: string; color?: string };
+  /** Optional canonical opening view — used as the Explorer's default chart
+   *  type, X/Y attributes, color encoding, and per-axis scale. Each dataset
+   *  declares the view that makes the data look "right" on cold open. */
+  featured?: {
+    /** Default chart type. Defaults to 'scatter' when omitted. */
+    type?: 'scatter' | 'histogram' | 'bar' | 'box' | 'map';
+    x: string;
+    y: string;
+    color?: string;
+    /** Initial X-axis scale for scatter view. */
+    xScale?: 'linear' | 'log';
+    /** Initial Y-axis scale for scatter view. */
+    yScale?: 'linear' | 'log';
+  };
   /** Optional geo coordinates — names of the lat / lon attributes if this
    *  dataset can be plotted on a world map. Presence enables the Explorer's
    *  map view. `size` is an optional numeric attribute to scale point radius. */

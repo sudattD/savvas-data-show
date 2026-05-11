@@ -431,7 +431,7 @@ export const EARTHQUAKES_DATASET: Dataset = {
     { key: 'lat', label: 'Latitude', kind: 'numeric', description: 'Latitude in decimal degrees, –90 (South Pole) to +90 (North Pole). Plot Y on a map.' },
     { key: 'lon', label: 'Longitude', kind: 'numeric', description: 'Longitude in decimal degrees, –180 to +180. Plot X on a map.' },
   ],
-  featured: { x: 'lon', y: 'lat', color: 'type' },
+  featured: { type: 'map', x: 'lon', y: 'lat', color: 'type' },
   geo: { lat: 'lat', lon: 'lon', size: 'magnitude' },
   chapterFits: [
     {

@@ -136,8 +136,15 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
   const [markerOn, setMarkerOn] = useState(false);
   const [markerX, setMarkerX] = useState(0);
   const [meansOn, setMeansOn] = useState(false);
-  const [xScale, setXScale] = useState<'linear' | 'log'>('linear');
-  const [yScale, setYScale] = useState<'linear' | 'log'>('linear');
+  const [xScale, setXScale] = useState<'linear' | 'log'>(dataset.featured?.xScale ?? 'linear');
+  const [yScale, setYScale] = useState<'linear' | 'log'>(dataset.featured?.yScale ?? 'linear');
+
+  // When the dataset switches in the same Explorer session, pick up its
+  // preferred scales so the new view doesn't open looking wrong.
+  useEffect(() => {
+    setXScale(dataset.featured?.xScale ?? 'linear');
+    setYScale(dataset.featured?.yScale ?? 'linear');
+  }, [dataset.id]);
 
   // Log scale requires strictly-positive values. Disable the toggle when the
   // axis includes zero or negatives.

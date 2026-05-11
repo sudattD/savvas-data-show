@@ -24,8 +24,14 @@ function defaultConfig(d: Dataset): ChartConfig {
   const featuredX = d.featured?.x && num.find((a) => a.key === d.featured!.x)?.key;
   const featuredY = d.featured?.y && num.find((a) => a.key === d.featured!.y)?.key;
   const featuredColor = d.featured?.color && cat.find((a) => a.key === d.featured!.color)?.key;
+  // Honor featured.type only if the prereq is met (e.g. map needs dataset.geo).
+  const featuredType = d.featured?.type;
+  const type =
+    featuredType === 'map' && d.geo
+      ? 'map'
+      : featuredType ?? 'scatter';
   return {
-    type: 'scatter',
+    type,
     xKey: featuredX ?? num[0]?.key ?? null,
     yKey: featuredY ?? num[1]?.key ?? num[0]?.key ?? null,
     colorKey: featuredColor ?? null,
@@ -91,7 +97,7 @@ export default function ExplorerPage() {
 
         <main className="flex flex-col bg-surface-raised border-r border-surface-line min-w-0">
           <ChartToolbar dataset={dataset} config={config} onChange={setConfig} />
-          <div className="flex-1 min-h-[420px] bg-surface-subtle/30 p-2">
+          <div className="flex-1 min-h-[420px] max-h-[640px] bg-surface-subtle/30 p-2">
             <div className="w-full h-full bg-surface-raised rounded-lg shadow-editorial border border-surface-line" style={{ minHeight: 400 }}>
               {config.type === 'scatter' && xAttr && yAttr && (
                 <ScatterView dataset={dataset} rows={filteredRows} xAttr={xAttr} yAttr={yAttr} colorAttr={colorAttr} />

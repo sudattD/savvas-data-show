@@ -259,7 +259,7 @@ export const COUNTRIES_DATASET: Dataset = {
     { key: 'internetUse', label: 'Internet users', kind: 'numeric', unit: '%', description: 'Percent of the population that has used the Internet in the last 3 months (any device, any location). 0–100.' },
     { key: 'urbanPercent', label: 'Urban population', kind: 'numeric', unit: '%', description: 'Percent of the population living in urban areas, as defined by each country\'s national statistics. 0–100.' },
   ],
-  featured: { x: 'gdpPerCapita', y: 'lifeExp', color: 'region' },
+  featured: { x: 'gdpPerCapita', y: 'lifeExp', color: 'region', xScale: 'log' },
   chapterFits: [
     {
       course: 'algebra2',

@@ -1014,7 +1014,7 @@ export const HURRICANES_DATASET: Dataset = {
     { key: 'startLon', label: 'Origin lon', kind: 'numeric', description: 'Longitude (°, negative = West) of the storm\'s first recorded position. Cape Verde storms originate near –20°; Gulf storms form much farther west.' },
     { key: 'durationDays', label: 'Duration', kind: 'numeric', unit: 'days', description: 'Time from formation to dissipation, in days. Long-lived Atlantic storms (Cape Verde-type) often run 10+ days; short-fuse Gulf storms a couple.' },
   ],
-  featured: { x: 'peakWind', y: 'minPressure', color: 'category' },
+  featured: { type: 'map', x: 'peakWind', y: 'minPressure', color: 'category' },
   geo: { lat: 'startLat', lon: 'startLon', size: 'peakWind' },
   chapterFits: [
     {

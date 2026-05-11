@@ -142,7 +142,7 @@ export const NEO_DATASET: Dataset = {
     { key: 'missDistanceLd', label: 'Miss distance', kind: 'numeric', unit: 'lunar distances', description: 'Closest distance to Earth\'s centre, in lunar distances (1 LD ≈ 384 400 km — the average Earth–Moon distance). Rendered intuitive: "0.5 LD" = half the Moon\'s distance.' },
     { key: 'missDistanceKm', label: 'Miss distance', kind: 'numeric', unit: 'km', description: 'The same closest-approach distance, expressed in kilometres. Pair with velocity to get sense of "how close, how fast".' },
   ],
-  featured: { x: 'diameterMaxM', y: 'missDistanceLd', color: 'hazardous' },
+  featured: { x: 'diameterMaxM', y: 'missDistanceLd', color: 'hazardous', xScale: 'log', yScale: 'log' },
   chapterFits: [
     {
       course: 'geometry',
