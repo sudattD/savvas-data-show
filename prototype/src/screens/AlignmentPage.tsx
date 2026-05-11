@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Masthead from '../components/Masthead';
-import EnvisionVideoLink from '../components/EnvisionVideoLink';
+import SavvasVideoEmbed from '../components/SavvasVideoEmbed';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import {
   COURSE_TITLE,
   chaptersForCourse,
   chapterAnchorId,
-  envisionVideoUrl,
 } from '../data/chapters';
 import type { CourseId, ChapterEntry } from '../data/chapters';
 import { ALIGNMENT, alignmentFor, strengthCount } from '../data/act1Alignment';
@@ -178,7 +177,6 @@ function CourseSection({
 function AlignmentCard({ entry }: { entry: ChapterEntry }) {
   const a = alignmentFor(entry.course, entry.topic);
   if (!a) return null;
-  const videoUrl = envisionVideoUrl(entry);
   const datasetObjs = a.datasetIds
     .map((id) => DATASETS.find((d) => d.id === id))
     .filter(Boolean) as { id: string; name: string }[];
@@ -200,16 +198,12 @@ function AlignmentCard({ entry }: { entry: ChapterEntry }) {
       <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-surface-line">
         {/* Savvas Act 1 side */}
         <div className="px-5 py-4">
-          <div className="eyebrow text-rose-700 mb-1.5">Savvas · Act 1</div>
-          <p className="text-sm text-ink leading-relaxed mb-2">{a.savvasPremise}</p>
-          <div className="text-xs text-ink-muted italic mb-3">
+          <div className="eyebrow text-rose-700 mb-2">Savvas · Act 1</div>
+          <SavvasVideoEmbed course={entry.course} topic={entry.topic} />
+          <p className="text-sm text-ink leading-relaxed mt-3 mb-2">{a.savvasPremise}</p>
+          <div className="text-xs text-ink-muted italic">
             Question: <span className="text-ink not-italic font-semibold">"{a.savvasQuestion}"</span>
           </div>
-          {videoUrl && (
-            <div className="pt-2 border-t border-surface-line/60">
-              <EnvisionVideoLink course={entry.course} topic={entry.topic} compact />
-            </div>
-          )}
         </div>
 
         {/* Our continuation */}
