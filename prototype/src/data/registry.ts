@@ -14,6 +14,7 @@ import { STARS_DATASET } from './starsDataset';
 import { HURRICANES_DATASET } from './hurricanesDataset';
 import { SPOTIFY_DATASET } from './spotifyDataset';
 import { POPULATION_DATASET } from './populationDataset';
+import { OLYMPIC_100M_DATASET } from './olympic100mDataset';
 
 export const DATASETS: Dataset[] = [
   WIND_TURBINE_DATASET,
@@ -29,6 +30,7 @@ export const DATASETS: Dataset[] = [
   POPULATION_DATASET,
   NEO_DATASET,
   MARATHON_DATASET,
+  OLYMPIC_100M_DATASET,
   MOORE_LAW_DATASET,
   SPOTIFY_DATASET,
 ];
