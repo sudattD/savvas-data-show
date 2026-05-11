@@ -166,6 +166,50 @@ export default function ReactionInterpret({ identify, trials, onRestart }: Inter
           <Mini label="Visual range" value={`${v.fastest}–${v.slowest}`} />
           <Mini label="Audio range" value={`${a.fastest}–${a.slowest}`} />
         </div>
+        <details className="mt-4 group">
+          <summary className="cursor-pointer text-xs eyebrow text-ink-muted hover:text-violet-700 select-none">
+            <span className="group-open:hidden">Show raw data ▾</span>
+            <span className="hidden group-open:inline">Hide raw data ▴</span>
+          </summary>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-xs font-mono">
+              <thead>
+                <tr className="border-b border-surface-line text-ink-muted">
+                  <th className="text-left py-2 px-3">Trial</th>
+                  <th className="text-right py-2 px-3 text-violet-700">Visual (ms)</th>
+                  <th className="text-right py-2 px-3 text-emerald-700">Audio (ms)</th>
+                  <th className="text-right py-2 px-3">Diff</th>
+                </tr>
+              </thead>
+              <tbody className="tabular-nums">
+                {Array.from({ length: Math.max(trials.visual.length, trials.audio.length) }).map((_, i) => {
+                  const vt = trials.visual[i];
+                  const at = trials.audio[i];
+                  const diff = vt !== undefined && at !== undefined ? vt - at : null;
+                  return (
+                    <tr key={i} className="border-b border-surface-line last:border-0">
+                      <td className="py-1.5 px-3 text-ink-muted">{i + 1}</td>
+                      <td className="py-1.5 px-3 text-right">{vt ?? '—'}</td>
+                      <td className="py-1.5 px-3 text-right">{at ?? '—'}</td>
+                      <td className={`py-1.5 px-3 text-right ${diff !== null && diff > 0 ? 'text-emerald-700' : diff !== null && diff < 0 ? 'text-rose-700' : ''}`}>
+                        {diff !== null ? (diff > 0 ? `+${diff}` : diff) : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+                <tr className="border-t-2 border-ink/20 font-semibold">
+                  <td className="py-1.5 px-3 text-ink-muted">median</td>
+                  <td className="py-1.5 px-3 text-right">{v.median}</td>
+                  <td className="py-1.5 px-3 text-right">{a.median}</td>
+                  <td className="py-1.5 px-3 text-right text-emerald-700">{v.median - a.median > 0 ? `+${v.median - a.median}` : v.median - a.median}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div className="text-[10px] text-ink-muted italic mt-2">
+              Diff = visual − audio. Positive means your audio reaction was faster.
+            </div>
+          </div>
+        </details>
       </div>
 
       {/* Story */}

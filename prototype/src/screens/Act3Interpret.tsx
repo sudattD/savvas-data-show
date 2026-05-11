@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import HostBubble from '../components/HostBubble';
 import ActHeader from '../components/ActHeader';
 import WindChart from '../components/WindChart';
@@ -129,10 +130,16 @@ export default function Act3Interpret({ state, onRestart }: Act3Props) {
               R² = {r2.toFixed(3)}.
             </p>
             <div className="flex flex-wrap gap-2">
+              <Link
+                to="/explorer?dataset=wind"
+                className="px-4 py-2 rounded-lg bg-white text-sky-800 font-semibold hover:bg-sky-50 transition"
+              >
+                Explore the full dataset →
+              </Link>
               {!submitted ? (
                 <button
                   onClick={() => setSubmitted(true)}
-                  className="px-4 py-2 rounded-lg bg-white text-sky-800 font-semibold hover:bg-sky-50 transition"
+                  className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur text-white font-semibold hover:bg-white/20 transition border border-white/20"
                 >
                   Save to my notebook
                 </button>

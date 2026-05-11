@@ -72,9 +72,18 @@ export default function DatasetStory() {
               <h1 className="editorial-hero text-4xl md:text-6xl text-brand-900 mb-5">
                 {dataset.name}
               </h1>
-              <p className="text-lg md:text-xl text-ink-soft max-w-prose leading-relaxed mb-8">
+              <p className="text-lg md:text-xl text-ink-soft max-w-prose leading-relaxed mb-6">
                 {dataset.description}
               </p>
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <Link
+                  to={`/explorer?dataset=${dataset.id}`}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-brand-900 text-white font-semibold shadow-editorial hover:bg-brand-700 transition text-sm"
+                >
+                  Explore in table + charts <span aria-hidden>→</span>
+                </Link>
+                <span className="text-xs text-ink-muted">Tabular view · scatter · histogram · bar · box plot · filters</span>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-2xl">
                 <Stat label="Rows" value={dataset.rows.length.toLocaleString()} mono />
                 <Stat label="Numeric" value={numericAttrs.length} mono />
