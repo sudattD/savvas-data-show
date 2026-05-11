@@ -1,9 +1,19 @@
+# ⚠️ STALE — Do not use
+
+This file tested the **wrong URL** (`prototype-3cxbirii1-dereklomas-projects.vercel.app`, May-10-morning state). The B2/B5/B6 blockers documented below were already fixed days ago and shipped to `prototype-five-iota.vercel.app`. 
+
+**Current verification:** see `screenshots/browser_pass_report.md` → "Pass-6 · ✓ all clear" section.
+
+Leaving this file in place only as a record of what happened. Everything below this banner describes a prior build state.
+
+---
+
 # Live Test Findings — Cowork Browser Pass
 
 **Status:** in-progress (sweep running)
 **Tester:** Claude (Cowork)
 **Started:** May 11, 2026
-**Target:** https://prototype-3cxbirii1-dereklomas-projects.vercel.app
+**Target:** https://prototype-3cxbirii1-dereklomas-projects.vercel.app   ← STALE URL, see banner above
 
 This file is appended as I go. Terminal Claude is free to start fixing the highest-confidence bugs without waiting for the final report. Mark items here as you take them by adding `[FIXING: terminal]` next to the row.
 

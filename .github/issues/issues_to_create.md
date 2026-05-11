@@ -154,3 +154,37 @@ Untested paths in the prototype as of 2026-05-10. A 25-minute smoke pass Wednesd
 - [ ] **Slider behavior under fast keyboard input** on `/lessons/slider-of-lies`, `/lessons/walk-into-a-bar`, `/lessons/pick-your-story`. Hold left/right arrows; verify no NaN states or chart explosions.
 
 Source: `dev_feedback_addendum.md` items N3-N6 plus the original unverified list.
+
+---
+
+## 11 · N3 · Large-N scatter datasets show empty chart on first load until hover  — **fixed in source, awaiting redeploy**
+
+**Labels:** minor, design
+
+**Status (2026-05-11, Cowork):** edit applied to `src/components/explorer/ScatterView.tsx` line ~579 — `isAnimationActive={false}` added to the `<Scatter>` in `groups.map`. Inline comment added. Not yet built or deployed. Terminal Claude: please build, smoke-test on `/explorer?dataset=stars` and `/explorer?dataset=spotify` for "dots visible on cold hard-reload, no hover needed," and deploy if green. If the fix doesn't take, original repro / hypothesis below.
+
+---
+
+
+**Where:** `src/components/explorer/ScatterView.tsx`.
+
+**Repro:** Cold-navigate `/explorer?dataset=stars` (750 pts) or `/explorer?dataset=spotify` (600 pts). The page paints — filter rail, summary stats, axes, legend — but the chart canvas itself stays blank for ~1 second. As soon as the cursor enters the chart area (or any other event triggers a Recharts redraw) all dots appear instantly. DOM evidence: the `.recharts-scatter-symbol` elements are present at first load (`querySelectorAll('.recharts-scatter-symbol').length === 750`) with correct `cx`/`cy` positions, `fill` colors, and `0.6` opacity — they're just not painted to the canvas yet.
+
+**Not observed on** smaller-N scatter (`moore` 219, `penguins` 342, `olympic100m` 30, `heartRate` 16, `solarSystem` 11) or on Map view (`hurricanes` 957 paints fine, `earthquakes` 382 paints fine). So the trigger is specifically **large-N `<Scatter>`**, not point count alone.
+
+**Hypothesis:** Recharts defers the initial paint of large scatter sets behind its enter-animation, and the animation tick doesn't fire until layout stabilizes — which on a heavy explorer page (filters + table + stats) takes long enough to look like a blank chart for a beat.
+
+**Most likely fix (one prop):**
+
+```diff
+- <Scatter data={...} />
++ <Scatter data={...} isAnimationActive={false} />
+```
+
+Or, if you want to keep the entrance animation: `animationDuration={0}` on the first render and re-enable for filter changes.
+
+**Demo risk:** medium. Park sees a blank Spotify or Stars chart for a beat before he interacts, might wonder if it's broken. Probably fine in practice because he'll hover/click within a second — but not zero.
+
+**Acceptance:** On a hard reload of `/explorer?dataset=stars` and `/explorer?dataset=spotify`, the scatter points are visible *immediately* once the chart container has finished its initial layout (no hover required).
+
+Est: ~10 min (one-line edit + verify on the two affected datasets). Source: `screenshots/browser_pass_report.md` Pass-7 finding N3.

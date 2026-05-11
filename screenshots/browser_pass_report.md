@@ -155,6 +155,20 @@ The CO2 fit is the canonical case: linear regression on a near-linear time serie
 - **I12 · Fit a line uses raw-unit linear regression even with log scale active.** Product decision: pick one behavior, document it. Fix is one branch in the regression utility.
 - **M11 · Y axis auto-fits to model extent rather than data extent.** When Fit-a-line is on with bad slope/intercept, the Y domain blows up and crushes the data. Should probably clamp the Y domain to data ± 10% padding regardless of where the regression line goes.
 
+### Pass-6 findings — Olympic 100m + Map view
+
+| Test | Result | Detail |
+|---|---|---|
+| R6.5 · `/explorer?dataset=olympic100m` cold-open | ✓ pass | Default X=year, Y=time, color=timing — matches brief. **30 scatter paths in DOM** (brief said 29 — likely off by one because 2024 Paris added). Filter rail rich: Year 1896-2024, Winning time 9.6-12.0s, athletes (Usain Bolt 3, Carl Lewis 2, Tom Burke 1, ...), athlete country (USA 17, GBR 3, JAM 3 ...), host city, host country. |
+| R6.5 · Fit a line on Olympic 100m | △ partial | best R² = **0.809**. Brief expected `> 0.85`. Close miss. Explanation: the time-vs-year curve has a flattening tail (Bolt-era plateau) so a linear fit underfits the recent years. R² ~0.81 is mathematically right; the brief's `> 0.85` may have been written before recent Olympics added the plateau, or based on a different fit method. Not a bug; brief should soften the threshold. |
+| R6.4 · Map button on earthquakes | ✓ pass | The `Map` button (with `◯` icon prefix — that's why my earlier text-matching regex missed it) is in the chart-type picker. Clicking it switches to map view. |
+| R6.4 · Map view renders | ✓ pass (DOM) | **382 SVG circles** (matches 381 earthquakes + 1 explosion in the dataset). 7 path elements (graticule). Page text contains `equator`, `meridian`, `°W`, `°E`, `°N`, `°S` — graticule axis labels exist. I couldn't visually verify the Ring of Fire / Alpide belt clustering because the chart canvas was off-viewport in my narrow window, but the structural evidence is consistent. |
+| R6.4 · Map button availability across datasets | not tested | Brief asserts Map button visible for earthquakes/hurricanes, NOT for co2/marathon. Confirmed for earthquakes. Hurricanes/co2/marathon not tested in this pass. Worth a 60-second spot-check Wednesday morning. |
+
+**Olympic 100m caveat:** R² = 0.809 isn't a failure — it's an honest fit number on a relationship that's mostly linear but flattening. If the brief's `> 0.85` matters as a pedagogy gate, two options: (a) update brief to `> 0.75`, or (b) fit log-time vs year (since improvement curves are often exponential decays toward a physiological floor). Option (b) would push R² higher and teach a different lesson.
+
+**The big chart-type bug from pass-5 (I11 · Y: log strips scatter from DOM) is dataset-independent.** It affects Moore's Law on cold-open because Moore's `featured` defaults to Y: log. Other datasets that default to Y: linear are unaffected on cold-open but would trigger the bug if a user toggles Y: log. So the bug surfaces by default only on Moore's Law, but is latent across all numeric datasets.
+
 ### What this means for Wednesday
 
 The prototype is in **demo-ready** shape. The deploy went out, the visible empty-chart bugs are gone, the stats land their numbers, the explorer's "wow" views render on cold-open, and the dataset-story sparkline gives Jamal-persona students something to look at on first scroll. The one visible nit (masthead overlap on Explorer pages) is recoverable in a single CSS line if Tuesday has spare time; otherwise it's not the kind of thing that derails a Savvas pitch.
@@ -191,3 +205,64 @@ If all four land, append a brief "## Pass-6 · ✓ all clear" section to this fi
 **What I didn't change** (so you don't go looking for new state where there isn't any): everything outside `ScatterView.tsx`. Same dataset registry, same 4 chapter activities, same lessons, same homepage. The masthead overlap nit on Explorer pages is still unaddressed; the beat-dot forward-locking is intentional per the dev note.
 
 **Why this matters for the demo:** `demo_runbook.md` Beat 4c is the prototype's strongest 90 seconds — a breadth tour through Kepler / Kleiber / Olympic on log-log axes. Without I11 and I12 fixed, that beat would show empty charts and wrong slopes. With them fixed, it lands. Verifying these three is the highest-leverage thing you can do for Wednesday.
+
+---
+
+## Pass-6 · ✓ all clear — 2026-05-11 (Cowork)
+
+**Build under test:** commit `2a182bc`, https://prototype-five-iota.vercel.app
+**Driver:** Claude in Chrome MCP from a Cowork session
+
+All four Pass-6 verifications land. The I11/I12/M11 fixes are confirmed live. Beat 4c (Kepler / Kleiber log-log tour) will demo correctly on Wednesday.
+
+| # | Test | Expected | Observed | Verdict |
+|---|---|---|---|---|
+| 1 | `/explorer?dataset=moore` cold-open, log-Y | 219 visible scatter points | **219** `recharts-scatter-symbol` elements in DOM; visual zoom confirms iconic exponential straight line from ~7k transistors (1971, MP944 / Intel 4004) up to ~130B (2024). Decade-coded color gradient (pale 1970s → navy 2020s) painting cleanly. | ✓ pass |
+| 2 | `solarSystem`, X log + Y log + Fit a line + Show best fit + Snap | best R² ≈ 0.99, slope ≈ 1.5 | **best R² 1.000**, **slope 1.50** (intercept 0.00). All 11 bodies (Mercury → Eris, including dwarf planets) sit dead-on the regression line. Kepler's Third Law textbook-perfect. | ✓ pass (exceeds expectations) |
+| 3 | `heartRate`, X log + Y log + Fit + best fit + Snap | best R² > 0.85, slope ≈ −0.25 | **best R² 0.950**, **slope −0.238** (intercept 2.36). 16 mammals from etruscan shrew (1200 BPM, 1.8 g) to elephant-class megafauna, downward-sloping line. Kleiber allometric scaling visualized. | ✓ pass |
+| 4 | Any dataset, Fit a line, drag slope to wild value | Y range stays put, line clips at chart edges | Set slope on heartRate to +0.787 (slider max — opposite sign from best fit). User line clipped where it would exit the chart at body mass ≈ 5 kg / y = 1000 BPM. **Y axis stayed at 10 → 1000** (unchanged from data extent). Scatter points still visible. M11 fix landed via `ifOverflow="hidden"`. | ✓ pass |
+
+**Screenshot IDs:** `ss_4764tzawo` (moore log-Y), `ss_86580ljcy` (solarSystem snap-to-best-fit, slope 1.50), `ss_016933hmh` (heartRate snap-to-best-fit, slope -0.238), `ss_5304538h7` (heartRate wild slope clipped at chart edge).
+
+**Spot-checks I noticed in passing:**
+- Tab title is now per-route ("Savvas Data Show · Explorer · Moore's Law (transistor counts)", "...Solar System", "...Heart rate vs body mass (mammals)") — B1/I1 fix landed.
+- Datasets dropdown now shows **18 datasets** including new ones I hadn't seen: The Solar System, Visible Stars (HR diagram), Heart rate vs body mass (mammals), Atlantic Hurricanes (1950-2024), US Population Pyramid (1900 vs 2020), Olympic 100m — Men's gold medal time, Spotify Tracks (audio features).
+- Masthead "DATA DICTIONARY →" rendered cleanly on every Explorer page I visited in this pass — the overlap nit flagged at Pass-2 was not reproducible. Same conclusion as the Pass-2 continuation note.
+- The `Fit a line` panel now exposes: slope slider · intercept slider · your R² (live) · best R² (computed) · Show best fit · Snap to best fit. The pedagogical loop (drag → see your R² → reveal optimal → snap) is in place and works on log-log fits, which is the whole point of Beat 4c.
+
+**Status for Wednesday:** demo-ready. No blockers, no new candidate issues filed.
+
+**Note on Cowork file hygiene:** an earlier Cowork session wrote `test_report.md` and `test_findings_live.md` against the stale URL `prototype-3cxbirii1-dereklomas-projects.vercel.app` (May 10 morning state, 11 datasets / 6 lessons, B2/B5/B6 still open). Those files describe a prior state and should not be used as the May-11 verification. This Pass-6 section is the current state.
+
+---
+
+## Pass-7 · coverage sweep on new datasets — 2026-05-11 (Cowork)
+
+Closing the loop on the "10-minute sweep" the Pass-5 author flagged as missing: Olympic 100m, Map view on geo-enabled datasets, Visible Stars HR diagram, Spotify Tracks. All pass.
+
+| Route | Status | Notes | Screenshot |
+|---|---|---|---|
+| `/explorer?dataset=olympic100m` | ✓ pass | 30 rows. Default X=Year, Y=Winning time, Color=Timing system. Y axis label nails the editorial touch: "Winning time (s) · lower = faster". Hand-timed era (orange) descending 12.0→10.2 across 1896-1968, automatic-timed era (blue) continuing 10.2→9.63 through 2024 (Bolt). The timing-system color split *is* a built-in data-literacy lesson about measurement methodology. | ss_48959woii |
+| `/explorer?dataset=hurricanes` | ✓ pass | 957 points. **Default chart type = Map** (auto-selected for geo datasets — nice touch). Equirectangular projection, graticule every 30°, tropics dashed at ±23.5°. North Atlantic basin literally drawn by the storm tracks. Colored by Category (Tropical Storm 457, Cat 1 204, Cat 2 98, Cat 4 88, Cat 3 77, Cat 5 33). Footer caption: "Continental outlines aren't drawn — the data itself traces them." Perfect editorial framing. | ss_641160ck5 |
+| `/explorer?dataset=earthquakes` | ✓ pass | 382 points. Default Map view. Ring of Fire instantly visible — heavy Alaska/Aleutians cluster (115), Brawley fault region in CA (66), Nevada (21), Indonesia (9), Chile (10), Japan (14), Papua New Guinea (11), South Sandwich Islands. The data is doing the geology lesson for you. | ss_2764swcdv |
+| `/explorer?dataset=stars` | ✓ pass (after hover trigger — see N3 below) | 750 stars. Default X=Color (B-V), Y=Absolute mag, Color=Spectral class. Y axis correctly **inverted** with the wonderful annotation "Absolute mag · brighter ↑ · lower number = brighter" — astronomy's confusing convention turned into a one-line teaching moment. The textbook HR-diagram features all render correctly: main sequence diagonal from upper-left (hot O/B stars) down through F/G/K to red dwarfs at lower-right, red giants visible in upper-right around B-V≈1, and supergiants strung across the top. Eight spectral classes (A 167, K 165, B 156, F 112, G 100, M 44, O 5, Other 1) cleanly color-separated. | ss_1440zy9zr |
+| `/explorer?dataset=spotify` | ✓ pass (after hover trigger — see N3) | 600 tracks across 6 genres (Pop / Rock / R&B / Latin / Rap / EDM, 100 each except 2010s decade-heavy). Default X=Energy, Y=Danceability, Color=Genre. Most tracks bunch upper-right (popular music = high energy & high danceability), with EDM clustering most tightly to the upper-right and Rock spreading the widest. Relatable hook for high-schoolers. | ss_6492ol7e3 |
+
+**One new finding — render-timing on large-N scatter datasets:**
+
+### N3 · First-load on Visible Stars and Spotify shows empty chart until a hover/interaction triggers a redraw — **minor**
+
+- **Repro:** Cold-navigate `/explorer?dataset=stars` or `/explorer?dataset=spotify`. After the page is visibly "done loading" (filter rail and stats panel painted), the chart area still appears blank for a beat. DOM shows the 750 / 600 `recharts-scatter-symbol` elements are present with correct positions, fills (0.6 opacity), and 9×9 px boxes — they're just not painted to the canvas. As soon as the cursor enters the chart area (hover) or any DOM event triggers a Recharts redraw, all dots appear.
+- **Not observed on:** moore (219), penguins (342), olympic100m (30), heartRate (16), solarSystem (11), hurricanes (957 — Map view), earthquakes (382 — Map view). So the trigger is **large-N scatter** specifically, not point count alone (Map view at 957 paints fine).
+- **Hypothesis:** Recharts' `<Scatter>` may be deferring its initial paint until layout settles (likely an `animationBegin` / `isAnimationActive` quirk on the first render of >500 points). A `isAnimationActive={false}` prop on the scatter, or a forced redraw after data settles, would fix it.
+- **Demo risk:** medium — Park sees a blank Spotify or stars chart for a moment before any interaction, and might wonder if it's broken before he hovers. Probably fine in practice because the typical demo gesture is "let me click into this" within a second. But not zero.
+- **Fix entry point:** `src/components/explorer/ScatterView.tsx` — try `isAnimationActive={false}` or set an `animationDuration={0}` on the Scatter component.
+
+**Other observations:**
+
+- **Map view is gorgeous and feels production-grade.** The "continental outlines aren't drawn — the data itself traces them" framing is exactly the editorial move Savvas's brand team will appreciate. Hurricanes and Earthquakes both work as cold-open demo views.
+- **HR diagram Y-axis inversion is correctly handled.** Astronomy's "brighter = lower number" convention is a known student pitfall; the inline label resolves it.
+- The Olympic 100m Y label ("lower = faster") is the same pattern — small editorial annotations that anticipate student confusion.
+- The Spotify Genre legend is positioned across the top of the chart and doesn't collide with the chart area. Clean.
+
+**Status:** no new blockers. N3 is a minor render-timing nit worth one fix-attempt if Tuesday has spare time; otherwise post-demo. The new datasets (Olympic, Hurricanes, Earthquakes, Stars, Spotify) all support Park's demo flow.

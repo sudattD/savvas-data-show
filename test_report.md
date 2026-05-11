@@ -1,8 +1,18 @@
+# ⚠️ STALE — Do not use
+
+This file tested the **wrong URL** (`prototype-3cxbirii1-dereklomas-projects.vercel.app`, May-10-morning state with 11 datasets / 6 lessons / B2 B5 B6 open). The current build is at `prototype-five-iota.vercel.app` (18 datasets / 9 lessons, B2/B5/B6 fixed days ago, plus regression line, map view, log scales, Kepler, Kleiber).
+
+**Current verification:** see `screenshots/browser_pass_report.md` → "Pass-6 · ✓ all clear" section.
+
+Leaving this file in place only as a record of what happened. Everything below this banner is outdated.
+
+---
+
 # Savvas Data Show — Browser Test Report
 
 **Tester:** Claude (Cowork)
 **Date:** May 11, 2026 (T-2 to demo)
-**Target:** https://prototype-3cxbirii1-dereklomas-projects.vercel.app
+**Target:** https://prototype-3cxbirii1-dereklomas-projects.vercel.app   ← STALE URL, see banner above
 **Method:** Embedded Chrome, full route sweep + interaction tests on Explorer, all 6 Lessons, Wind Turbine 3-Act, and Voice DNA Wonder→Play.
 
 A running bug log is at `test_findings_live.md` and was being updated during the run so the terminal-side Claude could pick up fixes in parallel.
