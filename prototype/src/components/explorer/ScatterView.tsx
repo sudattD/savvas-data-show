@@ -66,15 +66,64 @@ function r2(points: Array<{ x: number; y: number }>, slope: number, intercept: n
 }
 
 export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: ScatterViewProps) {
+  // Numeric color range — when colorAttr is numeric, we encode each point
+  // individually instead of grouping. Compute the min/max once.
+  const numericColorRange = useMemo(() => {
+    if (!colorAttr || colorAttr.kind !== 'numeric') return null;
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const r of rows) {
+      const v = Number(r[colorAttr.key]);
+      if (!Number.isFinite(v)) continue;
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+    if (!Number.isFinite(lo) || !Number.isFinite(hi) || lo === hi) return null;
+    return { lo, hi };
+  }, [rows, colorAttr]);
+
   const groups = useMemo(() => {
     if (!colorAttr) {
       return [
         {
           name: dataset.name,
           color: DEFAULT_POINT,
-          points: rows.map((r) => ({ x: Number(r[xAttr.key]), y: Number(r[yAttr.key]), row: r })),
+          points: rows.map((r) => ({ x: Number(r[xAttr.key]), y: Number(r[yAttr.key]), row: r, color: DEFAULT_POINT })),
         },
       ];
+    }
+    // Numeric color: bin the data into 8 quantized color groups so each gets
+    // a uniform Recharts <Scatter> with one fill (cleaner than per-point fill
+    // and lets us paint a legend gradient cleanly).
+    if (colorAttr.kind === 'numeric' && numericColorRange) {
+      const BINS = 8;
+      const { lo, hi } = numericColorRange;
+      const range = hi - lo;
+      const buckets: { name: string; color: string; points: Array<{ x: number; y: number; row: Row; color: string }> }[] = [];
+      for (let i = 0; i < BINS; i++) {
+        const binLo = lo + (i / BINS) * range;
+        const binHi = lo + ((i + 1) / BINS) * range;
+        const color = numericColor((i + 0.5) / BINS);
+        buckets.push({
+          name: `${formatScalar(binLo)}–${formatScalar(binHi)}`,
+          color,
+          points: [],
+        });
+      }
+      for (const r of rows) {
+        const v = Number(r[colorAttr.key]);
+        if (!Number.isFinite(v)) continue;
+        let i = Math.floor(((v - lo) / range) * BINS);
+        if (i === BINS) i = BINS - 1;
+        if (i < 0) i = 0;
+        buckets[i].points.push({
+          x: Number(r[xAttr.key]),
+          y: Number(r[yAttr.key]),
+          row: r,
+          color: buckets[i].color,
+        });
+      }
+      return buckets.filter((b) => b.points.length > 0);
     }
     const isOrdinal = !!colorAttr.ordinal;
     const cats = uniqueValues(rows, colorAttr.key, { ordinal: isOrdinal });
@@ -83,9 +132,9 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
       color: categoryColor(c, cats, { ordinal: isOrdinal }),
       points: rows
         .filter((r) => String(r[colorAttr.key]) === c)
-        .map((r) => ({ x: Number(r[xAttr.key]), y: Number(r[yAttr.key]), row: r })),
+        .map((r) => ({ x: Number(r[xAttr.key]), y: Number(r[yAttr.key]), row: r, color: categoryColor(c, cats, { ordinal: isOrdinal }) })),
     }));
-  }, [rows, xAttr, yAttr, colorAttr, dataset.name]);
+  }, [rows, xAttr, yAttr, colorAttr, dataset.name, numericColorRange]);
 
   // All points flattened, for regression computation.
   const allPoints = useMemo(
@@ -188,6 +237,16 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [markerOn, ranges]);
 
+  // Horizontal y-marker (symmetric with the existing vertical x-marker).
+  const [yMarkerOn, setYMarkerOn] = useState(false);
+  const [markerY, setMarkerY] = useState(0);
+  useEffect(() => {
+    if (yMarkerOn && ranges && markerY === 0) {
+      setMarkerY((ranges.yMin + ranges.yMax) / 2);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yMarkerOn, ranges]);
+
   // Predicted y from the manual line at the marker's x (used as a readout
   // when both features are on).
   const markerYPredicted = manualSlope * markerX + manualIntercept;
@@ -250,7 +309,18 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
               : 'bg-surface-raised border border-surface-line text-ink hover:border-rose-300'
           }`}
         >
-          {markerOn ? 'Drop a marker ✓' : 'Drop a marker'}
+          {markerOn ? 'x-marker ✓' : 'x-marker'}
+        </button>
+
+        <button
+          onClick={() => setYMarkerOn((v) => !v)}
+          className={`px-3 py-1.5 rounded-md font-semibold transition ${
+            yMarkerOn
+              ? 'bg-rose-700 text-white shadow-editorial'
+              : 'bg-surface-raised border border-surface-line text-ink hover:border-rose-300'
+          }`}
+        >
+          {yMarkerOn ? 'y-marker ✓' : 'y-marker'}
         </button>
 
         <button
@@ -285,6 +355,35 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
               <span className="font-mono tabular-nums text-ink-soft">→ <span className="text-rose-700 font-bold">y = {formatScalar(markerYPredicted)}</span></span>
             )}
           </label>
+        )}
+
+        {yMarkerOn && ranges && (
+          <label className="flex items-center gap-2">
+            <span className="text-ink-muted">y</span>
+            <input
+              type="range"
+              min={ranges.yMin}
+              max={ranges.yMax}
+              step={(ranges.yMax - ranges.yMin) / 200}
+              value={markerY}
+              onChange={(e) => setMarkerY(Number(e.target.value))}
+              className="w-28 accent-rose-700"
+            />
+            <span className="font-mono tabular-nums text-ink w-16 text-right">{formatScalar(markerY)}</span>
+          </label>
+        )}
+
+        {colorAttr && colorAttr.kind === 'numeric' && numericColorRange && (
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-ink-muted text-[11px]">{colorAttr.label}</span>
+            <span className="font-mono tabular-nums text-ink-soft text-[11px]">{formatScalar(numericColorRange.lo)}</span>
+            <span
+              className="inline-block h-3 w-28 rounded"
+              style={{ background: `linear-gradient(90deg, ${numericRampStops()})` }}
+              aria-label={`Color scale for ${colorAttr.label}`}
+            />
+            <span className="font-mono tabular-nums text-ink-soft text-[11px]">{formatScalar(numericColorRange.hi)}</span>
+          </div>
         )}
 
         {regressionOn && (
@@ -396,7 +495,7 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
                 return [val, name];
               }}
             />
-            {colorAttr && groups.length > 1 && (
+            {colorAttr && colorAttr.kind !== 'numeric' && groups.length > 1 && (
               <Legend
                 verticalAlign="top"
                 align="right"
@@ -435,6 +534,14 @@ export default function ScatterView({ dataset, rows, xAttr, yAttr, colorAttr }: 
                 stroke="#9F1239"
                 strokeWidth={2}
                 label={{ value: formatScalar(markerX), fill: '#9F1239', fontSize: 11, position: 'top' }}
+              />
+            )}
+            {yMarkerOn && (
+              <ReferenceLine
+                y={markerY}
+                stroke="#9F1239"
+                strokeWidth={2}
+                label={{ value: formatScalar(markerY), fill: '#9F1239', fontSize: 11, position: 'right' }}
               />
             )}
             {meansOn && meanMedian && (
