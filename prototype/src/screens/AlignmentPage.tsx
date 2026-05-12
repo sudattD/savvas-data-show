@@ -120,6 +120,14 @@ export default function AlignmentPage() {
       </section>
 
       <main className="max-w-6xl mx-auto px-6 py-10 space-y-12">
+        {strengthFilter === 'all' && courseFilter === 'all' && <FlagshipRail />}
+
+        {(strengthFilter !== 'all' || courseFilter !== 'all') && (
+          <div className="text-xs eyebrow text-ink-muted">
+            All {ALIGNMENT.length} chapters · filtered
+          </div>
+        )}
+
         {courses.map((c) => (
           <CourseSection
             key={c}
@@ -139,6 +147,108 @@ export default function AlignmentPage() {
         Source: 35 official Savvas enVision AGA 2024 3-Act Math videos captured from textbook QR codes · Transcribed with Gemini 3 Flash · Working draft, not for distribution
       </footer>
     </div>
+  );
+}
+
+// Three demo-ready alignments where Savvas's Act-1 hook and our parallel
+// real-data activity both exist, are strong fits, and click through to
+// something that actually works. The argument of the page lives or dies
+// on these three; everything below this rail is supporting evidence.
+interface Flagship {
+  course: CourseId;
+  topic: number;
+  savvasTitle: string;       // e.g. "The Long Shot"
+  ourActivity: string;       // e.g. "Wind Power Curve"
+  builtRoute: string;        // e.g. "/wind-turbine"
+  oneLiner: string;          // the alignment in one bold sentence
+  mathTopic: string;         // e.g. "Quadratic functions"
+}
+
+const FLAGSHIPS: Flagship[] = [
+  {
+    course: 'algebra1', topic: 8,
+    savvasTitle: 'The Long Shot',
+    ourActivity: 'Wind Power Curve',
+    builtRoute: '/wind-turbine',
+    mathTopic: 'Quadratic functions',
+    oneLiner: 'Six basketball arcs in the textbook → slider-fit a real quadratic to live SCADA data from a 1.5 MW turbine.',
+  },
+  {
+    course: 'algebra2', topic: 7,
+    savvasTitle: 'What Note Was That?',
+    ourActivity: 'Voice DNA',
+    builtRoute: '/voice-dna',
+    mathTopic: 'Trigonometric functions',
+    oneLiner: 'A flute and a sine wave in the textbook → record your own voice and watch the harmonics appear as a sum of sines.',
+  },
+  {
+    course: 'algebra2', topic: 12,
+    savvasTitle: 'Place Your Guess',
+    ourActivity: 'The Rare Disease Test',
+    builtRoute: '/lessons/rare-disease',
+    mathTopic: 'Conditional probability',
+    oneLiner: '"Is the coin-flip game fair?" → "Is your positive test result actually positive?" Bayes\' theorem with stakes.',
+  },
+];
+
+function FlagshipRail() {
+  return (
+    <section>
+      <div className="flex items-baseline justify-between mb-4">
+        <div>
+          <div className="eyebrow text-emerald-700 mb-1">Demo-ready · three flagships</div>
+          <h2 className="font-display text-2xl md:text-3xl font-bold text-brand-900 leading-tight">
+            Three chapters where it all works <em className="not-italic text-emerald-700">today.</em>
+          </h2>
+        </div>
+        <div className="text-xs text-ink-muted hidden md:block max-w-xs text-right leading-snug">
+          Savvas's official Act-1 video on the left, our real-data Act 1.5 on the right. Both built. Both clickable.
+        </div>
+      </div>
+      <div className="grid md:grid-cols-3 gap-4">
+        {FLAGSHIPS.map((f) => (
+          <FlagshipCard key={`${f.course}-${f.topic}`} flagship={f} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FlagshipCard({ flagship: f }: { flagship: Flagship }) {
+  const courseLabel =
+    f.course === 'algebra1' ? 'Algebra 1' :
+    f.course === 'algebra2' ? 'Algebra 2' : 'Geometry';
+  return (
+    <article className="bg-surface-raised border-2 border-emerald-200 rounded-lg overflow-hidden hover:border-emerald-300 hover:shadow-md transition flex flex-col">
+      <div className="p-4 border-b border-surface-line bg-emerald-50/40">
+        <div className="eyebrow text-emerald-700 text-[10px]">
+          {courseLabel} · Topic {f.topic} · {f.mathTopic}
+        </div>
+        <h3 className="font-display text-lg font-bold text-brand-900 leading-tight mt-1">
+          {f.ourActivity}
+        </h3>
+        <div className="text-xs text-ink-muted mt-0.5">
+          Paired with Savvas Act 1: <em className="not-italic font-semibold text-ink">"{f.savvasTitle}"</em>
+        </div>
+      </div>
+
+      <div className="px-4 py-3 border-b border-surface-line">
+        <SavvasVideoEmbed course={f.course} topic={f.topic} />
+      </div>
+
+      <p className="px-4 py-3 text-sm text-ink leading-relaxed flex-1">
+        {f.oneLiner}
+      </p>
+
+      <a
+        href={f.builtRoute}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block px-4 py-3 bg-brand-900 text-white text-sm font-semibold hover:bg-brand-700 transition text-center"
+      >
+        Open the Act-1.5 activity →
+      </a>
+    </article>
   );
 }
 
