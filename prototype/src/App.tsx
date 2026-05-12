@@ -39,8 +39,15 @@ export default function App() {
         {/* allowedHosts: empty array means the widget never auto-shows.
             It still activates when ?getinput is in the URL, so Derek can
             share a review URL with Park without cluttering the default
-            view. */}
-        <InputWidget allowedHosts={[]} />
+            view.
+            apiEndpoint points back to the prototype's /api/input because
+            the pitch deploy is a static-only Vercel project — it has no
+            serverless function of its own. Without this override, every
+            POST from a pitch reviewer 404'd silently. */}
+        <InputWidget
+          allowedHosts={[]}
+          apiEndpoint="https://prototype-five-iota.vercel.app/api/input"
+        />
       </BrowserRouter>
     );
   }
