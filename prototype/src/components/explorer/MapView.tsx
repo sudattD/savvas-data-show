@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
 import { categoryColor, uniqueValues, DEFAULT_POINT } from './ColorScale';
+import { WORLD_LAND_PATH } from './worldLand';
 
 function formatScalar(v: number): string {
   if (Math.abs(v) >= 1e6) return `${(v / 1e6).toFixed(1)}M`;
@@ -275,8 +276,20 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
           {/* Ocean background */}
           <rect x={0} y={0} width={W} height={H} fill="#E5EFFB" />
 
-          {/* Graticule — lat/lon grid every 30 degrees */}
-          <g stroke="#BFD3EE" strokeWidth={0.5 / zoom} fill="none">
+          {/* Continental landmass underlay — Natural Earth 1:110m.
+              Soft warm fill so it reads as "land" without competing with
+              colored data points layered above. */}
+          <path
+            d={WORLD_LAND_PATH}
+            fill="#F5EFE4"
+            stroke="#C7B89A"
+            strokeWidth={0.4 / zoom}
+            fillRule="evenodd"
+          />
+
+          {/* Graticule — lat/lon grid every 30 degrees, kept very light so
+              the land outline is the dominant guide. */}
+          <g stroke="#94A3B8" strokeOpacity={0.18} strokeWidth={0.4 / zoom} fill="none">
             {[-60, -30, 0, 30, 60].map((lat) => {
               const y = ((90 - lat) / 180) * H;
               return <line key={`lat${lat}`} x1={0} x2={W} y1={y} y2={y} />;
@@ -288,13 +301,13 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
           </g>
 
           {/* Equator + prime meridian — emphasized */}
-          <g stroke="#94A3B8" strokeWidth={1 / zoom} fill="none">
+          <g stroke="#64748B" strokeOpacity={0.35} strokeWidth={0.7 / zoom} fill="none">
             <line x1={0} x2={W} y1={H / 2} y2={H / 2} />
             <line x1={W / 2} x2={W / 2} y1={0} y2={H} />
           </g>
 
           {/* Tropics + arctic/antarctic circles — labels for orientation */}
-          <g stroke="#CBD5E1" strokeWidth={0.5 / zoom} strokeDasharray={`${2 / zoom} ${3 / zoom}`} fill="none">
+          <g stroke="#94A3B8" strokeOpacity={0.25} strokeWidth={0.4 / zoom} strokeDasharray={`${2 / zoom} ${3 / zoom}`} fill="none">
             {[-66.5, -23.5, 23.5, 66.5].map((lat) => {
               const y = ((90 - lat) / 180) * H;
               return <line key={`spec${lat}`} x1={0} x2={W} y1={y} y2={y} />;
@@ -326,7 +339,7 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
       </div>
 
       <div className="shrink-0 text-[10px] text-ink-muted italic">
-        Equirectangular projection · graticule every 30° · dashed lines: tropics (±23.5°) and arctic/antarctic (±66.5°). Continental outlines aren't drawn — the data itself traces them.
+        Equirectangular projection · graticule every 30° · dashed lines: tropics (±23.5°) and arctic/antarctic (±66.5°). Continental outlines: Natural Earth 1:110m.
       </div>
     </div>
   );
