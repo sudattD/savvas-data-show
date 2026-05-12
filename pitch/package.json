@@ -1,0 +1,6 @@
+{
+  "name": "savvas-alignment-pitch",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Standalone Vercel deployment for the alignment pitch page. Builds from ../prototype with VITE_PITCH_MODE=true so / serves the alignment artifact. See vercel.json for the build pipeline."
+}
