@@ -36,6 +36,9 @@ import { TENNIS_SERVES_DATASET } from './tennisServesDataset';
 import { CELL_COVERAGE_DATASET } from './cellCoverageDataset';
 import { NYC_EMS_DATASET } from './nycEmsDataset';
 import { HIGHWAY_PROJECTS_DATASET } from './highwayProjectsDataset';
+import { BATHYMETRY_DATASET } from './bathymetryDataset';
+import { LIDAR_RUINS_DATASET } from './lidarRuinsDataset';
+import { GAME_SPRITES_DATASET } from './gameSpritesDataset';
 
 export const DATASETS: Dataset[] = [
   WIND_TURBINE_DATASET,
@@ -75,6 +78,9 @@ export const DATASETS: Dataset[] = [
   CELL_COVERAGE_DATASET,
   NYC_EMS_DATASET,
   HIGHWAY_PROJECTS_DATASET,
+  BATHYMETRY_DATASET,
+  LIDAR_RUINS_DATASET,
+  GAME_SPRITES_DATASET,
 ];
 
 export function getDataset(id: string): Dataset {
