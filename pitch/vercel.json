@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd ../prototype && npm ci && VITE_PITCH_MODE=true npm run build && rm -rf ../pitch/dist && cp -r dist ../pitch/dist",
+  "buildCommand": "echo 'pre-built locally, see pitch/README.md'",
   "outputDirectory": "dist",
-  "installCommand": "echo 'no install needed in pitch root'",
+  "installCommand": "echo 'no install needed'",
   "framework": null,
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }

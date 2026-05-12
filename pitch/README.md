@@ -11,9 +11,17 @@ A Vercel deployment that hosts the alignment artifact at its own root URL.
 ## Deploy
 
 ```sh
-cd pitch
-vercel --prod
+# 1. Build the prototype with the pitch flag
+cd prototype && VITE_PITCH_MODE=true npm run build
+
+# 2. Copy the built artifact into pitch/dist
+rm -rf ../pitch/dist && cp -r dist ../pitch/dist
+
+# 3. Deploy the static dist
+cd ../pitch && vercel --prod
 ```
+
+Stable production URL: <https://pitch-eosin-gamma.vercel.app/>
 
 ## Files
 
