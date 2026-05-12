@@ -67,8 +67,8 @@ export default function AlignmentPage() {
             <div className="md:col-span-8">
               <div className="eyebrow text-accent-600 mb-3">A proposal for enVision AGA 2024</div>
               <h1 className="editorial-hero text-4xl md:text-5xl text-brand-900 leading-tight">
-                Keep their <em className="not-italic text-accent-600">Act 1.</em>{' '}
-                Add <em className="not-italic text-emerald-700">Act 1.5</em> — real data.
+                In a 3-Act structure, let's add{' '}
+                <em className="not-italic text-emerald-700">Act 1.5</em> — real data science.
               </h1>
               <p className="mt-4 text-base text-ink-soft max-w-prose leading-relaxed">
                 Every enVision chapter ships with a dramatized 3-Act hook. The hook works.
@@ -84,6 +84,20 @@ export default function AlignmentPage() {
               <div className="text-[10px] eyebrow text-ink-muted mt-2 text-center md:text-right">
                 of 35 chapters
               </div>
+              <a
+                href="https://prototype-five-iota.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 block rounded-md bg-surface-raised border border-surface-line px-3 py-2 hover:border-brand-300 hover:bg-surface-subtle transition"
+              >
+                <div className="eyebrow text-ink-muted text-[10px]">Companion proposal</div>
+                <div className="text-xs font-semibold text-brand-900 mt-0.5 leading-snug">
+                  Savvas Data Show <span className="text-ink-muted">→</span>
+                </div>
+                <div className="text-[11px] text-ink-soft leading-snug mt-0.5">
+                  The full data-exploration prototype: Explorer, 21 datasets, 9 lessons, 7 built activities.
+                </div>
+              </a>
             </div>
           </div>
 
@@ -135,8 +149,21 @@ export default function AlignmentPage() {
         )}
       </main>
 
-      <footer className="border-t border-surface-line py-6 text-center text-xs text-ink-muted">
-        Source: 35 official Savvas enVision AGA 2024 3-Act Math videos captured from textbook QR codes · Transcribed with Gemini 3 Flash · Working draft, not for distribution
+      <footer className="border-t border-surface-line py-8 text-center text-xs text-ink-muted space-y-2">
+        <div>
+          Companion proposal:{' '}
+          <a
+            href="https://prototype-five-iota.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-brand-700 hover:text-accent-700 hover:underline"
+          >
+            Savvas Data Show — full prototype ↗
+          </a>
+        </div>
+        <div>
+          Source: 35 official Savvas enVision AGA 2024 3-Act Math videos captured from textbook QR codes · Transcribed with Gemini 3 Flash · Working draft, not for distribution
+        </div>
       </footer>
     </div>
   );
