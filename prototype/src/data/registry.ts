@@ -28,6 +28,9 @@ import { WATER_FIXTURES_DATASET } from './waterFixturesDataset';
 import { RUNNING_SURFACES_DATASET } from './runningSurfacesDataset';
 import { ADA_RAMPS_DATASET } from './adaRampsDataset';
 import { SALMON_MARK_RECAPTURE_DATASET } from './salmonMarkRecaptureDataset';
+import { NBA_HEIGHTS_DATASET } from './nbaHeightsDataset';
+import { RECYCLING_RATES_DATASET } from './recyclingRatesDataset';
+import { ELEVATORS_DATASET } from './elevatorsDataset';
 
 export const DATASETS: Dataset[] = [
   WIND_TURBINE_DATASET,
@@ -59,6 +62,9 @@ export const DATASETS: Dataset[] = [
   RUNNING_SURFACES_DATASET,
   ADA_RAMPS_DATASET,
   SALMON_MARK_RECAPTURE_DATASET,
+  NBA_HEIGHTS_DATASET,
+  RECYCLING_RATES_DATASET,
+  ELEVATORS_DATASET,
 ];
 
 export function getDataset(id: string): Dataset {
