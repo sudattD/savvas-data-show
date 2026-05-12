@@ -24,6 +24,10 @@ import { USPS_BOXES_DATASET } from './uspsBoxesDataset';
 import { US_MINT_CENTS_DATASET } from './usMintCentsDataset';
 import { TALLEST_BUILDINGS_DATASET } from './tallestBuildingsDataset';
 import { FAST_FOOD_BURGERS_DATASET } from './fastFoodBurgersDataset';
+import { WATER_FIXTURES_DATASET } from './waterFixturesDataset';
+import { RUNNING_SURFACES_DATASET } from './runningSurfacesDataset';
+import { ADA_RAMPS_DATASET } from './adaRampsDataset';
+import { SALMON_MARK_RECAPTURE_DATASET } from './salmonMarkRecaptureDataset';
 
 export const DATASETS: Dataset[] = [
   WIND_TURBINE_DATASET,
@@ -51,6 +55,10 @@ export const DATASETS: Dataset[] = [
   US_MINT_CENTS_DATASET,
   TALLEST_BUILDINGS_DATASET,
   FAST_FOOD_BURGERS_DATASET,
+  WATER_FIXTURES_DATASET,
+  RUNNING_SURFACES_DATASET,
+  ADA_RAMPS_DATASET,
+  SALMON_MARK_RECAPTURE_DATASET,
 ];
 
 export function getDataset(id: string): Dataset {
