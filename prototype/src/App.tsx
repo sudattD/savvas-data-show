@@ -23,7 +23,22 @@ import RareDiseaseTest from './screens/lessons/RareDiseaseTest';
 import CrackTheHeadline from './screens/lessons/CrackTheHeadline';
 import HitTheTarget from './screens/lessons/HitTheTarget';
 
+// Two deployments share this source. PITCH_MODE = true is for the
+// stand-alone alignment artifact (`/` serves the pitch page, no
+// prototype routes). PITCH_MODE = false is the full prototype.
+const PITCH_MODE = import.meta.env.VITE_PITCH_MODE === 'true';
+
 export default function App() {
+  if (PITCH_MODE) {
+    return (
+      <BrowserRouter>
+        <Routes>
+          {/* All paths render the alignment page — no prototype leakage. */}
+          <Route path="*" element={<AlignmentPage />} />
+        </Routes>
+      </BrowserRouter>
+    );
+  }
   return (
     <BrowserRouter>
       <Routes>
