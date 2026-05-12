@@ -325,12 +325,17 @@ function AlignmentCard({ entry }: { entry: ChapterEntry }) {
               </span>
             )}
             {a.needsDataset && (
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-accent-50 border border-accent-200 text-accent-800 text-[11px] font-semibold"
-                title="Conceptually clear but the dataset would need to be built"
+              <a
+                href={a.needsDataset.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={a.needsDataset.note || `${a.needsDataset.name} — ${a.needsDataset.source}`}
+                className="inline-flex items-baseline gap-1.5 px-2.5 py-1 rounded-md bg-accent-50 border border-accent-200 text-accent-800 text-[11px] font-semibold hover:bg-accent-100 hover:border-accent-300 transition"
               >
-                Needs: {a.needsDataset}
-              </span>
+                <span className="opacity-70 font-normal">Candidate:</span>
+                <span>{a.needsDataset.name}</span>
+                <span aria-hidden className="opacity-60">↗</span>
+              </a>
             )}
             {datasetObjs.length === 0 && !a.needsDataset && (
               <span className="text-[11px] text-ink-muted italic">No data extension</span>

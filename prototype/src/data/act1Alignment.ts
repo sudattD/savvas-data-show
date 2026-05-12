@@ -21,6 +21,21 @@ import type { CourseId } from './chapters';
 
 export type AlignmentStrength = 'strong' | 'possible' | 'weak';
 
+/** Concrete, real-world dataset that could anchor a chapter's Act-1.5
+ *  exploration — even if we haven't compiled it into our registry yet.
+ *  The point is to show that for every possible-fit chapter there's a
+ *  named, public, citable source — not a hand-wave. */
+export interface CandidateDataset {
+  /** Short human name shown on the page. */
+  name: string;
+  /** Publisher / institution. */
+  source: string;
+  /** Direct URL to the dataset or its landing page. */
+  sourceUrl: string;
+  /** Optional one-line characterization of what's in it. */
+  note?: string;
+}
+
 export interface AlignmentRow {
   course: CourseId;
   topic: number;
@@ -33,8 +48,10 @@ export interface AlignmentRow {
   exploration: string;
   /** IDs of existing datasets in registry.ts that this exploration uses. */
   datasetIds: string[];
-  /** If a fresh dataset is needed (not yet built), describe it here. */
-  needsDataset?: string;
+  /** Concrete dataset that exists in the public world but isn't yet in
+   *  our registry — points at the source so the alignment row stays
+   *  credible without us having to author the dataset today. */
+  needsDataset?: CandidateDataset;
   strength: AlignmentStrength;
 }
 
@@ -44,18 +61,28 @@ export const ALIGNMENT: AlignmentRow[] = [
     course: 'algebra1', topic: 1,
     savvasPremise: 'Four students each shake bags of cans, claiming theirs holds the most.',
     savvasQuestion: 'Who collected the most cans?',
-    exploration: 'Recycling-drive data from a real school program: weight per bag → unit conversion → fundraising total. Anchors the same English-to-equation translation our Crack the Headline lesson teaches, but on data students could plausibly collect.',
+    exploration: 'Real US municipal recycling rates by state, scaled down to "what would your school collect in a year?" Anchors the same English-to-equation translation our Crack the Headline lesson teaches.',
     datasetIds: [],
-    needsDataset: 'School recycling-drive weight totals (could be class-collected)',
+    needsDataset: {
+      name: 'Municipal Solid Waste Recycling Rates by State',
+      source: 'US EPA',
+      sourceUrl: 'https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling',
+      note: 'State-level recycling tonnage published annually by EPA.',
+    },
     strength: 'weak',
   },
   {
     course: 'algebra1', topic: 2,
     savvasPremise: 'A tall man (Jay) is measured in stacks of sheep, babies, teachers, then plastic cups.',
     savvasQuestion: 'How many cups tall is Jay?',
-    exploration: 'NBA player height time series — has the average professional basketball player gotten taller, and at what rate? Plot height vs. era; fit a linear trend. Connects unit comparison to a population-scale linear function.',
+    exploration: 'NBA player heights since 1946 — has the average pro basketball player gotten taller, and at what rate? Plot mean height vs. season; fit a linear trend. Connects unit comparison to a population-scale linear function.',
     datasetIds: [],
-    needsDataset: 'NBA player heights by year (publicly available)',
+    needsDataset: {
+      name: 'NBA Player Database (height, era)',
+      source: 'Basketball Reference',
+      sourceUrl: 'https://www.basketball-reference.com/players/',
+      note: 'Height, weight, position, and career years for every player since 1946. Free, scrapable.',
+    },
     strength: 'possible',
   },
   {
@@ -70,9 +97,14 @@ export const ALIGNMENT: AlignmentRow[] = [
     course: 'algebra1', topic: 4,
     savvasPremise: 'Two coworkers race to a rooftop party from their cubicles, taking separate elevators.',
     savvasQuestion: 'Who reaches the rooftop first?',
-    exploration: 'Real elevator travel-time data (public-building studies) — combine waiting time + travel rate as a linear function. Solve when person A overtakes person B given different starting floors.',
+    exploration: 'Real elevator-speed specs from the world\'s tallest buildings (Burj Khalifa, Taipei 101, One World Trade). Combine waiting time + ascent rate as a linear function; solve for catch-up floor given two different cars.',
     datasetIds: [],
-    needsDataset: 'Elevator wait + travel-time benchmarks (publicly published)',
+    needsDataset: {
+      name: 'Elevator speeds in supertall buildings',
+      source: 'Council on Tall Buildings and Urban Habitat (CTBUH)',
+      sourceUrl: 'https://www.skyscrapercenter.com/',
+      note: 'Per-tower elevator-system specs including cruising speed and shaft height.',
+    },
     strength: 'possible',
   },
   {
@@ -103,17 +135,28 @@ export const ALIGNMENT: AlignmentRow[] = [
     course: 'algebra1', topic: 8,
     savvasPremise: 'A player takes six basketball shots from the same spot; each ball\'s arc is traced.',
     savvasQuestion: 'Which shot is most likely to go in?',
-    exploration: 'Our Wind Power Curve activity is the SAME quadratic-fitting problem on a different domain — fit P = av² + bv + c to real SCADA data and see R² climb. Could also pair with NBA shot-tracking data showing make/miss vs. release angle distribution.',
+    exploration: 'Same quadratic-fitting math on TWO real domains: our Wind Power Curve activity (slider-fit P = av² + bv + c on a 1.5 MW turbine) and 4 million real NBA shots since 2003-04 with x/y coordinates and make/miss outcomes. The math that runs a wind farm also predicts an NBA shot.',
     datasetIds: ['wind'],
+    needsDataset: {
+      name: 'NBA Shot Locations 2003-04 → 2024-25',
+      source: 'DomSamangy / NBA_Shots_04_25',
+      sourceUrl: 'https://github.com/DomSamangy/NBA_Shots_04_25',
+      note: '~4M shots with x/y coordinates, distance, shot type, make/miss. Free, public, NBA-sourced.',
+    },
     strength: 'strong',
   },
   {
     course: 'algebra1', topic: 9,
     savvasPremise: 'A young woman spreads out pennies from rolls; many more rolls remain unopened.',
     savvasQuestion: 'How many pennies are in the basket?',
-    exploration: 'US Mint penny production by year — billions per year, distinct mints, weight × count math. Real-world counting via weight estimation.',
+    exploration: 'US Mint penny production since 1793 — billions per year across Philadelphia, Denver, and San Francisco mints. Weight × count factoring; polynomial roots as "when did production cross 10 billion?"',
     datasetIds: [],
-    needsDataset: 'US Mint penny production by year + mint',
+    needsDataset: {
+      name: 'Annual Coin Production (cents, by mint)',
+      source: 'United States Mint',
+      sourceUrl: 'https://www.usmint.gov/about/production-sales-figures',
+      note: 'Production figures by denomination and mint, published annually.',
+    },
     strength: 'possible',
   },
   {
@@ -148,7 +191,12 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'Which site will finish first?',
     exploration: 'Real construction-rate time series — building projects, road resurfacing, or LEGO assembly timing. Each is a linear progress line; intersection answers "when does B catch up to A?"',
     datasetIds: [],
-    needsDataset: 'Public construction-project completion records (state DOT data)',
+    needsDataset: {
+      name: 'Highway Project Tracker',
+      source: 'Federal Highway Administration (FHWA)',
+      sourceUrl: 'https://www.fhwa.dot.gov/policyinformation/statistics.cfm',
+      note: 'Project-level construction timelines from the Highway Performance Monitoring System (HPMS).',
+    },
     strength: 'possible',
   },
   {
@@ -173,7 +221,12 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'Where should the pad be located to be equidistant from all three towns?',
     exploration: 'Real city EMS response-time data + actual hospital/station coordinates. Compute the geometric median (or circumcenter for "fair" equidistance), compare to where the city actually built its station. Real "where to put the fire station" is a published optimization problem.',
     datasetIds: [],
-    needsDataset: 'City EMS response times + station locations (NYC, Chicago, SF open data)',
+    needsDataset: {
+      name: 'NYC EMS Incident Dispatch Data',
+      source: 'NYC Open Data',
+      sourceUrl: 'https://data.cityofnewyork.us/Public-Safety/EMS-Incident-Dispatch-Data/76xm-jjuj',
+      note: '10M+ EMS incidents with timestamps, locations, and response times. Lets students compute geometric medians on actual demand.',
+    },
     strength: 'strong',
   },
   {
@@ -190,7 +243,12 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'How tall is the Mayor\'s statue?',
     exploration: 'Real architectural-scale data — famous buildings\' actual heights vs. their scale-model versions. Could pair with our stars dataset for the "ratio between brightness and distance" inverse-square companion.',
     datasetIds: [],
-    needsDataset: 'Notable buildings + corresponding scale-model heights',
+    needsDataset: {
+      name: 'List of Tallest Buildings',
+      source: 'Council on Tall Buildings and Urban Habitat (CTBUH)',
+      sourceUrl: 'https://www.skyscrapercenter.com/buildings',
+      note: 'Verified heights for every building over 100 m, with year completed and architect.',
+    },
     strength: 'possible',
   },
   {
@@ -223,7 +281,12 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'How many candle boxes will fit in the large shipping box?',
     exploration: 'Real shipping/packaging efficiency data — container packing problems, postal rate structures, ISO container fill rates. Volume math with logistical constraints.',
     datasetIds: [],
-    needsDataset: 'Standard container dimensions + common parcel sizes',
+    needsDataset: {
+      name: 'USPS Flat Rate Box Dimensions',
+      source: 'United States Postal Service',
+      sourceUrl: 'https://store.usps.com/store/results/priority-mail/shipping-supplies-boxes/_/N-p52cprZu9qwm0',
+      note: 'Small / medium (two variants) / large / APO-FPO — exact inside dimensions published per SKU.',
+    },
     strength: 'possible',
   },
   {
@@ -248,8 +311,14 @@ export const ALIGNMENT: AlignmentRow[] = [
     course: 'algebra2', topic: 2,
     savvasPremise: 'A cartoon soccer player kicks five colored balls toward a goal; each shot pauses at three flight points.',
     savvasQuestion: 'Which shot will go into the goal?',
-    exploration: 'Same quadratic-trajectory problem as A1·T8 (basketball). Could pair with our NEO dataset (asteroid kinetic energy) or build a soccer xG dataset from public match data.',
+    exploration: 'Real shot-level event data with expected-goal scores (xG) and freeze-frame positions of defenders. Every shot is a quadratic-trajectory problem with a probability attached — students fit, then compare their guess to StatsBomb\'s xG model.',
     datasetIds: ['wind', 'neo'],
+    needsDataset: {
+      name: 'StatsBomb Open Data — Soccer Events',
+      source: 'StatsBomb / Hudl',
+      sourceUrl: 'https://github.com/statsbomb/open-data',
+      note: 'Free shot-by-shot data including xG, body part, outcome, and defender freeze-frame coordinates. JSON, CC.',
+    },
     strength: 'possible',
   },
   {
@@ -258,7 +327,12 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'Which of the remaining tennis balls will land in?',
     exploration: 'Real ATP tennis serve speed and placement data — predict serve outcome from speed, spin, location. Real polynomial classification flavor.',
     datasetIds: [],
-    needsDataset: 'ATP serve placement dataset (public match data)',
+    needsDataset: {
+      name: 'ATP Tennis Rankings, Results, and Stats',
+      source: 'Jeff Sackmann / Tennis Abstract',
+      sourceUrl: 'https://github.com/JeffSackmann/tennis_atp',
+      note: 'Every ATP match since 1968 with per-match stats (aces, first-serve %, break points). CC BY-NC-SA.',
+    },
     strength: 'possible',
   },
   {
@@ -267,7 +341,12 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'How long will it take with both hoses?',
     exploration: 'Combined-rate problems show up in real irrigation engineering and plumbing. Real flow-rate data plus consumption.',
     datasetIds: [],
-    needsDataset: 'Public flow-rate data for residential plumbing fixtures',
+    needsDataset: {
+      name: 'WaterSense Product Specifications',
+      source: 'US Environmental Protection Agency',
+      sourceUrl: 'https://www.epa.gov/watersense/product-search',
+      note: 'Certified flow rates (gallons per minute) for showerheads, faucets, toilets, hoses. Real combined-rate problems.',
+    },
     strength: 'possible',
   },
   {
@@ -276,7 +355,12 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'Who reaches the shack first?',
     exploration: 'Real running-speed data on different surfaces (track, trail, beach). Minimize total time over a path with two regions. The math is Snell\'s law in disguise — light traveling through two media.',
     datasetIds: [],
-    needsDataset: 'Running speed by surface type (existing physiology research)',
+    needsDataset: {
+      name: 'Sprint Performance: Natural Turf, Artificial Turf, Sand',
+      source: 'PMC / Sports Medicine (systematic review + meta-analysis, 2020)',
+      sourceUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC7767268/',
+      note: 'Quantified speed reductions across surfaces — boardwalk vs. beach as a real Snell\'s-law optimization.',
+    },
     strength: 'strong',
   },
   {
@@ -301,7 +385,12 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'How long should the ramp be?',
     exploration: 'Real ADA ramp specs (1:12 max slope) + actual home stair-height distributions. Solve for ramp length given rise; check angle against accessibility code. Trig equations with policy stakes.',
     datasetIds: [],
-    needsDataset: 'ADA ramp code requirements + common residential rise heights',
+    needsDataset: {
+      name: 'ADA Standards § 405 (Ramps) + American Housing Survey',
+      source: 'US Access Board + US Census Bureau',
+      sourceUrl: 'https://www.access-board.gov/ada/#ada-405',
+      note: 'ADA mandates 1:12 max slope; AHS publishes typical residential entrance-step heights nationally.',
+    },
     strength: 'strong',
   },
   {
@@ -310,15 +399,26 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'Where should the sprinklers go to cover the entire lawn?',
     exploration: 'Real cell-tower coverage data (3 towers per metro area cover most of a city) or radio-broadcast range patterns. Coverage geometry with overlapping circles.',
     datasetIds: ['satellites'],
-    needsDataset: 'Cell-tower locations and coverage radii (FCC database)',
+    needsDataset: {
+      name: 'Antenna Structure Registration (ASR) database',
+      source: 'Federal Communications Commission',
+      sourceUrl: 'https://www.fcc.gov/uls/transactions/daily-weekly',
+      note: '~150,000 registered antenna structures in the US with lat/lon + height. Circle-packing for full coverage of any neighborhood.',
+    },
     strength: 'possible',
   },
   {
     course: 'algebra2', topic: 10,
     savvasPremise: 'A customer insists on the "biggest burger" possible at a burger shop.',
     savvasQuestion: 'How many patties are in the big burger?',
-    exploration: 'Our 120-Years-of-America Census Pyramid is the matrix-multiplication anchor — Leslie matrix demography. A nutrition-database matrix could be a parallel option.',
+    exploration: 'Our 120-Years-of-America Census Pyramid is the matrix-multiplication anchor (Leslie-matrix demography). A nutrition-vector × food-quantity-vector matrix from USDA FoodData Central lets students build the same matrix mechanics on a "stack the burger to hit a calorie target" optimization.',
     datasetIds: ['population'],
+    needsDataset: {
+      name: 'FoodData Central',
+      source: 'US Department of Agriculture',
+      sourceUrl: 'https://fdc.nal.usda.gov/',
+      note: 'Public-domain nutrition database; ~2M food records including branded fast-food items with full macronutrient + ingredient vectors.',
+    },
     strength: 'possible',
   },
   {
@@ -327,7 +427,12 @@ export const ALIGNMENT: AlignmentRow[] = [
     savvasQuestion: 'How much money is in the jar?',
     exploration: 'Mark-and-recapture is the wildlife-biology technique for estimating populations you can\'t fully count — tag N animals, recapture M later, see what fraction were tagged. Real published studies on salmon, deer, elk. The coin-jar Act 1 is the classroom-scale rehearsal for population inference.',
     datasetIds: [],
-    needsDataset: 'Real mark-recapture wildlife studies (NPS / USGS)',
+    needsDataset: {
+      name: 'Salmon Smolt Abundance Mark-Recapture (1998)',
+      source: 'Alaska Department of Fish and Game',
+      sourceUrl: 'https://www.adfg.alaska.gov/static/home/library/PDFs/afrb/carlv5n2.pdf',
+      note: 'Real stratified mark-recapture study estimating salmon-smolt abundance with downstream traps. The wildlife-biology counterpart to the coin-jar Act 1.',
+    },
     strength: 'strong',
   },
   {
