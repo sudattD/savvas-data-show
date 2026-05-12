@@ -36,6 +36,11 @@ export default function App() {
           {/* All paths render the alignment page — no prototype leakage. */}
           <Route path="*" element={<AlignmentPage />} />
         </Routes>
+        {/* allowedHosts: empty array means the widget never auto-shows.
+            It still activates when ?getinput is in the URL, so Derek can
+            share a review URL with Park without cluttering the default
+            view. */}
+        <InputWidget allowedHosts={[]} />
       </BrowserRouter>
     );
   }
