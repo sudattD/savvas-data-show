@@ -20,6 +20,8 @@ import { SOLAR_SYSTEM_DATASET } from './solarSystemDataset';
 import { SP500_DATASET } from './sp500Dataset';
 import { APPLIANCE_LOADS_DATASET } from './applianceLoadsDataset';
 import { SATELLITE_ORBITS_DATASET } from './satelliteOrbitsDataset';
+import { USPS_BOXES_DATASET } from './uspsBoxesDataset';
+import { US_MINT_CENTS_DATASET } from './usMintCentsDataset';
 
 export const DATASETS: Dataset[] = [
   WIND_TURBINE_DATASET,
@@ -43,6 +45,8 @@ export const DATASETS: Dataset[] = [
   SP500_DATASET,
   APPLIANCE_LOADS_DATASET,
   SATELLITE_ORBITS_DATASET,
+  USPS_BOXES_DATASET,
+  US_MINT_CENTS_DATASET,
 ];
 
 export function getDataset(id: string): Dataset {
