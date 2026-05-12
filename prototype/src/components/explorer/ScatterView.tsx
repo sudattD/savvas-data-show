@@ -447,54 +447,14 @@ export default function ScatterView({
   return (
     <div className="w-full h-full flex flex-col gap-2">
       <div className="shrink-0 flex items-center gap-3 flex-wrap text-xs">
-        <button
-          onClick={() => {
-            const next = !regressionOn;
-            setRegressionOn(next);
-            if (!next) setAutoOverlay(false);
-          }}
-          className={`px-3 py-1.5 rounded-md font-semibold transition ${
-            regressionOn
-              ? 'bg-brand-900 text-white shadow-editorial'
-              : 'bg-surface-raised border border-surface-line text-ink hover:border-brand-300'
-          }`}
-        >
-          {regressionOn ? 'Fit a line ✓' : 'Fit a line'}
-        </button>
-
-        <button
-          onClick={() => setMarkerOn((v) => !v)}
-          className={`px-3 py-1.5 rounded-md font-semibold transition ${
-            markerOn
-              ? 'bg-rose-700 text-white shadow-editorial'
-              : 'bg-surface-raised border border-surface-line text-ink hover:border-rose-300'
-          }`}
-        >
-          {markerOn ? 'x-marker ✓' : 'x-marker'}
-        </button>
-
-        <button
-          onClick={() => setYMarkerOn((v) => !v)}
-          className={`px-3 py-1.5 rounded-md font-semibold transition ${
-            yMarkerOn
-              ? 'bg-rose-700 text-white shadow-editorial'
-              : 'bg-surface-raised border border-surface-line text-ink hover:border-rose-300'
-          }`}
-        >
-          {yMarkerOn ? 'y-marker ✓' : 'y-marker'}
-        </button>
-
-        <button
-          onClick={() => setMeansOn((v) => !v)}
-          className={`px-3 py-1.5 rounded-md font-semibold transition ${
-            meansOn
-              ? 'bg-emerald-700 text-white shadow-editorial'
-              : 'bg-surface-raised border border-surface-line text-ink hover:border-emerald-300'
-          }`}
-          title="Show mean and median crosshairs on both axes"
-        >
-          {meansOn ? 'Mean / median ✓' : 'Mean / median'}
-        </button>
+        <OverlayMenu
+          items={[
+            { label: 'Fit a line',     active: regressionOn, dotColor: 'bg-brand-900',    onToggle: () => { const next = !regressionOn; setRegressionOn(next); if (!next) setAutoOverlay(false); } },
+            { label: 'x-marker',       active: markerOn,     dotColor: 'bg-rose-700',     onToggle: () => setMarkerOn((v) => !v) },
+            { label: 'y-marker',       active: yMarkerOn,    dotColor: 'bg-rose-700',     onToggle: () => setYMarkerOn((v) => !v) },
+            { label: 'Mean / median',  active: meansOn,      dotColor: 'bg-emerald-700',  onToggle: () => setMeansOn((v) => !v) },
+          ]}
+        />
 
         <ScaleToggle axis="x" enabled={xCanLog} scale={xScale} onChange={setXScale} />
         <ScaleToggle axis="y" enabled={yCanLog} scale={yScale} onChange={setYScale} />
@@ -800,6 +760,67 @@ function formatTick(v: number): string {
   if (abs >= 10) return Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1);
   if (abs >= 1) return v.toFixed(2);
   return v.toFixed(3);
+}
+
+// Collapse the four overlay toggles (Fit a line / markers / mean·median) behind
+// one menu. They're optional analysis tools, not always-on controls — keeping
+// them visible at all times was crowding the toolbar with stuff first-time
+// visitors couldn't read. When any are active, an indicator dot + count
+// surfaces the state so the menu doesn't feel like a black hole.
+interface OverlayItem {
+  label: string;
+  active: boolean;
+  dotColor: string;
+  onToggle: () => void;
+}
+function OverlayMenu({ items }: { items: OverlayItem[] }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const activeCount = items.filter((i) => i.active).length;
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`px-3 py-1.5 rounded-md font-semibold transition flex items-center gap-1.5 ${
+          activeCount > 0
+            ? 'bg-brand-900 text-white shadow-editorial'
+            : 'bg-surface-raised border border-surface-line text-ink hover:border-brand-300'
+        }`}
+      >
+        <span>Overlays</span>
+        {activeCount > 0 && (
+          <span className="font-mono text-[10px] bg-white/20 px-1.5 py-0.5 rounded-sm">{activeCount}</span>
+        )}
+        <span aria-hidden className="text-[10px] opacity-70">▾</span>
+      </button>
+      {open && (
+        <div className="absolute top-full mt-1 left-0 z-20 bg-surface-raised border border-surface-line rounded-md shadow-lg p-1 min-w-[180px]">
+          {items.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => item.onToggle()}
+              className="w-full px-2.5 py-1.5 rounded text-left flex items-center gap-2 hover:bg-surface-subtle transition"
+            >
+              <span className={`w-3 h-3 rounded-sm border ${item.active ? `${item.dotColor} border-transparent` : 'border-surface-line bg-transparent'}`} aria-hidden />
+              <span className={`text-xs font-semibold ${item.active ? 'text-ink' : 'text-ink-soft'}`}>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ScaleToggle({
