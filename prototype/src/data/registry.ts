@@ -31,6 +31,11 @@ import { SALMON_MARK_RECAPTURE_DATASET } from './salmonMarkRecaptureDataset';
 import { NBA_HEIGHTS_DATASET } from './nbaHeightsDataset';
 import { RECYCLING_RATES_DATASET } from './recyclingRatesDataset';
 import { ELEVATORS_DATASET } from './elevatorsDataset';
+import { WORLD_CUP_SHOTS_DATASET } from './worldCupShotsDataset';
+import { TENNIS_SERVES_DATASET } from './tennisServesDataset';
+import { CELL_COVERAGE_DATASET } from './cellCoverageDataset';
+import { NYC_EMS_DATASET } from './nycEmsDataset';
+import { HIGHWAY_PROJECTS_DATASET } from './highwayProjectsDataset';
 
 export const DATASETS: Dataset[] = [
   WIND_TURBINE_DATASET,
@@ -65,6 +70,11 @@ export const DATASETS: Dataset[] = [
   NBA_HEIGHTS_DATASET,
   RECYCLING_RATES_DATASET,
   ELEVATORS_DATASET,
+  WORLD_CUP_SHOTS_DATASET,
+  TENNIS_SERVES_DATASET,
+  CELL_COVERAGE_DATASET,
+  NYC_EMS_DATASET,
+  HIGHWAY_PROJECTS_DATASET,
 ];
 
 export function getDataset(id: string): Dataset {
