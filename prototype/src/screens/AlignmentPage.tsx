@@ -62,35 +62,27 @@ export default function AlignmentPage() {
       </header>
 
       <section className="border-b border-surface-line bg-surface">
-        <div className="max-w-6xl mx-auto px-6 pt-12 pb-8">
+        <div className="max-w-6xl mx-auto px-6 pt-10 pb-6">
           <div className="grid md:grid-cols-12 gap-6 items-end">
             <div className="md:col-span-8">
-              <div className="eyebrow text-accent-600 mb-3">A proposal</div>
+              <div className="eyebrow text-accent-600 mb-3">A proposal for enVision AGA 2024</div>
               <h1 className="editorial-hero text-4xl md:text-5xl text-brand-900 leading-tight">
-                Keep their <em className="not-italic text-accent-600">Act 1.</em><br />
+                Keep their <em className="not-italic text-accent-600">Act 1.</em>{' '}
                 Add <em className="not-italic text-emerald-700">Act 1.5</em> — real data.
               </h1>
-              <p className="mt-4 text-base md:text-lg text-ink-soft max-w-prose leading-relaxed">
-                Every chapter of enVision Algebra 1, Geometry, and Algebra 2 already
-                ships with a dramatized Savvas 3-Act Math video — the kids in the
-                classroom, the cans clinking, the basketball arcs, the flute on a
-                sine wave. The hook works. What if we kept that hook and added a
-                real-data exploration that picks up where it leaves off?
-              </p>
-              <p className="mt-3 text-base md:text-lg text-ink-soft max-w-prose leading-relaxed">
-                Below: every Savvas Act 1 video paired with the real-data
-                continuation it implies. Strong fits ({strengthCount('strong')})
-                map directly to a real dataset; possible fits
-                ({strengthCount('possible')}) need a small new dataset; the
-                rest ({strengthCount('weak')}) are pure-math hooks without a
-                natural real-world extension.
+              <p className="mt-4 text-base text-ink-soft max-w-prose leading-relaxed">
+                Every enVision chapter ships with a dramatized 3-Act hook. The hook works.
+                What if we kept it — and added a real-data exploration that picks up where it leaves off?
               </p>
             </div>
-            <div className="md:col-span-4 space-y-3">
+            <div className="md:col-span-4">
               <div className="grid grid-cols-3 gap-2">
-                <Tile label="strong" value={strengthCount('strong')} tone="emerald" />
+                <Tile label="strong fits" value={strengthCount('strong')} tone="emerald" />
                 <Tile label="possible" value={strengthCount('possible')} tone="accent" />
                 <Tile label="abstract" value={strengthCount('weak')} tone="muted" />
+              </div>
+              <div className="text-[10px] eyebrow text-ink-muted mt-2 text-center md:text-right">
+                of 35 chapters
               </div>
             </div>
           </div>
