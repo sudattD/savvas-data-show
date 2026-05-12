@@ -22,6 +22,8 @@ import { APPLIANCE_LOADS_DATASET } from './applianceLoadsDataset';
 import { SATELLITE_ORBITS_DATASET } from './satelliteOrbitsDataset';
 import { USPS_BOXES_DATASET } from './uspsBoxesDataset';
 import { US_MINT_CENTS_DATASET } from './usMintCentsDataset';
+import { TALLEST_BUILDINGS_DATASET } from './tallestBuildingsDataset';
+import { FAST_FOOD_BURGERS_DATASET } from './fastFoodBurgersDataset';
 
 export const DATASETS: Dataset[] = [
   WIND_TURBINE_DATASET,
@@ -47,6 +49,8 @@ export const DATASETS: Dataset[] = [
   SATELLITE_ORBITS_DATASET,
   USPS_BOXES_DATASET,
   US_MINT_CENTS_DATASET,
+  TALLEST_BUILDINGS_DATASET,
+  FAST_FOOD_BURGERS_DATASET,
 ];
 
 export function getDataset(id: string): Dataset {
