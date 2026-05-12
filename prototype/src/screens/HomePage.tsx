@@ -16,26 +16,16 @@ export default function HomePage() {
       {/* Editorial hero */}
       <section className="border-b border-surface-line bg-surface">
         <div className="max-w-6xl mx-auto px-6 pt-16 pb-20">
-          <div className="grid md:grid-cols-12 gap-8 items-end">
-            <div className="md:col-span-8">
-              <div className="eyebrow text-accent-600 mb-5">A prototype · May 2026</div>
-              <h1 className="editorial-hero text-5xl md:text-7xl text-brand-900">
-                Data lives <em className="not-italic text-accent-600">inside</em> every chapter.
-              </h1>
-              <p className="mt-6 text-lg md:text-xl text-ink-soft max-w-prose leading-relaxed">
-                A prototype of an embedded data-exploration feature for{' '}
-                <span className="text-brand-900 font-semibold">enVision Algebra 1, Geometry, and Algebra 2</span> —
-                {' '}{datasetCount} real-world datasets, {lessonCount} transferable lessons,
-                and one shared exploration tool, threaded through every chapter.
-              </p>
-            </div>
-            <div className="md:col-span-4">
-              <div className="grid grid-cols-3 gap-2">
-                <Tile big label="datasets" value={datasetCount} />
-                <Tile label="lessons" value={lessonCount} />
-                <Tile label="acts" value={3} />
-              </div>
-            </div>
+          <div className="max-w-4xl">
+            <div className="eyebrow text-accent-600 mb-5">A prototype · May 2026</div>
+            <h1 className="editorial-hero text-5xl md:text-7xl text-brand-900">
+              Let's bring <em className="not-italic text-accent-600">data science</em> to high school math.
+            </h1>
+            <p className="mt-6 text-lg md:text-xl text-ink-soft max-w-prose leading-relaxed">
+              A new "Data Exploration" feature for{' '}
+              <span className="text-brand-900 font-semibold">enVision Algebra 1, Geometry, and Algebra 2</span> —
+              providing {datasetCount} engaging, real-world datasets aligned to 44 different math chapters.
+            </p>
           </div>
         </div>
       </section>
@@ -188,15 +178,6 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function Tile({ label, value, big }: { label: string; value: number; big?: boolean }) {
-  return (
-    <div className={`rounded-lg bg-surface-raised border border-surface-line p-3 ${big ? 'ring-2 ring-accent-200' : ''}`}>
-      <div className="font-display font-black text-brand-900 text-3xl tabular-nums leading-none">{value}</div>
-      <div className="eyebrow text-ink-muted mt-2">{label}</div>
     </div>
   );
 }
