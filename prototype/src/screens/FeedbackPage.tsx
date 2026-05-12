@@ -11,6 +11,8 @@ interface FeedbackItem {
   edited?: string;
   elementText?: string;
   comment?: string;
+  user?: string;          // self-reported display name
+  sessionId?: string;     // anonymous browser-level identifier
 }
 
 type Filter = 'all' | 'text-edit' | 'comment';
@@ -71,7 +73,8 @@ export default function FeedbackPage() {
   const counts = useMemo(() => {
     const edits = items.filter((i) => i.type === 'text-edit').length;
     const comments = items.filter((i) => i.type === 'comment').length;
-    return { edits, comments };
+    const sessions = new Set(items.map((i) => i.sessionId).filter(Boolean)).size;
+    return { edits, comments, sessions };
   }, [items]);
 
   const downloadJson = () => {
@@ -102,10 +105,11 @@ export default function FeedbackPage() {
                 text plus the note.
               </p>
             </div>
-            <div className="md:col-span-4 grid grid-cols-3 gap-2">
+            <div className="md:col-span-4 grid grid-cols-4 gap-2">
               <Tile big label="total" value={items.length} />
               <Tile label="edits" value={counts.edits} />
               <Tile label="comments" value={counts.comments} />
+              <Tile label="authors" value={counts.sessions || '—'} />
             </div>
           </div>
 
@@ -209,6 +213,14 @@ function FeedbackRow({ item }: { item: FeedbackItem }) {
           {isEdit ? 'edit' : 'comment'}
         </span>
         <span className="font-mono text-ink-muted">{niceTime}</span>
+        {(item.user || item.sessionId) && (
+          <span
+            className="font-semibold text-brand-700"
+            title={item.sessionId ? `session ${item.sessionId}` : undefined}
+          >
+            {item.user || `anon-${item.sessionId!.slice(0, 6)}`}
+          </span>
+        )}
         <code className="font-mono text-[10px] text-ink-muted truncate" title={item.selector}>
           {item.selector}
         </code>

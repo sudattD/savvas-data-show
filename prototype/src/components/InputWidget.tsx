@@ -10,6 +10,8 @@ interface TextEdit {
   original: string;
   edited: string;
   timestamp: string;
+  user?: string;        // self-reported display name (optional)
+  sessionId?: string;   // random UUID, persisted in localStorage
 }
 
 interface Comment {
@@ -19,9 +21,31 @@ interface Comment {
   elementText: string;
   comment: string;
   timestamp: string;
+  user?: string;
+  sessionId?: string;
 }
 
 type InputItem = TextEdit | Comment;
+
+// Persistent per-browser session id so we can group anonymous feedback
+// by author across multiple submissions. Generated once on first use.
+function ensureSessionId(): string {
+  const KEY = "getinput-session-id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = (crypto.randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now()).toString();
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+function getUserName(): string {
+  return localStorage.getItem("getinput-user-name") || "";
+}
+function setUserName(name: string) {
+  if (name.trim()) localStorage.setItem("getinput-user-name", name.trim());
+  else localStorage.removeItem("getinput-user-name");
+}
 
 function getSelector(el: Element): string {
   const path: string[] = [];
@@ -96,6 +120,7 @@ export default function InputWidget({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("Saved!");
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [userName, setUserNameState] = useState<string>("");
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -122,6 +147,7 @@ export default function InputWidget({
 
     if (visible) {
       loadFeedback(targetUrl, shareMode);
+      setUserNameState(getUserName());
       const hasSeenOnboarding = localStorage.getItem("getinput-onboarding-seen");
       if (!hasSeenOnboarding || shareMode) {
         setShowOnboarding(true);
@@ -166,20 +192,33 @@ export default function InputWidget({
   };
 
   const saveInput = async (item: InputItem) => {
-    // In share mode, just store locally - visitor will copy and send
-    if (!isShareMode) {
-      const endpoint = reviewUrl
-        ? `${apiEndpoint}?url=${encodeURIComponent(reviewUrl)}`
-        : apiEndpoint;
+    // Tag every submission with the visitor's session id + name (if set).
+    // The session id is enough to tell anonymous authors apart; the name
+    // is optional and gives recognizable attribution when provided.
+    const enriched: InputItem = {
+      ...item,
+      sessionId: ensureSessionId(),
+      user: getUserName() || undefined,
+    };
+    // POST in both regular and share mode — share mode used to be local-only,
+    // which meant visitors' feedback never reached the API. That bug was
+    // why the feedback log only ever contained the page owner's own edits.
+    const endpoint = reviewUrl
+      ? `${apiEndpoint}?url=${encodeURIComponent(reviewUrl)}`
+      : apiEndpoint;
+    try {
       await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item),
+        body: JSON.stringify(enriched),
       });
+    } catch (e) {
+      // Network failure — keep the item locally and let the visitor copy it
+      // as a fallback. (Toast wording below reflects the regular path.)
     }
-    setFeedbackItems((prev) => [...prev, item]);
+    setFeedbackItems((prev) => [...prev, enriched]);
     setInputCount((c) => c + 1);
-    showToastWithMessage(isShareMode ? "Added!" : "Saved!");
+    showToastWithMessage("Saved!");
   };
 
   const copyFeedback = async () => {
@@ -308,7 +347,7 @@ export default function InputWidget({
 
       {/* Onboarding tooltip */}
       {showOnboarding && mode === "idle" && !activeElement && (
-        <div className="absolute bottom-14 right-0 w-64 rounded-lg bg-white p-3 shadow-xl border border-gray-200">
+        <div className="absolute bottom-14 right-0 w-72 rounded-lg bg-white p-3 shadow-xl border border-gray-200">
           <div className="flex items-start gap-2 mb-2">
             <span className="text-amber-600 text-lg">&#9998;</span>
             <div>
@@ -316,14 +355,21 @@ export default function InputWidget({
                 {isShareMode ? "You've been invited to review" : "Leave feedback on this page"}
               </p>
               <p className="text-xs text-gray-600 mt-1">
-                {isShareMode ? (
-                  <>Leave your feedback using <strong>Edit</strong> or <strong>Comment</strong>. When done, click <strong>Copy feedback</strong> and paste it back to the person who sent you this link.</>
-                ) : (
-                  <>Click <strong>Edit</strong> to fix text directly, or <strong>Comment</strong> to leave notes. Your feedback auto-saves.</>
-                )}
+                Click <strong>Edit</strong> to fix text directly, or <strong>Comment</strong> to leave notes. Each piece of feedback is sent back automatically.
               </p>
             </div>
           </div>
+          <label className="block text-[11px] font-semibold text-gray-700 mt-2 mb-1">Your name <span className="text-gray-400 font-normal">(optional · helps attribution)</span></label>
+          <input
+            type="text"
+            placeholder="e.g. Jane Smith"
+            defaultValue={userName}
+            onChange={(e) => {
+              setUserName(e.target.value);
+              setUserNameState(e.target.value);
+            }}
+            className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-amber-500"
+          />
           <button
             onClick={dismissOnboarding}
             className="w-full mt-2 text-xs text-gray-400 hover:text-gray-600 py-1"
