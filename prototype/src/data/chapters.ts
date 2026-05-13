@@ -143,9 +143,16 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "Real exponential growth at scale (Moore's Law / GitHub stars). Estimate the doubling time, predict the next one.",
     connection: 'Doubling time is the human-readable form of exponential growth.',
     format: ['CDS'], datasets: ['moore', 'earthquakes', 'babyNames'],
-    design: {
-      hook: "Plot Moore's Law (or GitHub stars on a famous repo's first 90 days). The curve climbs absurdly steeply on a linear axis.",
-      reveal: 'Find the doubling time — ~24 months for transistors, for decades. Then predict the next doubling and check.',
+    route: '/doubling-time',
+    teacher: {
+      objective: "Students will plot 219 microprocessors by year and transistor count, recognize that a linear axis hides the pattern, toggle to a log y-axis to linearize the data, and fit the doubling time T(year) = T₀ · 2^((year-1971)/τ) by slider — discovering τ ≈ 2 years (Moore's Law).",
+      standards: ['HSF-LE.A.1c', 'HSF-LE.A.2', 'HSF-IF.C.8b', 'HSF-LE.B.5'],
+      minutes: 25,
+      discussion: [
+        'On the linear axis, every chip before 1990 looks like zero. What does that say about which questions a linear axis CAN and CANNOT answer well?',
+        "Moore's Law has been called \"a self-fulfilling prophecy\" because the industry plans around it. Does that make it less of a law, or more?",
+        'If your fitted doubling time is right, where would the count be in 2034? Is that physically possible — or does something have to break?',
+      ],
     },
   },
   {

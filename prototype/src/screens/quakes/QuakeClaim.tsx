@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import HostBubble from '../../components/HostBubble';
+import QuakeEnergyMeter from '../../components/calibrators/QuakeEnergyMeter';
 import type { QuakeSummary } from './QuakeMap';
 import type { PredictionShape } from './QuakeWonder';
 
@@ -128,6 +129,13 @@ export default function QuakeClaim({ summary, prediction, onRestart }: QuakeClai
         same whether you take seven days or seventy years — plate boundaries
         are slow on a human time scale. Run the activity again next week and
         the dots will land in the same places.
+      </div>
+
+      <div className="pt-2">
+        <div className="text-[10px] font-semibold tracking-widest text-slate-500 mb-2">
+          BEFORE YOU GO — A LITTLE CALIBRATOR
+        </div>
+        <QuakeEnergyMeter compact />
       </div>
     </div>
   );
