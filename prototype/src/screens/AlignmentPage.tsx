@@ -258,7 +258,7 @@ function FlagshipCard({ flagship: f }: { flagship: Flagship }) {
       </p>
 
       <a
-        href={f.builtRoute}
+        href={`https://prototype-five-iota.vercel.app${f.builtRoute}`}
         target="_blank"
         rel="noopener noreferrer"
         className="block px-4 py-3 bg-brand-900 text-white text-sm font-semibold hover:bg-brand-700 transition text-center"

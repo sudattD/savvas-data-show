@@ -179,81 +179,17 @@ export default function ExplorerPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datasetId, config]);
 
-  const tourActive = searchParams.get('tour') === '1';
+  // In-dataset onboarding. The tour spotlights 2-3 pieces of the Explorer UI
+  // for the dataset the user just opened, then closes. It never switches
+  // dataset — the user stays put. The script lives in DATASET_TOURS, keyed
+  // by dataset id, so each dataset has its own per-dataset framing.
+  const tourSteps = DATASET_TOURS[datasetId] ?? null;
+  const tourActive = searchParams.get('tour') === '1' && tourSteps !== null;
   const closeTour = () => {
     const next = new URLSearchParams(searchParams);
     next.delete('tour');
     setSearchParams(next, { replace: true });
   };
-
-  // Four-stop dataset sampler + a final hand-off. Each dataset stop switches
-  // the explorer to a deliberately different chart type so the user sees the
-  // range of what the library does: scatter on log-Y, geographic map,
-  // distribution histogram, celestial sky chart.
-  const tourSteps: TourStep[] = [
-    {
-      eyebrow: 'Dataset 1 of 4 · Scatter, log-Y',
-      title: "Moore's Law",
-      points: [
-        '1971: 2,300 transistors on a chip. 2023: ~100 billion.',
-        'A straight diagonal on a log-Y scale = exponential growth.',
-        'Slope ≈ doubles every two years — Gordon Moore, 1965.',
-      ],
-      setup: () => {
-        if (datasetId !== 'moore') handleDatasetChange('moore');
-      },
-    },
-    {
-      eyebrow: 'Dataset 2 of 4 · Map',
-      title: 'Global earthquakes',
-      points: [
-        'Every magnitude-4.5+ quake from the past 30 days.',
-        'The Ring of Fire emerges without anyone naming it.',
-        'Dot size = magnitude. Click any dot for depth and time.',
-      ],
-      setup: () => {
-        if (datasetId !== 'earthquakes') handleDatasetChange('earthquakes');
-      },
-    },
-    {
-      eyebrow: 'Dataset 3 of 4 · Histogram',
-      title: 'Boston Marathon finishers',
-      points: [
-        '~26,000 finishers, 2023 race.',
-        'Right-skewed bell — fast runners thin out on the right.',
-        'Watch for clumps at round times — humans push to beat 4:00.',
-      ],
-      setup: () => {
-        if (datasetId !== 'marathon') handleDatasetChange('marathon');
-        setConfig((c) => ({
-          ...c,
-          type: 'histogram',
-          xKey: 'officialTime',
-          yKey: null,
-          colorKey: null,
-        }));
-      },
-    },
-    {
-      eyebrow: 'Dataset 4 of 4 · Sky chart',
-      title: 'The brightest stars in the sky',
-      points: [
-        '~250 naked-eye stars plotted on the celestial sphere.',
-        'Color = spectral class. Blue = hot, red = cool.',
-        'Dot size = apparent brightness from Earth.',
-      ],
-      setup: () => {
-        if (datasetId !== 'stars') handleDatasetChange('stars');
-        setConfig((c) => ({ ...c, type: 'sky' }));
-      },
-    },
-    {
-      title: "Now pick your own",
-      selector: '[data-tour="picker"]',
-      body: "30-plus datasets live in this dropdown — NOAA, NASA, World Bank, the BAA, Wikipedia. Pick whichever pulls you in and ask your own question.",
-      cta: 'Start exploring →',
-    },
-  ];
 
   // reset chart config + filters when dataset changes via the picker.
   // (Deep-link navigation goes through the initial-mount path instead.)
@@ -356,7 +292,7 @@ export default function ExplorerPage() {
         Prototype · {dataset.source}
       </footer>
 
-      {tourActive && <ExplorerTour steps={tourSteps} onClose={closeTour} />}
+      {tourActive && tourSteps && <ExplorerTour steps={tourSteps} onClose={closeTour} />}
     </div>
   );
 }
