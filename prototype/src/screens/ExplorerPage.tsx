@@ -14,8 +14,35 @@ import SkyView from '../components/explorer/SkyView';
 import DataTable from '../components/explorer/DataTable';
 import StatsPanel from '../components/explorer/StatsPanel';
 import FilterPanel from '../components/explorer/FilterPanel';
-import ExplorerTour from '../components/explorer/ExplorerTour';
+import Tour, { type TourStep } from '../components/Tour';
 import { DATASET_TOURS } from '../data/datasetTours';
+
+// LocalStorage key for the set of chart-type hints the user has already seen.
+const SEEN_HINTS_KEY = 'savvas:seen-chart-hints';
+
+// One-stop callouts for chart types that look unfamiliar on first sight.
+// Scatter / Histogram / Bar are common enough to skip; Map, Sky, and Box
+// plot benefit from a sentence of orientation the first time they appear.
+const CHART_TYPE_HINTS: Partial<Record<ChartType, TourStep>> = {
+  map: {
+    eyebrow: 'New view',
+    title: 'Map view',
+    body: 'Each row plotted by latitude and longitude on a world map. Where the dataset has a magnitude or size attribute, that controls the dot size. Pan and zoom to explore.',
+    cta: 'Got it →',
+  },
+  sky: {
+    eyebrow: 'New view',
+    title: 'Sky chart',
+    body: "Each star plotted on the celestial sphere — right ascension across (0–24 h), declination up/down (-90° to +90°). It's the night sky flattened onto a chart.",
+    cta: 'Got it →',
+  },
+  box: {
+    eyebrow: 'New view',
+    title: 'Box plot',
+    body: 'One box per category. The box spans the middle 50% (Q1 to Q3), the line inside is the median, and the whiskers reach toward the extremes.',
+    cta: 'Got it →',
+  },
+};
 import Masthead from '../components/Masthead';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { datasetAccent } from '../lib/dataset';
@@ -191,6 +218,38 @@ export default function ExplorerPage() {
     setSearchParams(next, { replace: true });
   };
 
+  // First-use hints for unfamiliar chart types. When the user lands on (or
+  // switches to) Map / Sky / Box plot for the first time on this browser,
+  // show a one-stop callout explaining what they're looking at. Suppressed
+  // while the multi-stop dataset tour is active to avoid stacked overlays.
+  const [chartTypeHint, setChartTypeHint] = useState<ChartType | null>(null);
+  useEffect(() => {
+    if (tourActive) return;
+    if (!CHART_TYPE_HINTS[config.type]) return;
+    let seen: ChartType[] = [];
+    try {
+      seen = JSON.parse(localStorage.getItem(SEEN_HINTS_KEY) ?? '[]');
+    } catch {
+      seen = [];
+    }
+    if (seen.includes(config.type)) return;
+    setChartTypeHint(config.type);
+  }, [config.type, tourActive]);
+  const closeChartTypeHint = () => {
+    if (!chartTypeHint) return;
+    let seen: ChartType[] = [];
+    try {
+      seen = JSON.parse(localStorage.getItem(SEEN_HINTS_KEY) ?? '[]');
+    } catch {
+      seen = [];
+    }
+    if (!seen.includes(chartTypeHint)) {
+      seen.push(chartTypeHint);
+      localStorage.setItem(SEEN_HINTS_KEY, JSON.stringify(seen));
+    }
+    setChartTypeHint(null);
+  };
+
   // reset chart config + filters when dataset changes via the picker.
   // (Deep-link navigation goes through the initial-mount path instead.)
   const handleDatasetChange = (id: string) => {
@@ -292,7 +351,10 @@ export default function ExplorerPage() {
         Prototype · {dataset.source}
       </footer>
 
-      {tourActive && tourSteps && <ExplorerTour steps={tourSteps} onClose={closeTour} />}
+      {tourActive && tourSteps && <Tour steps={tourSteps} onClose={closeTour} />}
+      {chartTypeHint && CHART_TYPE_HINTS[chartTypeHint] && (
+        <Tour steps={[CHART_TYPE_HINTS[chartTypeHint]!]} onClose={closeChartTypeHint} />
+      )}
     </div>
   );
 }

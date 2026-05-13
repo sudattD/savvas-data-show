@@ -1,12 +1,11 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
 
-// A short, scripted walkthrough that overlays the Explorer. The tour drives
-// the underlying view (dataset, chart config) via the setters passed in by
-// ExplorerPage, so each stop lands on something visually concrete. When the
-// tour ends, the overlay unmounts and the user is left wherever the last
-// step put them — free to keep exploring.
+// A short, scripted walkthrough that overlays any page. Each step spotlights
+// an element via CSS selector and shows a callout card with a title plus
+// optional body and bulleted observations. Use it for in-page orientation —
+// homepage funnel, in-dataset onboarding, lesson openers, etc.
 //
-// Activated via `?tour=1` on /explorer. See ExplorerPage for the wiring.
+// Activate via `?tour=1` on the page (each host page wires its own steps).
 
 export type TourStep = {
   title: string;
@@ -29,7 +28,7 @@ type Props = {
   onClose: () => void;
 };
 
-export default function ExplorerTour({ steps, onClose }: Props) {
+export default function Tour({ steps, onClose }: Props) {
   const [i, setI] = useState(0);
   const [rect, setRect] = useState<DOMRect | null>(null);
   const step = steps[i];
@@ -40,25 +39,36 @@ export default function ExplorerTour({ steps, onClose }: Props) {
   }, [i]);
 
   useLayoutEffect(() => {
-    const measure = () => {
-      if (!step.selector) {
-        setRect(null);
-        return;
-      }
-      // Wait a tick for the DOM to settle after setup() may have changed it.
-      requestAnimationFrame(() => {
-        const el = document.querySelector(step.selector!) as HTMLElement | null;
-        if (el) {
-          setRect(el.getBoundingClientRect());
-          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        } else {
-          setRect(null);
-        }
-      });
+    if (!step.selector) {
+      setRect(null);
+      return;
+    }
+    const el = document.querySelector(step.selector) as HTMLElement | null;
+    if (!el) {
+      setRect(null);
+      return;
+    }
+    // For a typical desktop layout, all Explorer panels are visible without
+    // scrolling — so we deliberately do NOT call scrollIntoView. A previous
+    // version used `block: 'center'`, which on stop 2+ scrolled the page just
+    // enough that the *next* target's bounding rect ended up partially behind
+    // the sticky masthead, drawing the spotlight ring on the masthead. If a
+    // target is genuinely offscreen we accept the imperfect spotlight rather
+    // than risk that bug.
+    const update = () => setRect(el.getBoundingClientRect());
+    update();
+    // A few frames later, in case parent layout was still settling after a
+    // dataset/config change in setup().
+    const t1 = requestAnimationFrame(update);
+    const t2 = window.setTimeout(update, 100);
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      cancelAnimationFrame(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
     };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
   }, [i, step.selector]);
 
   const isFirst = i === 0;

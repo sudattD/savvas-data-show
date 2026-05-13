@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import Masthead from '../components/Masthead';
+import Tour, { type TourStep } from '../components/Tour';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import {
   CHAPTERS,
@@ -94,6 +95,33 @@ export default function ChaptersPage() {
     return Array.from(set);
   }, []);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tourActive = searchParams.get('tour') === '1';
+  const closeTour = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('tour');
+    setSearchParams(next, { replace: true });
+  };
+
+  const tourSteps: TourStep[] = [
+    {
+      eyebrow: 'Get oriented · 1 of 2',
+      title: `${CHAPTERS.length} chapters, three courses`,
+      body: `Every row is one enVision chapter. ${BUILT_COUNT} of them link to a built prototype; the rest link to the underlying dataset. Each activity earns its chapter through one of three math-fit rules — shape, source, or lens.`,
+    },
+    {
+      eyebrow: '2 of 2',
+      title: 'Narrow with the filters',
+      selector: '[data-tour="filters"]',
+      points: [
+        'Toggle "Built only" to see just the prototyped activities.',
+        'Filter by course (Algebra 1 / Geometry / Algebra 2).',
+        'Filter by format — seven distinct activity shapes.',
+      ],
+      cta: 'Got it →',
+    },
+  ];
+
   return (
     <div className="min-h-screen">
       <Masthead section="Scope & Sequence" eyebrow={`One activity per chapter · 3 courses · ${CHAPTERS.length} chapters`} />
@@ -124,7 +152,7 @@ export default function ChaptersPage() {
             </div>
           </div>
 
-          <div className="mt-6 space-y-2">
+          <div data-tour="filters" className="mt-6 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="eyebrow text-ink-muted mr-2 w-14">Course</span>
               <FilterChip active={filter === 'all'} onClick={() => setFilter('all')}>All</FilterChip>
@@ -184,6 +212,8 @@ export default function ChaptersPage() {
       <footer className="border-t border-surface-line py-6 text-center text-xs text-ink-muted">
         Source: <code className="font-mono">chapter_activities.md</code>. Built activities link to the prototype; concept activities link to the underlying dataset where one exists.
       </footer>
+
+      {tourActive && <Tour steps={tourSteps} onClose={closeTour} />}
     </div>
   );
 }

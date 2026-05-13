@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Masthead from '../components/Masthead';
+import Tour, { type TourStep } from '../components/Tour';
 import { DATASETS } from '../data/registry';
 import { CHAPTERS } from '../data/chapters';
 import { LESSONS } from './lessons/LessonsHub';
@@ -10,6 +11,46 @@ export default function HomePage() {
   const datasetCount = DATASETS.length;
   const lessonCount = LESSONS.length;
   const chapterCount = CHAPTERS.length;
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tourActive = searchParams.get('tour') === '1';
+  const closeTour = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('tour');
+    setSearchParams(next, { replace: true });
+  };
+
+  // Three-stop orientation for a first-visit Savvas reviewer. The page itself
+  // is the pitch artifact — this tour just helps a cold reader skim it
+  // efficiently and find a concrete next click.
+  const tourSteps: TourStep[] = [
+    {
+      eyebrow: 'Get oriented · 1 of 3',
+      title: 'A pitch, in a prototype',
+      body: `You're looking at a prototype of a data-exploration feature pitched to Savvas for enVision Algebra 1, Geometry, and Algebra 2. ${datasetCount} real datasets across ${chapterCount} chapters. Three quick stops.`,
+    },
+    {
+      eyebrow: '2 of 3',
+      title: 'Same chapters, two pitches',
+      selector: '[data-tour="pitches"]',
+      points: [
+        'Approach A keeps every existing 3-Act video and adds a data extension.',
+        'Approach B redesigns each chapter around the dataset itself.',
+        'Open either to walk the chapter-by-chapter alignment.',
+      ],
+    },
+    {
+      eyebrow: '3 of 3',
+      title: 'Or just click an activity',
+      selector: '[data-tour="activities"]',
+      points: [
+        'Four real, clickable prototypes below — Wind Curve, Voice DNA, Reaction Time, Census Pyramid.',
+        'Fastest way to feel what students would actually do.',
+        'Each one links onward to the dataset and Explorer when finished.',
+      ],
+      cta: 'Got it →',
+    },
+  ];
 
   return (
     <div className="min-h-screen">
@@ -33,7 +74,7 @@ export default function HomePage() {
       </section>
 
       {/* Two pitches for Savvas — A/B chapter alignment frame */}
-      <section className="border-b border-surface-line bg-surface-subtle/30">
+      <section data-tour="pitches" className="border-b border-surface-line bg-surface-subtle/30">
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="mb-8 max-w-3xl">
             <div className="eyebrow text-accent-600 mb-2">Two pitches</div>
@@ -113,7 +154,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured activities */}
-      <section className="border-b border-surface-line">
+      <section data-tour="activities" className="border-b border-surface-line">
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="mb-8">
             <div className="eyebrow text-ink-muted mb-2">Featured chapter activities</div>
@@ -216,6 +257,8 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {tourActive && <Tour steps={tourSteps} onClose={closeTour} />}
     </div>
   );
 }
