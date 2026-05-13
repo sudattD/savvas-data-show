@@ -10,6 +10,7 @@ import HistogramView from '../components/explorer/HistogramView';
 import BarView from '../components/explorer/BarView';
 import BoxPlotView from '../components/explorer/BoxPlotView';
 import MapView from '../components/explorer/MapView';
+import SkyView from '../components/explorer/SkyView';
 import DataTable from '../components/explorer/DataTable';
 import StatsPanel from '../components/explorer/StatsPanel';
 import FilterPanel from '../components/explorer/FilterPanel';
@@ -44,7 +45,11 @@ import { Link } from 'react-router-dom';
 //  shareable, screenshot it for now.
 // ───────────────────────────────────────────────────────────────────────────
 
-const CHART_TYPES = new Set<ChartType>(['scatter', 'histogram', 'bar', 'box', 'map']);
+const CHART_TYPES = new Set<ChartType>(['scatter', 'histogram', 'bar', 'box', 'map', 'sky']);
+
+function datasetHasCelestial(d: Dataset): boolean {
+  return d.attributes.some((a) => a.key === 'raHours') && d.attributes.some((a) => a.key === 'decDeg');
+}
 
 function defaultConfig(d: Dataset): ChartConfig {
   const num = d.attributes.filter((a) => a.kind === 'numeric');
@@ -103,8 +108,12 @@ function defaultFilters(d: Dataset): Filter[] {
 function readConfigFromURL(d: Dataset, params: URLSearchParams): ChartConfig {
   const base = defaultConfig(d);
   const t = params.get('type');
-  const type =
-    t && CHART_TYPES.has(t as ChartType) && (t !== 'map' || d.geo) ? (t as ChartType) : base.type;
+  const requested = t && CHART_TYPES.has(t as ChartType) ? (t as ChartType) : null;
+  const typeAllowed =
+    requested !== null &&
+    (requested !== 'map' || !!d.geo) &&
+    (requested !== 'sky' || datasetHasCelestial(d));
+  const type = typeAllowed ? (requested as ChartType) : base.type;
 
   const x = params.get('x');
   const y = params.get('y');
@@ -245,6 +254,9 @@ export default function ExplorerPage() {
                   />
                 );
               })()}
+              {config.type === 'sky' && datasetHasCelestial(dataset) && (
+                <SkyView dataset={dataset} rows={filteredRows} colorAttr={colorAttr} />
+              )}
             </div>
           </div>
           <DataTable dataset={dataset} rows={filteredRows} totalCount={dataset.rows.length} />

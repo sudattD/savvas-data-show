@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Dataset, Attribute } from '../../lib/dataset';
 import { getNumericAttrs, getCategoricalAttrs } from '../../lib/dataset';
 
-export type ChartType = 'scatter' | 'histogram' | 'bar' | 'box' | 'map';
+export type ChartType = 'scatter' | 'histogram' | 'bar' | 'box' | 'map' | 'sky';
 export type AxisScale = 'linear' | 'log';
 
 export interface ChartConfig {
@@ -21,13 +21,20 @@ interface ChartToolbarProps {
   onChange: (c: ChartConfig) => void;
 }
 
-const CHART_TYPES: { type: ChartType; label: string; icon: string; needs: 'x+y' | 'x-num' | 'x-cat' | 'y-num+group' | 'geo' }[] = [
+const CHART_TYPES: { type: ChartType; label: string; icon: string; needs: 'x+y' | 'x-num' | 'x-cat' | 'y-num+group' | 'geo' | 'celestial' }[] = [
   { type: 'scatter', label: 'Scatter', icon: '⠠⠂', needs: 'x+y' },
   { type: 'histogram', label: 'Histogram', icon: '▁▃▅▆▃▁', needs: 'x-num' },
   { type: 'bar', label: 'Bar', icon: '▌▌', needs: 'x-cat' },
   { type: 'box', label: 'Box plot', icon: '▭', needs: 'y-num+group' },
   { type: 'map', label: 'Map', icon: '◯', needs: 'geo' },
+  { type: 'sky', label: 'Sky', icon: '✦·★', needs: 'celestial' },
 ];
+
+// True if the dataset has both raHours and decDeg numeric attributes —
+// the prerequisites for the Sky chart type.
+function hasCelestial(d: { attributes: { key: string }[] }): boolean {
+  return d.attributes.some((a) => a.key === 'raHours') && d.attributes.some((a) => a.key === 'decDeg');
+}
 
 export default function ChartToolbar({ dataset, config, onChange }: ChartToolbarProps) {
   const num = getNumericAttrs(dataset);
@@ -68,6 +75,14 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
     } else if (t === 'map') {
       // Map view reads lat/lon from dataset.geo and color from config.colorKey.
       // x/y are irrelevant for the map; clear them so other types don't inherit stale picks.
+    } else if (t === 'sky') {
+      // Sky view locks X = raHours, Y = decDeg. Default colour to spectClass
+      // when available so the spectral-class hue ramp kicks in.
+      next.xKey = 'raHours';
+      next.yKey = 'decDeg';
+      if (!next.colorKey || !dataset.attributes.find((a) => a.key === next.colorKey)) {
+        next.colorKey = dataset.attributes.find((a) => a.key === 'spectClass') ? 'spectClass' : cat[0]?.key ?? null;
+      }
     }
     onChange(next);
   };
@@ -80,8 +95,13 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
     onChange(next);
   };
 
-  // Hide Map button when the dataset doesn't have geo coordinates.
-  const availableTypes = CHART_TYPES.filter((c) => c.needs !== 'geo' || dataset.geo != null);
+  // Hide Map button when the dataset doesn't have geo coordinates; hide Sky
+  // button when it doesn't have raHours + decDeg.
+  const availableTypes = CHART_TYPES.filter((c) => {
+    if (c.needs === 'geo') return dataset.geo != null;
+    if (c.needs === 'celestial') return hasCelestial(dataset);
+    return true;
+  });
 
   return (
     <div className="flex flex-wrap items-center gap-2 p-3 border-b border-slate-200 bg-white">
@@ -118,7 +138,7 @@ export default function ChartToolbar({ dataset, config, onChange }: ChartToolbar
         </>
       )}
 
-      {(config.type === 'scatter' || config.type === 'map') && (
+      {(config.type === 'scatter' || config.type === 'map' || config.type === 'sky') && (
         <>
           <Sep />
           <AttrPicker label="Color by" attrs={[...cat, ...num]} value={config.colorKey} onChange={(k) => setKey('color', k)} allowNone />
