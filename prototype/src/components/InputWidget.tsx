@@ -213,36 +213,6 @@ export default function InputWidget({
     }
   }, [showJson]);
 
-  // Recovery: merge any locally-pending items (items previously saved while
-  // the network was broken, or before a tab close) back into the panel and
-  // try to flush them to the server. Runs once per mount, after reviewUrl
-  // has been set so flushPending's closure points at the right endpoint.
-  useEffect(() => {
-    if (!isVisible || recoveryAttempted.current) return;
-    recoveryAttempted.current = true;
-
-    const pending = loadPending();
-    setPendingCount(pending.length);
-    if (pending.length === 0) return;
-
-    setFeedbackItems((prev) => {
-      const additions = pending.filter((p) => !prev.some((m) => sameItem(m, p)));
-      if (additions.length === 0) return prev;
-      return [...prev, ...additions];
-    });
-    setInputCount((c) => c + pending.length);
-
-    void flushPending().then((r) => {
-      if (r.sent > 0) {
-        showToastWithMessage(
-          r.pending === 0
-            ? "Pending feedback sent"
-            : `Sent ${r.sent}, ${r.pending} still pending`,
-        );
-      }
-    });
-  }, [isVisible, flushPending]);
-
   const dismissOnboarding = () => {
     setShowOnboarding(false);
     localStorage.setItem("getinput-onboarding-seen", "true");
@@ -321,6 +291,36 @@ export default function InputWidget({
     setPendingCount(stillPending.length);
     return { sent, pending: stillPending.length };
   }, [apiEndpoint, reviewUrl]);
+
+  // Recovery: merge any locally-pending items (items previously saved while
+  // the network was broken, or before a tab close) back into the panel and
+  // try to flush them to the server. Runs once per mount, after reviewUrl
+  // has been set so flushPending's closure points at the right endpoint.
+  useEffect(() => {
+    if (!isVisible || recoveryAttempted.current) return;
+    recoveryAttempted.current = true;
+
+    const pending = loadPending();
+    setPendingCount(pending.length);
+    if (pending.length === 0) return;
+
+    setFeedbackItems((prev) => {
+      const additions = pending.filter((p) => !prev.some((m) => sameItem(m, p)));
+      if (additions.length === 0) return prev;
+      return [...prev, ...additions];
+    });
+    setInputCount((c) => c + pending.length);
+
+    void flushPending().then((r) => {
+      if (r.sent > 0) {
+        showToastWithMessage(
+          r.pending === 0
+            ? "Pending feedback sent"
+            : `Sent ${r.sent}, ${r.pending} still pending`,
+        );
+      }
+    });
+  }, [isVisible, flushPending]);
 
   const saveInput = async (item: InputItem) => {
     // Tag every submission with the visitor's session id + name (if set).
