@@ -73,7 +73,7 @@ export default function BarView({ rows, xAttr }: BarViewProps) {
             contentStyle={{ borderRadius: 12, border: '1px solid #DBEAFE', fontSize: 12 }}
             formatter={(val) => [String(val), 'count']}
           />
-          <Bar dataKey="count">
+          <Bar dataKey="count" isAnimationActive={false}>
             {data.map((d) => (
               <Cell key={d.cat} fill={categoryColor(d.cat, cats, { ordinal: !!xAttr.ordinal })} />
             ))}

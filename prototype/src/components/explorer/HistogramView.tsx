@@ -326,7 +326,7 @@ export default function HistogramView({ rows, xAttr }: HistogramViewProps) {
                 label={{ value: 'marker', fill: '#1A2A52', fontSize: 11, position: 'top' }}
               />
             )}
-            <Bar dataKey="count" fill="#3B82F6" fillOpacity={0.85} />
+            <Bar dataKey="count" fill="#3B82F6" fillOpacity={0.85} isAnimationActive={false} />
             {dragStart && dragEnd && (
               <ReferenceArea
                 x1={Math.min(dragStart.x, dragEnd.x)}

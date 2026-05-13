@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import Masthead from '../components/Masthead';
 import { DATASETS } from '../data/registry';
+import { CHAPTERS } from '../data/chapters';
 import { LESSONS } from './lessons/LessonsHub';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
@@ -8,6 +9,7 @@ export default function HomePage() {
   useDocumentTitle('Home');
   const datasetCount = DATASETS.length;
   const lessonCount = LESSONS.length;
+  const chapterCount = CHAPTERS.length;
 
   return (
     <div className="min-h-screen">
@@ -24,7 +26,7 @@ export default function HomePage() {
             <p className="mt-6 text-lg md:text-xl text-ink-soft max-w-prose leading-relaxed">
               A new "Data Exploration" feature for{' '}
               <span className="text-brand-900 font-semibold">enVision Algebra 1, Geometry, and Algebra 2</span> —
-              providing {datasetCount} engaging, real-world datasets aligned to 44 different math chapters.
+              providing {datasetCount} engaging, real-world datasets aligned to {chapterCount} different math chapters.
             </p>
           </div>
         </div>

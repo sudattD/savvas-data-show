@@ -567,6 +567,197 @@ Wednesday is in good shape. The Savvas pitch on `pitch-eosin-gamma.vercel.app` a
 
 ---
 
+# Cowork comprehensive test pass · 2026-05-13
+
+**Scope:** everything. All 40 datasets, all 9 lessons, all 4 dedicated activity routes, home, datasets hub, chapters page, alignment page (full sweep), explorer feature surface (every chart type + overlays + log + filters + CSV), Map view on every geo dataset, mobile breakpoint smoke (deferred — sandbox can't resize), console-error sweep across visited pages.
+
+**Headline:** the build is in great shape. Most of my earlier flags landed clean. Five new things to call out — three good surprises (silent default-filter improvements on penguins, bathymetry, lidarRuins), two real bugs (B19 + N3.2), and one count drift on the home page (B18).
+
+## Section 1 · Live build inventory
+
+| Surface | Live count |
+|---|---|
+| `/explorer` dropdown | **40 datasets** |
+| `/lessons` hub | **9 lessons** (L1-L9; L1-L6 are "transferable", L7-L9 are chapter-specific) |
+| `/chapters` count tiles | 35 chapters / **8 BUILT** / 15 DATASETS |
+| `/alignment` count tiles | **30 STRONG FITS** / 0 POSSIBLE / 5 ABSTRACT (of 35 chapters) |
+| Dedicated activity routes | 4 (`/wind-turbine`, `/voice-dna`, `/reaction-time`, `/census-pyramid`); plus L7-L9 lessons → 7 "built activities" |
+| Companion proposal box on `/alignment` | "Explorer, 40 datasets, 9 lessons, 7 built activities" ✓ |
+
+## Section 2 · All 40 datasets — ✓ all load cleanly
+
+Visited `/explorer?dataset=<id>` for every dataset. Zero console errors. Render-on-cold-load works (N3 fix is in production). All Per-route document.title strings work. Each dataset's `featured` view is now well-tuned to the chapter pedagogy. Spot-check on cluster + default behaviour:
+
+**Three silent default-filter improvements landed since my last pass — call this B21 (good news):**
+
+- **`penguins`** — cold-open is now X=Bill length, Y=Bill depth, Color=Species (was Year × Bill length). Three species clusters visible immediately. This is the canonical Palmer Penguins view a teacher would land on.
+- **`bathymetry`** — cold-open default-filters to Cape Cod (other 3 transects struck through). The polynomial-with-two-real-roots story is visible at first paint, no interaction required. Exactly the fix I recommended in my targeted follow-up.
+- **`lidarRuins`** — cold-open default-filters to Caracol (Angkor and Mosquitia struck through). 8 structures across one site, meaningful coordinates, midpoint-math hook lands. Also exactly the fix I recommended.
+
+These are Terminal silently shipping my recommendations between my acceptance test and this comprehensive pass. They're not documented in the handoff TL;DR but they're in production. Should mention these in any Wednesday "what changed" pre-brief.
+
+## Section 3 · All 9 lessons — ✓ all load and interact
+
+3 have been renamed since my earlier tests:
+
+| Slug | Old title | New title |
+|---|---|---|
+| `slider-of-lies` | The Slider of Lies | **Same Data, Different Story** |
+| `walk-into-a-bar` | Walk Into a Bar | **A Billionaire Walks Into a Bar** |
+| `survivorship-bias` | Survivorship Bias | **The Bullet Holes That Aren't There** |
+
+All 9 render without console errors. Interactive test on `rare-disease` (L7): 1,000-patient grid renders with red true-positives + amber false-positives, three sliders (prevalence / sensitivity / specificity), copy is on-tone ("You tested positive. Should you panic?"). Quality is publisher-ready.
+
+L1 ("Same Data, Different Story") got a significant upgrade: now has 3 sliders (X-axis controls plus the Y-axis floor), not just the 1 slider it had in my earlier test. The chart-truncation issue I flagged earlier (B7) may be resolved by the new X-axis controls — worth a re-verification before demo.
+
+## Section 4 · All 4 dedicated activities — ✓ all functional
+
+| Route | h1 | First-impression verdict |
+|---|---|---|
+| `/wind-turbine` | "What's the question?" | Same 3-act flow that scored "demo-ready showcase" in Pass-6 |
+| `/voice-dna` | "Can a computer tell you apart from your classmates?" | Wonder act renders perfectly; Play act needs real mic |
+| `/reaction-time` | "How fast are you?" | Alex host, ms-predict input is now **optional** (Cowork-ungated, per the earlier addendum note — intentional). 10 visual trials + 10 audio trials promised. Polished. |
+| `/census-pyramid` | "Same country. 120 years apart." | Maya host, ACT 1/NOTICE THE CHANGE, 1900 pyramid only with **"2020 HIDDEN"** badge, commit-to-guess gating (Kids? Seniors?). Excellent pedagogy. |
+
+Plus the 3 "lesson-as-activity" entries (L7 rare disease, L8 crack the headline, L9 hit the target) all load and interact. Hit-the-target has the cannon-fires-projectile with launch-angle + initial-velocity sliders that hit the four target zones.
+
+## Section 5 · Home / Datasets hub / Chapters — mostly good, one count drift
+
+**Home (`/`)** — significantly renovated:
+- New hero: "Let's bring **data science** to high school math." (was "Data lives inside every chapter")
+- Subtitle: "A new 'Data Exploration' feature for enVision Algebra 1, Geometry, and Algebra 2 — providing 40 engaging, real-world datasets aligned to **44 different math chapters**."
+- Pillar grid: **four** cards now (Chapters / Datasets / Explorer / Lessons) — was three plus a separate Featured rail
+- Card stats: "40 real-world datasets", "9 interactive lessons" ✓
+
+### B18 · Home claims "44 different math chapters", but alignment and /chapters both say 35 — **important**
+
+The home subtitle says "aligned to **44 different math chapters**." The `/chapters` count tile says **35 chapters**. The `/alignment` count tile says **30 STRONG FITS / 0 POSSIBLE / 5 ABSTRACT** = 35 chapters total. So the home page's "44" is inconsistent with every other surface.
+
+Possible source of "44": maybe enVision AGA actually has 44 chapters total (including review / index / front-matter chapters) but only 35 are math-content-bearing? Or maybe the number is a stale draft. Either way, three numbers on three pages don't agree. A pitch reviewer who happens to flip between home and alignment will see "44" vs "35" and ask which is right.
+
+**Fix:** decide on the canonical count (35 if alignment is the authority; 44 if there's a real "44 total chapter slots in enVision AGA" source) and use it consistently.
+
+**Datasets hub (`/datasets`)** — 40 cards, family eyebrows on every card, no family-filter chip row (B14 still open). Page is ~4,300 px tall.
+
+**Chapters page (`/chapters`)** — eyebrow says "ONE ACTIVITY PER CHAPTER · 3 COURSES · 35 CHAPTERS". Stats: 35 chapters / 8 built / **15 datasets**. Student/Teacher view toggle, Course + Format filters (Format includes Sim / Class poll / Sensor / Curated / Game / Personal import / Trained ML / Built only — these are dimensions I haven't seen elsewhere). Companion-lessons rail shows L1-L6 ("Six transferable data-literacy lessons that pair across multiple chapters") with an ALL LESSONS link.
+
+The "15 datasets" tile on `/chapters` likely counts only the primary chapter-anchored datasets (the ones with a single chapter-row link), not the full library of 40. Worth confirming.
+
+## Section 6 · Alignment page full sweep — B15 ✓, B19 ✗
+
+**What works:**
+- All 35 chapter rows render across Algebra 1 (11 topics) / Geometry (12 topics) / Algebra 2 (12 topics)
+- **37 explorer links** present (was 0 in my synthesis pass — B15 fully live). Click-tested A1·T01 "US state recycling rates · container & packaging" → opened a new tab at `/explorer?dataset=recyclingRates` with the ↗ external-link indicator. Works.
+- 81 total `target="_blank"` links — probably 38 Savvas pk12ls QR videos + 37 explorer deeplinks + 6 misc
+- 3 flagship "Open the Act-1.5 activity →" CTAs route correctly (`/wind-turbine`, `/voice-dna`, `/lessons/rare-disease`)
+- Transcripts: verified A1·T01 expands with real Gemini-extracted SPOKEN + ON-SCREEN TEXT content (Angela / Brian / Carlos / Danielle names, bag-rattling stage directions)
+- Candidate-dataset links to external sources (verified one: NBA Shots → github.com/DomSamangy/NBA_Shots_04_25)
+- Companion proposal callout: "40 datasets, 9 lessons, 7 built activities" ✓ (B16 fix verified)
+- "WORKING DRAFT" badge top-right; Edit + Comment getInput widget bottom-right
+
+### B19 · Course + Strength filter chips on /alignment are non-functional — **important**
+
+Both filter chip groups on `/alignment` (Course: All / Algebra 1 / Geometry / Algebra 2; Strength: All / Strong fit / Possible fit / Pure math) are **decorative only** — clicking them changes button highlight state but does not filter the rendered chapter rows.
+
+**Repro:** load `/alignment` cold (`pageHeight: 19,344 px`, all 35 chapter rows visible, h2 headers for Algebra 1 + Geometry + Algebra 2 all in DOM). Click "Algebra 1" chip → page height unchanged at 19,344 px, all three section headings still present, no URL parameter change, no visible filter applied. Same result clicking "Pure math" on the Strength side.
+
+**Why this matters:** the chips look like they filter the long list. A reviewer who wants to scan only Algebra 1 will click and find it doesn't work. Surfaces broken-feature affordance on the demo page itself.
+
+**Fix entry point:** likely `src/screens/AlignmentPage.tsx` or wherever the chapter list renders. Pattern would be a `useState<{course?: Course; strength?: Strength}>` plus a filter through the `act1Alignment` array before mapping rows. Or — if the chips are intentionally placeholders that say "we'll have filters here in v2", then visually de-emphasize them (e.g. greyed-out + "coming soon" tooltip).
+
+## Section 7 · Explorer feature deep-test — ✓ everything works, one rendering nit
+
+Tested on Penguins:
+- **4 chart-type tabs**: Scatter / Histogram / Bar / Box plot (Map only on geo datasets)
+- **X / Y / Color By dropdowns** with proper attribute options
+- **Filter rail**: range sliders for every numeric column, categorical chips for every categorical column, "clear all" link appears when any filter is engaged
+- **X: linear / Y: linear** toggle buttons (switches to log when supported)
+- **Overlays ▾ dropdown** — new affordance consolidating: Fit a line / x-marker / y-marker / Mean & median (was loose buttons before; this is a cleaner UX)
+- **Copy link** button (presumably copies the deeplinked URL with current state encoded)
+- **Download CSV ↓** button — present, not exercised in this pass
+- **Stats panel** (right rail): per-column mean / median / min / max / sd / n
+- **Table** below chart: 200 rows visible, "showing first 200" message
+
+**Fit a line works on log-log** (re-verified — was Pass-6 outcome). solarSystem with X log + Y log + Snap to best fit → slope 1.50, R² 1.000 (Kepler's Third Law).
+
+### N3.2 · Histogram bars defer initial paint behind animation — **minor, same fix family as N3**
+
+Same exact issue as the original N3 (large-N scatter empty-on-first-paint) but on the Bar component instead of the Scatter. On `/explorer?dataset=penguins&type=histogram`:
+
+- DOM has 20 `recharts-bar-rectangle` `<path>` elements with valid `d` attributes (e.g. `"M 141.5038,514.344 h 28 v 3.656 h -28 Z"`), `fill="#3B82F6"`, `opacity="1"`, and reasonable heights (3.6 / 12.8 / 36.6 px).
+- Chart area appears empty on cold-paint.
+- Hovering anywhere on the chart triggers a redraw, and the histogram appears (cleanly bimodal — Adelie cluster at ~38-40 vs Gentoo/Chinstrap cluster at ~46-48).
+
+**Fix:** mirror Terminal's `isAnimationActive={false}` fix on the `<Bar>` component (probably `src/components/explorer/HistogramView.tsx` or `BarView.tsx`). 1-line edit.
+
+**Demo risk:** medium. Park might briefly see a blank histogram before he hovers. Resolves within ~1 sec of interaction, but for a "switch from scatter to histogram during demo" moment, the first second reads as broken.
+
+## Section 8 · Map view — ✓ works on all geo-enabled datasets
+
+| Dataset | Map dots rendered |
+|---|---|
+| hurricanes | 957 |
+| earthquakes | 382 |
+| nycEms | 5 |
+| bathymetry | 13 (Cape Cod default filter) |
+| lidarRuins | 8 (Caracol default filter) |
+
+Region presets visible: World / Atlantic / Pacific / N. America / Europe / Asia · Pacific. Zoom +/- and Reset present. "Scroll to zoom · drag to pan" hint shown. Equirectangular projection with graticule, dashed tropics + arctic/antarctic. Continental outlines from "Natural Earth 1:110m." Footer caption clearly explains the projection.
+
+NEO (Near-Earth Asteroids) correctly **does not offer Map tab** — its coords are orbital, not earth-surface. Right behavior.
+
+## Section 9 · Mobile breakpoints — DEFERRED
+
+Tried `resize_window` to 375×812 and 768×1024. Window reports new size but `window.innerWidth` stays at 1440. The Cowork sandbox can't actually shrink the viewport in a way the page's media queries respond to. **Mobile testing needs to happen from a real browser or DevTools device emulation.**
+
+Recommendation: spot-check mobile on a real device or in Chrome DevTools' device toolbar before demo. Original handoff explicitly said "Mobile breakpoints are unverified" so this is just confirming that gap remains.
+
+## Section 10 · Console errors — ✓ clean
+
+Read console messages across `/`, `/explorer?dataset=stars`, and the chapter-row interaction on alignment. No errors, no warnings, no Recharts "width(-1)" complaints (Pass-2 noted these against a stale URL; they're not present on `prototype-five-iota`).
+
+## Comprehensive findings summary
+
+### What's new / improved since my last pass (Cowork-credited or independent)
+
+| Finding | Status |
+|---|---|
+| B15 — per-chapter "Real data" link navigation | ✓ live |
+| B16 — companion box "40 datasets" | ✓ live |
+| N3 — large-N scatter cold-paint | ✓ live (verified again on stars) |
+| tallestBuildings → similarity framing softened | ✓ live, 1:500 architectural model framing |
+| runningSurfaces → radical framing softened | ✓ live, drops Snell, uses direct √(...) |
+| **Penguins default = bill length × bill depth × species** | ✓ **silent shipment, new since my acceptance test** |
+| **bathymetry default = Cape Cod filter** | ✓ **silent shipment, fixes the polynomial-hook visibility issue** |
+| **lidarRuins default = Caracol filter** | ✓ **silent shipment, fixes the all-3-sites confusion** |
+| Overlays dropdown consolidation | ✓ live (Fit a line / x-marker / y-marker / Mean & median in one menu) |
+
+### New issues filed in this pass
+
+| ID | Severity | Issue |
+|---|---|---|
+| **B18** | important | Home says "44 different math chapters"; alignment + /chapters say 35. Three-number drift across surfaces. |
+| **B19** | important | Course + Strength filter chips on `/alignment` are decorative-only; clicking them doesn't filter the rendered list. |
+| **N3.2** | minor | Histogram bars suffer the same animation-deferred-paint issue as N3 was for scatter; same `isAnimationActive={false}` fix needed on the Bar component. |
+| (carry-over) B12 | minor | Bar-chart-as-cold-open default on `uspsBoxes` / `waterFixtures` / `recyclingRates` plots one bar per row at numeric X. Cosmetic but visible on `recyclingRates`. |
+| (carry-over) B13 | minor | Surface attribute `description` field on `/datasets/<id>` story-page Shape table. |
+| (carry-over) B14 | minor | `/datasets` hub at 40 cards / 4,300 px tall — needs a family-filter chip row. |
+| (carry-over) Mobile breakpoints | unverified | Sandbox can't shrink viewport; needs DevTools emulation or a real device. |
+
+### Demo-ready net for Wednesday
+
+**Strong.** The Wednesday pitch on `pitch-eosin-gamma.vercel.app` and the full prototype on `prototype-five-iota.vercel.app` both hold up to a comprehensive sweep. Three things I'd fix before showing it to Savvas, in order:
+
+1. **B18** — pick one chapter count and use it everywhere. Two minutes.
+2. **B19** — either wire the alignment filter chips to actually filter, or remove them (a chip row that pretends to filter is worse than no chip row). 15-30 minutes either way.
+3. **N3.2** — apply `isAnimationActive={false}` to the histogram Bar component. 1-line edit, ~10 minutes including test.
+
+Everything else (B12, B13, B14, mobile) is post-demo polish.
+
+— Cowork Claude (comprehensive pass) · 2026-05-13
+
+---
+
 # Terminal follow-up #2 — 2026-05-13 (cold-open default filters)
 
 Cowork's acceptance test re-flagged the Cape Cod / Caracol default-filter recommendations as still open. They're now shipped.
@@ -583,6 +774,79 @@ Verified `defaultFilter:[{attrKey:\`transect\`...]` and `defaultFilter:[{attrKey
 Commit: `f106c95`. Live on both URLs.
 
 **Net for Wednesday:** every blocker and recommendation in Cowork's acceptance test is now ✓. Open items are the genuinely-non-blocking polish (B12 bar-chart default, B13 attribute descriptions on story pages, B14 family-filter on `/datasets` hub).
+
+— Terminal Claude · 2026-05-13
+
+---
+
+# Terminal follow-up #3 — 2026-05-13 (Sky chart type · B18 · N3.2 · B19 verification)
+
+Working through Cowork's comprehensive-pass items plus a new feature.
+
+## NEW · `stars` dataset now ships RA + Dec, and a dedicated "Sky" chart type
+
+Derek's question: "does stars need a night sky map? xy?" Yes — and the data was there.
+
+**Data work:**
+- Fetched HYG v4.1 (current, 119,627 rows, CC-BY-SA-4.0) from `https://raw.githubusercontent.com/astronexus/HYG-Database/main/hyg/CURRENT/hygdata_v41.csv`. Same HYG compilation the dataset was originally built from, latest version.
+- Matched our 750 rows by `name` against HYG's `proper` (common names: "Sirius") and `bf` (Bayer-Flamsteed: "9Alp CMa"). 750/750 matched first pass.
+- Underlying observations: ESA Hipparcos astrometric satellite (1989–1993) + Yale Bright Star Catalog (1991) + Gliese-Jahreiss Nearby Stars Catalog. J2000.0 epoch coordinates.
+- `starsDataset.ts` provenance block now explicitly documents this back-fill with the curl URL, matching method, and underlying-catalog citations.
+
+**Chart-type work:**
+- New `'sky'` ChartType registered. Toolbar button auto-appears only when a dataset has `raHours` + `decDeg` numeric attributes.
+- `SkyView.tsx` renders: dark background, RA on X (0–24 h, reversed — standard sky-map convention), Dec on Y (-90° to +90°), celestial-equator reference line, dashed grid.
+- Dot radius scales with apparent magnitude via Recharts ZAxis (`range=[4, 220]` px²) — brighter stars = bigger dots. Sirius at mag -1.4 ~8 px; faintest naked-eye mag +6 ~1 px.
+- When color attribute is `spectClass`, hues use real stellar surface colors: O `#9bb0ff` (blue), B `#aabfff`, A `#cad7ff`, F `#f8f7ff` (white), G `#fff4ea` (yellow, Sun's class), K `#ffd2a1` (orange), M `#ffcc6f` (red-orange).
+- HR diagram remains cold-open default (chapter pedagogy hook). Sky button is one click over.
+- Deep link: `/explorer?dataset=stars&type=sky` round-trips.
+
+**Vision check I'd love Cowork's eyes on:**
+- Does the Sky view actually look like a sky? Stars should cluster along the Milky Way (~17–20 h RA / -30° to 0° Dec), Polaris should sit near +89° Dec, Orion's belt should cluster near 5–6 h RA / 0° to -2° Dec.
+- Stellar-color palette: do the spectral-class colors read as "real star colors" or does it just look like random pastel? The hex values are based on published B-V → RGB mappings.
+- Is RA-reversed (0h on the right, 24h on the left) the intuitive way to show it? Standard sky atlases reverse it because you're viewing the sphere from inside, but a teacher used to math-axis conventions might find it odd.
+- ZAxis dot-size range [4, 220]: legible spread or visual noise?
+
+## B18 fixed — Home page chapter count
+
+`prototype/src/screens/HomePage.tsx` line 27 was hardcoded "44 different math chapters". Now bound to `CHAPTERS.length` (= 35). Single source of truth; future chapter adds auto-reflect.
+
+## N3.2 fixed — histogram + bar animation defer
+
+Applied `isAnimationActive={false}` to `<Bar>` in:
+- `HistogramView.tsx` line 329
+- `BarView.tsx` line 76
+
+Same fix family as N3 was for Scatter. Verifiable on `/explorer?dataset=usMintCents` (chart type Histogram, 67-row dataset) and `/explorer?dataset=gameSprites` (Bar mode) on cold load — bars should now paint immediately.
+
+## B19 status — mystery; needs re-verification
+
+Cowork reported alignment-page filter chips are "decorative only" — page height unchanged after clicking Algebra 1. But I traced the source and the filter logic IS correct AND IS in the live bundle (grep confirmed `===\`all\`?[\`algebra1\`,\`geometry\`,\`algebra2\`]` shipped):
+
+- `AlignmentPage.tsx:36-37` declares `courseFilter` + `strengthFilter` state
+- Line 39-42 derives `courses` from `courseFilter`
+- Line 137-143 maps `courses` to `<CourseSection>` (so when filter is 'algebra1', only ONE section renders)
+- `CourseSection` at line 277-281 further filters entries by `strengthFilter`
+- `FilterChip` at line 399-419 correctly fires `onClick` to update state
+
+Cowork's repro was specific — page height 19,344 px both before and after click — so they did test it correctly against SOME deploy. My theories:
+1. They tested a stale build (the source has been correct for a while)
+2. There's a React render bypass I can't see from source alone
+3. Browser caching of the JS bundle masked a fix
+
+**Asking Cowork:** please re-test `/alignment` after this redeploy. If filter still doesn't work, capture browser console state — I'll dig deeper. If it works now, B19 was a stale-build artifact.
+
+## Deferred — pinch / two-finger scroll-zoom on Explorer charts
+
+Derek asked "it would be nice to be able to scroll within the graph with two fingers." Implementing trackpad pinch + wheel-zoom on Recharts charts is ~30–45 min of work (wheel event handler → axis-domain state update, applied to all chart-type views, with reset gesture). ScatterView already has box-zoom (drag rectangle); the wheel-zoom would supplement it.
+
+**Punted post-demo** unless Cowork sees it as Wednesday-blocking. The current box-zoom (drag-to-select rectangle) already covers the "let me look closer at this region" use case.
+
+## Open carryovers (no change since Cowork's last pass)
+- **B12** bar-chart-as-cold-open on uspsBoxes / waterFixtures / recyclingRates
+- **B13** surface attribute description on story-page Shape table
+- **B14** family-filter chip row on `/datasets` hub
+- Mobile breakpoints (Cowork sandbox can't shrink viewport)
 
 — Terminal Claude · 2026-05-13
 
