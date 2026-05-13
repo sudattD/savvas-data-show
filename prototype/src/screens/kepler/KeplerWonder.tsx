@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import HostBubble from '../../components/HostBubble';
 
 interface KeplerWonderProps {
@@ -12,8 +11,6 @@ interface PlanetSample {
   periodLabel: string;
 }
 
-// A teaser table of well-known planets — the kid already feels this
-// asymmetry: Mercury blasts around in 88 days, Neptune takes 164 years.
 const SAMPLES: PlanetSample[] = [
   { body: 'Mercury', emoji: '☿', distanceAU: 0.39, periodLabel: '88 days' },
   { body: 'Earth', emoji: '🜨', distanceAU: 1.00, periodLabel: '1 year' },
@@ -22,12 +19,21 @@ const SAMPLES: PlanetSample[] = [
   { body: 'Neptune', emoji: '♆', distanceAU: 30.1, periodLabel: '165 years' },
 ];
 
+interface PredictionOption {
+  value: number;
+  label: string;
+  anchor: string;
+  tip: string;
+}
+
+const PREDICTIONS: PredictionOption[] = [
+  { value: 10,  label: 'Linear',         anchor: '~10 years',  tip: '10× farther = 10× slower.' },
+  { value: 15,  label: 'A little curve', anchor: '~15 years',  tip: 'Distance pulls a bit harder than linear.' },
+  { value: 35,  label: 'A strong curve', anchor: '~35 years',  tip: 'Distance pulls a lot harder than linear.' },
+  { value: 100, label: 'A wild curve',   anchor: '100+ years', tip: 'Distance compounds — far stuff crawls.' },
+];
+
 export default function KeplerWonder({ onStart }: KeplerWonderProps) {
-  const [guess, setGuess] = useState<string>('');
-
-  const numericGuess = guess === '' ? null : Number(guess);
-  const valid = numericGuess !== null && !Number.isNaN(numericGuess) && numericGuess >= 0.1 && numericGuess <= 200;
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -47,10 +53,10 @@ export default function KeplerWonder({ onStart }: KeplerWonderProps) {
 
       <HostBubble accent="amber">
         Every planet orbits the same Sun. The closer ones whip around in
-        weeks. The far ones take centuries. There's a pattern in the
-        numbers — Kepler found it in 1619 with the six planets he could
-        see. Make a guess first, then we'll plot all twelve bodies and
-        let the math show itself.
+        weeks. The far ones take centuries. Kepler spotted the pattern
+        in 1619 with just the six planets he could see. Look at these
+        five, then take a guess — no wrong answers, we'll plot the real
+        data next.
       </HostBubble>
 
       {/* Teaser table */}
@@ -68,50 +74,46 @@ export default function KeplerWonder({ onStart }: KeplerWonderProps) {
             </div>
           ))}
         </div>
+        <div className="text-[11px] text-amber-900/70 mt-3 italic">
+          AU = Astronomical Unit. 1 AU is Earth's distance from the Sun (~150 million km).
+        </div>
       </div>
 
-      {/* The prediction prompt */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
+      {/* The prediction prompt — pick a bucket, no free-input */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
         <div>
           <div className="text-[10px] font-semibold tracking-widest text-amber-700 mb-1">
-            TODAY'S QUESTION
+            YOUR HUNCH
           </div>
           <div className="text-base font-semibold text-ink">
-            If a planet sits at <span className="tabular-nums">10 AU</span> from the Sun, how many
-            Earth-years for one orbit?
+            A planet at <span className="tabular-nums">10 AU</span> — 10× farther than Earth.
+            One orbit takes about how long?
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            Earth is at 1 AU and takes 1 year. Jupiter is at 5 AU and takes 12. You decide.
+            Pick the bucket that feels right. We'll plot the real answer next.
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <input
-            type="number"
-            min={0.1}
-            max={200}
-            step={0.1}
-            value={guess}
-            onChange={(e) => setGuess(e.target.value)}
-            placeholder="years"
-            className="w-32 px-3 py-2 rounded-md border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none text-sm tabular-nums"
-          />
-          <span className="text-sm text-slate-500">Earth-years</span>
-        </div>
-        <div className="text-xs text-slate-500 italic pt-1 border-t border-slate-100">
-          Most students start with "10" (linear). The actual answer is something else. Plot the data and you'll see why.
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          {PREDICTIONS.map((p) => (
+            <button
+              key={p.value}
+              onClick={() => onStart(p.value)}
+              className="text-left bg-white border border-slate-200 hover:border-amber-400 hover:bg-amber-50 rounded-xl p-3 transition shadow-sm hover:shadow-md"
+            >
+              <div className="text-[10px] font-semibold tracking-widest text-amber-700">
+                {p.label.toUpperCase()}
+              </div>
+              <div className="font-display text-lg font-bold text-ink tabular-nums mt-0.5">
+                {p.anchor}
+              </div>
+              <div className="text-xs text-slate-600 mt-1 leading-snug">{p.tip}</div>
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="text-xs text-slate-500">
-          Real distances and orbital periods · IAU / NASA Horizons.
-        </div>
-        <button
-          onClick={() => onStart(valid ? numericGuess : null)}
-          className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition"
-        >
-          Plot the solar system →
-        </button>
+      <div className="text-xs text-slate-500">
+        Real distances and orbital periods · IAU / NASA Horizons.
       </div>
     </div>
   );
