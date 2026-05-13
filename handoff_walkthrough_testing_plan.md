@@ -216,7 +216,7 @@ Generic landing page for any chapter row clicked from `/chapters`. Sits between 
   - A bold dark "Start the activity →" button below.
 - Dataset section title reads "THE DATASET · the activity above uses this — explore here after you finish".
 - Each dataset card has an amber chip reading **"Recommended: do the activity above first"** above the CTAs, and the "Open in Explorer →" button is rendered in the **secondary/ghost** style (white background, slate border) — NOT bold brand-color.
-- For `/c/alg1-t11`, the artisanal Reaction Time page should still load (static route wins). Confirm the textbook-style 3 ACTS badge is full-size (the artisanal version) rather than the small generic one.
+- `/c/alg1-t11` (Reaction Time) now also uses the generic tee-up — the previous artisanal one-off page was retired. Confirm the small 3-ACTS badge + ACT 1 / ACT 3 preview cards appear and the "Start the activity →" button routes to `/reaction-time`.
 
 **Test 7b — unbuilt chapter** (`/c/alg1-t3` Find Your Slope, `/c/geo-t9` Storm Track)
 

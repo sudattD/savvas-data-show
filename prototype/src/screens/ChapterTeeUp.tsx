@@ -220,10 +220,20 @@ function DesignBriefFallback({ chapter }: { chapter: ChapterEntry }) {
           <section>
             <div className="text-[10px] font-semibold tracking-widest text-ink-muted mb-3">
               {datasets.length === 1 ? 'THE DATASET' : `${datasets.length} CONNECTED DATASETS`}
+              {chapter.route && (
+                <span className="ml-2 normal-case tracking-normal text-ink-muted italic font-normal">
+                  · the activity above uses this — explore here after you finish
+                </span>
+              )}
             </div>
             <div className="space-y-4">
               {datasets.map((d) => (
-                <DatasetConnectionCard key={d.id} dataset={d} chapter={chapter} />
+                <DatasetConnectionCard
+                  key={d.id}
+                  dataset={d}
+                  chapter={chapter}
+                  isBackDoor={Boolean(chapter.route)}
+                />
               ))}
             </div>
           </section>
@@ -457,7 +467,18 @@ function ActBlock({
   );
 }
 
-function DatasetConnectionCard({ dataset, chapter }: { dataset: Dataset; chapter: ChapterEntry }) {
+function DatasetConnectionCard({
+  dataset,
+  chapter,
+  isBackDoor = false,
+}: {
+  dataset: Dataset;
+  chapter: ChapterEntry;
+  /** When true, the chapter has a built activity above — Explorer is the
+   *  back door, not the primary path. Tones down the CTA and adds a
+   *  "do the activity first" reminder. */
+  isBackDoor?: boolean;
+}) {
   const fits = (dataset as { chapterFits?: ChapterFit[] }).chapterFits ?? [];
   const fit = fits.find((f) => f.course === chapter.course && f.topic === chapter.topic) ?? null;
 
@@ -502,8 +523,20 @@ function DatasetConnectionCard({ dataset, chapter }: { dataset: Dataset; chapter
             Source: {dataset.source}
           </div>
         )}
+        {isBackDoor && (
+          <div className="text-[10px] eyebrow text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 inline-flex">
+            Recommended: do the activity above first
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <Link to={`/explorer?dataset=${dataset.id}`} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-brand-900 text-white text-sm font-semibold hover:bg-brand-700 transition">
+          <Link
+            to={`/explorer?dataset=${dataset.id}`}
+            className={
+              isBackDoor
+                ? 'inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-white border border-surface-line text-ink-soft text-sm font-semibold hover:border-brand-300 hover:text-brand-700 transition'
+                : 'inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-brand-900 text-white text-sm font-semibold hover:bg-brand-700 transition'
+            }
+          >
             Open in Explorer <span aria-hidden>→</span>
           </Link>
           <Link to={`/datasets/${dataset.id}`} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-white border border-surface-line text-ink-soft text-sm font-semibold hover:border-brand-300 hover:text-brand-700 transition">
