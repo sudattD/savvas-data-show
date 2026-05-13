@@ -89,12 +89,12 @@ export const CHAPTERS: ChapterEntry[] = [
   {
     course: 'algebra1', topic: 2, topicName: 'Linear Equations',
     activity: 'Predict the Twin',
-    blurb: 'Pairs measure two correlated body metrics on each other, fit y = mx + b, then test on a stranger.',
-    connection: 'Students invent y = mx + b before being told.',
+    blurb: 'Take two measurements on each of two people. Write the linear equation through those two points. Then use the equation to predict a stranger.',
+    connection: 'The chapter skill — writing y = mx + b given two points — is the whole activity. Two body measurements, two points, one line, one prediction.',
     format: ['POL', 'SEN'], datasets: ['marathon'],
     design: {
-      hook: 'You and your partner pick two body measurements (hand-span vs. height, half-marathon pace vs. full pace, age vs. step length) and plot what you find.',
-      reveal: 'Your linear equation predicts a stranger from another pair. With 32,000 Boston Marathon finishers, the same line still holds.',
+      hook: 'You and your partner measure two body things on each other (hand-span vs. height, age vs. step length). That gives you two (x, y) points.',
+      reveal: 'Write the linear equation through your two points — that\'s your model. Test it on a stranger. The class\'s lines all roughly agree; the marathon-finisher dataset (32,000 points) shows the population line you were sampling from.',
     },
   },
   {
@@ -122,10 +122,16 @@ export const CHAPTERS: ChapterEntry[] = [
   {
     course: 'algebra1', topic: 5, topicName: 'Piecewise Functions',
     activity: 'The Curve That Bends',
-    blurb: 'Wind turbine power curves are piecewise: quadratic, plateau, drop-off. Find the breakpoint.',
+    blurb: 'Wind turbine power curves are piecewise: quadratic rise, rated plateau, cut-out drop. Find the breakpoints.',
     connection: 'Real engineering uses piecewise functions because the world bends. Where it bends means something.',
     format: ['CDS'], datasets: ['wind'],
-    route: '/wind-turbine',
+    // No route yet — the built /wind-turbine page emphasizes the quadratic
+    // fit (Topic 8). A piecewise-focused variant (breakpoint sliders, three
+    // pieces, domain switches) is the planned T5 build.
+    design: {
+      hook: 'A real turbine\'s power output vs. wind speed. Below cut-in: flat at zero. Then a quadratic rise. Then a plateau. Then a drop at cut-out. Three pieces, three domains.',
+      reveal: 'Slide the two breakpoints. The R² fits all three pieces at once. Where you put the boundaries decides what the model is "for."',
+    },
     teacher: {
       objective: 'Students will identify the wind-speed breakpoints in real SCADA data and define a piecewise function (quadratic rise, rated plateau, cut-out drop) that matches each regime.',
       standards: ['HSF-IF.C.7.b', 'HSF-BF.A.1.b'],
@@ -216,10 +222,10 @@ export const CHAPTERS: ChapterEntry[] = [
   },
   {
     course: 'algebra1', topic: 11, topicName: 'Statistics',
-    activity: 'Reaction Time Arena + Train-A-Sound',
-    blurb: 'Generate your own distribution (visual + audio reaction times), then train a tiny "yes/no" classifier on your own voice.',
-    connection: 'Linear regression IS machine learning. Welcome to the field.',
-    format: ['TML', 'SEN', 'GAM'], datasets: ['marathon', 'penguins', 'countries'],
+    activity: 'Reaction Time Arena',
+    blurb: 'Each student generates their own visual + audio reaction-time distributions. Compute median, mean, spread; compare distributions across the class.',
+    connection: 'The chapter\'s core moves — summary statistics, shape of a distribution, comparing two distributions — done on a dataset every student personally made.',
+    format: ['GAM', 'SEN'], datasets: ['marathon', 'penguins', 'countries'],
     route: '/reaction-time',
     flagship: true,
     teacher: {
@@ -404,12 +410,12 @@ export const CHAPTERS: ChapterEntry[] = [
   {
     course: 'algebra2', topic: 1, topicName: 'Linear Functions and Systems',
     activity: 'When the Lines Cross',
-    blurb: "Plot two slow trends — births vs. deaths, country A's median age vs. country B's. Fit linear best-fits and predict when they cross.",
-    connection: 'Systems of linear equations as a forecasting tool.',
+    blurb: "An A2 review of systems on slower, higher-stakes data — births vs. deaths, two countries' median ages. Fit linear best-fits and forecast the crossing year.",
+    connection: 'A2 returns to the A1 T4 idea ("two lines cross") with longer time-series, real forecasting stakes, and uncertainty in the fit. Same math, harder data.',
     format: ['CDS'], datasets: ['population', 'countries'],
     design: {
       hook: "Two slow trends on the same axes — US births vs. deaths, or country A's median age vs. country B's. Plot both.",
-      reveal: 'Fit linear best-fits, solve for the crossing year. Forecasting via systems of equations on data that actually shapes policy.',
+      reveal: 'Fit linear best-fits, solve for the crossing year. Same systems-of-equations math as A1 T4, but now the data is decades long and the forecast actually shapes policy.',
     },
   },
   {
@@ -544,16 +550,16 @@ export const CHAPTERS: ChapterEntry[] = [
   {
     course: 'algebra2', topic: 11, topicName: 'Data Analysis and Statistics',
     activity: 'Train-A-Genre Classifier',
-    blurb: 'Train a classifier on Spotify audio features to predict genre. See the confusion matrix. Then a bias hunt — does it fail more on Latin or R&B?',
-    connection: 'Real data analysis is iterative; bias is a feature of all models.',
-    format: ['TML', 'CDS'], datasets: ['spotify', 'countries'],
+    blurb: 'Use Spotify audio features (danceability, energy, valence…) to predict genre. Sampling, summary stats per category, then a confusion-matrix read-out — all the chapter\'s tools applied to one dataset.',
+    connection: 'The chapter moves — sampling, comparing per-category distributions, prediction from features — happen first. The classifier and confusion matrix are how a real data analyst sees whether those moves worked.',
+    format: ['CDS', 'TML'], datasets: ['spotify', 'countries'],
     flagship: true,
     design: {
-      hook: 'Spotify audio features (danceability, energy, valence, etc.) for tens of thousands of tracks. Train a classifier in the browser to predict genre.',
-      reveal: 'See the confusion matrix. Then go bias-hunting: does it fail more on Latin or R&B? Why? Real data analysis is iterative; bias is a feature of all models.',
+      hook: 'Spotify audio features (danceability, energy, valence) for tens of thousands of tracks. First: how do those features distribute differently across genres? Compare medians, spreads, overlaps.',
+      reveal: 'Then train a classifier in the browser and read the confusion matrix. The cells where it fails are exactly the genres whose feature distributions overlapped — the statistics you computed first predicted the model\'s failures.',
     },
     teacher: {
-      objective: 'Students will train a multi-class classifier on Spotify audio features, interpret a confusion matrix, identify systematic per-class errors, and propose hypotheses about the source of bias.',
+      objective: 'Students will compute per-genre summary statistics on Spotify audio features, identify which features separate genres and which overlap, then train a multi-class classifier and connect its confusion matrix back to the overlapping distributions they found.',
       standards: ['HSS-ID.B.6', 'HSS-IC.A.1', 'HSS-IC.B.6'],
       minutes: 40,
       discussion: [
