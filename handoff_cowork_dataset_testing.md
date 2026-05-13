@@ -924,3 +924,58 @@ If any of these you'd rather hand back to me, tell me which.
 
 — Terminal Claude · 2026-05-13
 
+---
+
+# Terminal follow-up #5 — 2026-05-13 (punch-list close-out, commit 68b726c)
+
+Fixed everything else I could from source while waiting on Cowork's vision checks.
+
+## Standards strings on alignment rows (your pre-demo checklist #7)
+
+You flagged that no standards codes were rendered on chapter rows despite being in source. **Fixed.** AlignmentCard now pulls `standards` from each wired dataset's chapterFit (matched by course + topic), deduplicates across multi-dataset rows, and renders them as small emerald-tinted monospace chips at the bottom of the right column. Verified 15 unique HSA codes in the live pitch bundle.
+
+**Verify URL:** `https://pitch-eosin-gamma.vercel.app/`. Scroll to A1·T07 (Polynomials & Factoring) — should see chips for HSA-APR.A.1, HSA-APR.B.3, HSF-IF.C.7c, HSA-SSE.A.2. Verify a sample of 5 chapter rows; if any "strong fit" row has no standards chips, flag it (means its underlying dataset's chapterFit forgot the standards field).
+
+## B22 (submit-button theater) — softened
+
+CensusInterpret was the last activity using class-wall language ("Submit this finding" / "Submitted to class wall"). The other 3 polished activities (WindTurbine/Act3Interpret, VoiceShare, ReactionInterpret) already say "Save to my notebook" / "Saved to notebook." Brought Census in line. Verified 4 occurrences of "Save to my notebook" in the live bundle and 0 of the old class-wall language.
+
+## M6 — Slider of Lies CO2 line stroke
+
+`SliderOfLies.tsx` line 238 — bumped second `<Line strokeWidth>` from 2.5 → 3.5 to match the first. Should now stay legible against the grid at standard browser zoom.
+
+## B19 — additional attempt
+
+Replaced `useMemo` on the `courses` derivation with a direct ternary in case strict-mode double-render or a stale closure was masking the bug. Source still LOOKS correct AND the bundle has the filter logic. Re-test against the latest deploy and report React DevTools state if filter still doesn't work — I'm out of theories without seeing the live state.
+
+## What's left that I CAN'T fix from terminal-side
+
+- **Sky chart rendering empty** — need DOM inspection of `.recharts-scatter-symbol` attrs (Cowork has this access)
+- **Mobile breakpoints** — need viewport emulation
+- **Lighthouse + axe accessibility** — need a browser
+- **Voice DNA / Reaction Time / Census Pyramid acts 2+3 with real input** — need mic / keyboard / interaction
+- **Card-as-link affordances** — need click test on real DOM
+
+## Stale issue entries (already fixed, just unmarked)
+
+- **N1** — All five "eleven datasets / six lessons" stale-copy locations on HomePage are already fixed (`grep` confirms zero hardcoded counts left). HomePage uses `{datasetCount}` and `{lessonCount}` everywhere.
+- **N2** — CensusPyramidPage already imports and calls `useDocumentTitle('120 Years of America')` at lines 11+19.
+
+Both can be marked closed in `.github/issues/issues_to_create.md`.
+
+## Honest punch-list status going into Wednesday
+
+Everything I could fix from source IS shipped. Of the original 18 issues + 15 pre-demo-checklist items:
+- ✓ N3, N3.2, B15, B16, B18, B22, M5, M6 — fixed in source + deployed
+- ✓ tallestBuildings/runningSurfaces pedagogy — softened
+- ✓ bathymetry/lidarRuins default-filters — pre-filtering on cold load
+- ✓ stars RA/Dec data — back-filled, sky chart type registered (but visually broken — debugging)
+- ✓ Standards strings on alignment rows — now render
+- ~ B19 — code-side fix attempt landed; needs vision verification
+- ~ Sky chart — bundle has the code; first paint still appears empty
+- ✗ Browser/device-only items — Cowork / Derek-side
+
+Net for Wednesday: every code-fixable demo blocker is ✓ except the two that need a real browser to diagnose (Sky + B19).
+
+— Terminal Claude · 2026-05-13
+
