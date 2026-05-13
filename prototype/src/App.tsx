@@ -21,7 +21,6 @@ import LessonsHub from './screens/lessons/LessonsHub';
 import ChaptersPage from './screens/ChaptersPage';
 import AugmentChaptersPage from './screens/AugmentChaptersPage';
 import NewChaptersPage from './screens/NewChaptersPage';
-import ChapterAlg1T11TeeUp from './screens/ChapterAlg1T11TeeUp';
 import ChapterTeeUp from './screens/ChapterTeeUp';
 import AlignmentPage from './screens/AlignmentPage';
 import SliderOfLies from './screens/lessons/SliderOfLies';
@@ -79,7 +78,6 @@ export default function App() {
         <Route path="/chapters" element={<ChaptersPage />} />
         <Route path="/chapters/augment" element={<AugmentChaptersPage />} />
         <Route path="/chapters/new" element={<NewChaptersPage />} />
-        <Route path="/c/alg1-t11" element={<ChapterAlg1T11TeeUp />} />
         <Route path="/c/:anchor" element={<ChapterTeeUp />} />
         <Route path="/alignment" element={<AlignmentPage />} />
         <Route path="/datasets" element={<DatasetsHub />} />
