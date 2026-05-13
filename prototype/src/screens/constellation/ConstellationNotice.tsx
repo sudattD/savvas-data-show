@@ -26,7 +26,7 @@ export default function ConstellationNotice({ onStart }: ConstellationNoticeProp
         </div>
       </div>
 
-      <HostBubble accent="purple" name="Nova">
+      <HostBubble accent="purple">
         Three different cultures, three different polygons connecting the same
         sky. The math is yours: count the sides, sum the angles, measure the
         perimeter. In a minute you'll pick your own stars and claim a shape no

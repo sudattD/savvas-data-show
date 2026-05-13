@@ -35,7 +35,7 @@ export default function VoiceWonder({ onStart }: VoiceWonderProps) {
         </div>
       </div>
 
-      <HostBubble accent="purple" name="Sami">
+      <HostBubble accent="purple">
         Here's the same person making two different sounds. Each sound makes a
         picture — that picture is called a <strong>spectrogram</strong>. Play
         them and watch. Time runs left-to-right; high notes go up, low notes go

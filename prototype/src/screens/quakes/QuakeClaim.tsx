@@ -42,7 +42,7 @@ export default function QuakeClaim({ summary, prediction, onRestart }: QuakeClai
         </div>
       </div>
 
-      <HostBubble accent="rose" name="Sol">
+      <HostBubble accent="rose">
         Every quake you plotted has two numbers — latitude and longitude.
         Just two numbers. But put them all on the same plane and{' '}
         <strong className="tabular-nums">{ringPct}%</strong> of them land

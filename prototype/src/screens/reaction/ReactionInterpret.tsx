@@ -57,7 +57,7 @@ export default function ReactionInterpret({ identify, trials, onRestart }: Inter
         </div>
       </div>
 
-      <HostBubble accent="emerald" name="Alex">
+      <HostBubble accent="emerald">
         Your visual median was <strong>{v.median} ms</strong>. Your audio median
         was <strong>{a.median} ms</strong>. {audioFasterBy > 0 ? (
           <>That's <strong>{audioFasterBy} ms faster</strong> with your ears than your eyes — sound takes a shorter path.</>

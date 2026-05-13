@@ -45,7 +45,7 @@ export default function KeplerWonder({ onStart }: KeplerWonderProps) {
         </div>
       </div>
 
-      <HostBubble accent="amber" name="Tycho">
+      <HostBubble accent="amber">
         Every planet orbits the same Sun. The closer ones whip around in
         weeks. The far ones take centuries. There's a pattern in the
         numbers — Kepler found it in 1619 with the six planets he could

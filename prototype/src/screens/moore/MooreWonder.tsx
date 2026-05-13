@@ -44,7 +44,7 @@ export default function MooreWonder({ onStart }: MooreWonderProps) {
         </div>
       </div>
 
-      <HostBubble accent="emerald" name="Gordon">
+      <HostBubble accent="emerald">
         In 1965, an Intel engineer named Gordon Moore wrote a tiny paper.
         He noticed that the number of transistors on a chip had been
         doubling every couple of years — and he guessed it would keep

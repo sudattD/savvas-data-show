@@ -35,7 +35,7 @@ export default function KeplerClaim({ pick, exponent, onRestart }: KeplerClaimPr
         </div>
       </div>
 
-      <HostBubble accent="amber" name="Tycho">
+      <HostBubble accent="amber">
         You found{' '}
         <strong className="tabular-nums">k = {exponent.toFixed(2)}</strong>
         {closeTo1p5 ? ' — bang on. ' : '. The exact answer is 1.5, which is the rational exponent 3/2. '}

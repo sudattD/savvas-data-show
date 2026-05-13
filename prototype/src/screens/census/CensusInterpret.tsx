@@ -61,7 +61,7 @@ export default function CensusInterpret({ identify, onRestart }: InterpretProps)
         </div>
       </div>
 
-      <HostBubble accent="rose" name="Maya">
+      <HostBubble accent="rose">
         {hasPick ? (
           <>You predicted that <strong>{identify.whoChangedMore === 'under18' ? 'kids under 18' : 'seniors 65+'}</strong> changed share more. </>
         ) : null}

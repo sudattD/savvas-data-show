@@ -89,7 +89,7 @@ export default function ConstellationClaim({ draft, onRestart }: ConstellationCl
         </div>
       </div>
 
-      <HostBubble accent="purple" name="Nova">
+      <HostBubble accent="purple">
         Here's what the chapter actually proves. Any simple polygon with{' '}
         <strong>n</strong> sides has interior angles that sum to{' '}
         <strong>(n−2)·180°</strong>. Your {draft.shapeName.toLowerCase()} has{' '}

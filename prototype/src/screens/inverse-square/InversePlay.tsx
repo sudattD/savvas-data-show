@@ -81,7 +81,7 @@ export default function InversePlay({ onNext }: InversePlayProps) {
         </div>
       </div>
 
-      <HostBubble accent="slate" name="Vera">
+      <HostBubble accent="slate">
         Pick any star and slide its distance multiplier. Notice the ratio
         on the right — that's how many times dimmer it would look. The
         rule is{' '}

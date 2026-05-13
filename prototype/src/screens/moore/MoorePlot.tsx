@@ -113,7 +113,7 @@ export default function MoorePlot({ guess, onNext }: MoorePlotProps) {
         </div>
       </div>
 
-      <HostBubble accent="emerald" name="Gordon">
+      <HostBubble accent="emerald">
         219 microprocessors plotted by year. On a linear y-axis, every chip
         before 1995 looks like zero — the recent ones are just unreadably
         big. Flip to log and they all share the page. Now slide the{' '}

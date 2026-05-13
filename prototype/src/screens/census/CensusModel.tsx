@@ -78,7 +78,7 @@ export default function CensusModel({ onNext }: ModelProps) {
         </div>
       </div>
 
-      <HostBubble accent="rose" name="Maya">
+      <HostBubble accent="rose">
         Here are both pyramids. Look at the bottom (kids), the middle
         (working-age), and the top (seniors). To compare two countries — or
         the same country at different times — we use <em>share</em> of the

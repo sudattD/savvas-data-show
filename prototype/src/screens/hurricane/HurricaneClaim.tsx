@@ -46,7 +46,7 @@ export default function HurricaneClaim({ tally, prediction, onRestart }: Hurrica
         </div>
       </div>
 
-      <HostBubble accent="sky" name="Mira">
+      <HostBubble accent="sky">
         You just computed two probabilities from real history — no formula,
         no theory, just counting. A coin or a die has{' '}
         <em>theoretical</em> probabilities (½, ⅙) we can derive from

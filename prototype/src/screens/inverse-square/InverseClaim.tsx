@@ -35,7 +35,7 @@ export default function InverseClaim({ pick, guess, onRestart }: InverseClaimPro
         </div>
       </div>
 
-      <HostBubble accent="slate" name="Vera">
+      <HostBubble accent="slate">
         Your push to{' '}
         <strong className="tabular-nums">{factor.toFixed(2)}×</strong> distance
         made <strong>{pick.starName}</strong> look{' '}

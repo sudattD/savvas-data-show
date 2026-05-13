@@ -42,7 +42,7 @@ export default function VoiceShare({ captures, onRestart }: VoiceShareProps) {
         </div>
       </div>
 
-      <HostBubble accent="purple" name="Sami">
+      <HostBubble accent="purple">
         See how each vowel makes the same shape across both voices? Those
         bright horizontal bands are <strong>formants</strong> — they're set by
         the shape of your mouth, lips, and tongue. Different sound = different

@@ -87,7 +87,7 @@ export default function VoiceLadder({ onNext }: Props) {
         </div>
       </div>
 
-      <HostBubble accent="purple" name="Sami">
+      <HostBubble accent="purple">
         For each step: hit <strong>"Hear the reference"</strong> to see how
         someone else's voice draws this vowel. Then <strong>record yours</strong>{' '}
         for the same sound. We'll line them up. You'll notice that <em>your</em>{' '}

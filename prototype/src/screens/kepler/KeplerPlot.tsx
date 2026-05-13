@@ -124,7 +124,7 @@ export default function KeplerPlot({ guess, onNext }: KeplerPlotProps) {
         </div>
       </div>
 
-      <HostBubble accent="amber" name="Tycho">
+      <HostBubble accent="amber">
         That's all twelve bodies plotted: distance from the Sun on X, orbit
         time on Y. The slider sets the <strong>exponent</strong>: the line
         is <code className="font-mono text-sm bg-amber-100 px-1 rounded">T = a^k</code>.

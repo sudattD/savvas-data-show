@@ -179,7 +179,7 @@ export default function ConstellationDesign({ onNext }: ConstellationDesignProps
         </div>
       </div>
 
-      <HostBubble accent="purple" name="Nova">
+      <HostBubble accent="purple">
         The dark canvas is the whole sky. Right ascension runs left-to-right
         (0–24 hours), declination runs top-to-bottom (+90° at the north pole,
         −90° at the south). Pick a star to start a polygon; pick another to

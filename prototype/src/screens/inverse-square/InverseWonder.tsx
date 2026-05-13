@@ -26,7 +26,7 @@ export default function InverseWonder({ onStart }: InverseWonderProps) {
         </div>
       </div>
 
-      <HostBubble accent="slate" name="Vera">
+      <HostBubble accent="slate">
         Stars have a true brightness (how much light they actually emit)
         and an apparent brightness (how much reaches Earth). The two
         differ for one reason only: distance. Same physics as your

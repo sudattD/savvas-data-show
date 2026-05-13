@@ -53,7 +53,7 @@ export default function ReactionIdentify({ onNext }: IdentifyProps) {
         </div>
       </div>
 
-      <HostBubble accent="emerald" name="Alex">
+      <HostBubble accent="emerald">
         Hey — I'm Alex. A typical adult reaction time is around 250 ms — a
         quarter of a second. Light has to hit your eye, race up your optic
         nerve, your brain has to notice and decide, and the motor signal has

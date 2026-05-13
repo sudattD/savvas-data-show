@@ -105,7 +105,7 @@ export default function HurricaneCount({ onNext }: HurricaneCountProps) {
         </div>
       </div>
 
-      <HostBubble accent="sky" name="Mira">
+      <HostBubble accent="sky">
         Every cell below is a year — 75 of them. Each colored stripe is one
         storm, brightest for the strongest. Slide the threshold up and
         you'll see which years "qualify" — meaning at least one storm of

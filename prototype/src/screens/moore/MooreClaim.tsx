@@ -39,7 +39,7 @@ export default function MooreClaim({ fit, guess, onRestart }: MooreClaimProps) {
         </div>
       </div>
 
-      <HostBubble accent="emerald" name="Gordon">
+      <HostBubble accent="emerald">
         Your fit:{' '}
         <strong className="tabular-nums">{fit.doublingMonths} months</strong> per doubling.{' '}
         {closeToCanon

@@ -71,7 +71,7 @@ export default function CensusIdentify({ onNext }: IdentifyProps) {
         </div>
       </div>
 
-      <HostBubble accent="rose" name="Maya">
+      <HostBubble accent="rose">
         Two snapshots of the United States. In 1900 the country had 76 million
         people; in 2020, 331 million. Here's 1900 as a <em>pyramid</em> — ages
         up the side, men on the left, women on the right. Take a quick look,

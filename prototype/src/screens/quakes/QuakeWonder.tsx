@@ -63,7 +63,7 @@ export default function QuakeWonder({ onStart }: QuakeWonderProps) {
         </div>
       </div>
 
-      <HostBubble accent="rose" name="Sol">
+      <HostBubble accent="rose">
         The USGS publishes a real-time feed of every earthquake at magnitude
         2.5 or larger anywhere on Earth. The dataset you're about to plot
         is the past seven days — almost four hundred dots, each one a real

@@ -118,7 +118,7 @@ export default function QuakeMap({ onNext }: QuakeMapProps) {
         </div>
       </div>
 
-      <HostBubble accent="rose" name="Sol">
+      <HostBubble accent="rose">
         Coordinates are about to do a lot of work. Latitude is the Y axis,
         longitude is the X — exactly like your math class. The faint
         outline is continents. Every dot is a real place where the ground

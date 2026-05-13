@@ -42,7 +42,7 @@ export default function HurricaneWonder({ onStart }: HurricaneWonderProps) {
         </div>
       </div>
 
-      <HostBubble accent="sky" name="Mira">
+      <HostBubble accent="sky">
         Atlantic hurricane records go back to 1950 — about 75 years of
         every named storm, every wind speed, every landfall. That's a long
         coin to flip. Before you crunch it: in a random year picked from

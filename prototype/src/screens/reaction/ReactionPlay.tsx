@@ -168,7 +168,7 @@ export default function ReactionPlay({ onNext }: PlayProps) {
         </div>
       </div>
 
-      <HostBubble accent={accent === 'violet' ? 'purple' : 'emerald'} name="Alex">
+      <HostBubble accent={accent === 'violet' ? 'purple' : 'emerald'}>
         {mode === 'visual' ? (
           <>
             Each trial is one data point — your reaction time in milliseconds.
