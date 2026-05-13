@@ -34,8 +34,8 @@ export default function Masthead({ section, eyebrow, right }: MastheadProps) {
 
         {(section || eyebrow) && !isHome && (
           <div className="hidden md:block flex-1 min-w-0 border-l border-surface-line pl-6">
-            {eyebrow && <div className="eyebrow text-ink-muted">{eyebrow}</div>}
-            {section && <div className="font-display font-medium text-ink text-sm leading-tight truncate">{section}</div>}
+            {eyebrow && <div className="eyebrow text-ink-muted whitespace-nowrap overflow-hidden text-ellipsis">{eyebrow}</div>}
+            {section && <div className="font-display font-medium text-ink text-sm leading-tight whitespace-nowrap overflow-hidden text-ellipsis">{section}</div>}
           </div>
         )}
 
