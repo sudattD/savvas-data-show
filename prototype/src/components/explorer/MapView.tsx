@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
 import { categoryColor, uniqueValues, DEFAULT_POINT } from './ColorScale';
 import { WORLD_LAND_PATH } from './worldLand';
@@ -22,6 +22,23 @@ interface MapViewProps {
   colorAttr?: Attribute | null;
   /** Optional numeric attribute to size points by (radius scales sqrt(value)). */
   sizeAttr?: Attribute | null;
+  /** Optional row key carrying an event time (epoch ms). Enables the Play/scrub
+   *  control beneath the map for cumulative chronological reveal. */
+  timelineKey?: string | null;
+  /** Display label for the timeline control. */
+  timelineLabel?: string;
+}
+
+// Animation length — the full timeline replays over this many milliseconds.
+const TIMELINE_DURATION_MS = 20_000;
+// Newer-than-this window (in timeline ms) gets a brief flash highlight.
+const FLASH_WINDOW_FRACTION = 0.05;
+
+function formatTimelineLabel(t: number, span: number): string {
+  const iso = new Date(t).toISOString(); // 2026-05-07T14:22:33.000Z
+  // Span < 2 days → include minutes; longer → date + hour.
+  if (span < 2 * 86_400_000) return `${iso.slice(0, 10)} ${iso.slice(11, 16)} UTC`;
+  return `${iso.slice(0, 10)} ${iso.slice(11, 13)}:00 UTC`;
 }
 
 /** Equirectangular projection — simple, distorts at poles but adequate for the
@@ -68,7 +85,7 @@ function regionToViewBox(b: [number, number, number, number]): { zoom: number; c
   return { zoom, cx, cy };
 }
 
-export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, sizeAttr }: MapViewProps) {
+export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, sizeAttr, timelineKey, timelineLabel }: MapViewProps) {
   const points = useMemo(() => {
     return rows
       .map((r) => {
@@ -77,12 +94,103 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
         if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
         if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
         const size = sizeAttr ? Number(r[sizeAttr.key]) : null;
-        return { lat, lon, row: r, size: Number.isFinite(size as number) ? (size as number) : null };
+        const time = timelineKey ? Number(r[timelineKey]) : null;
+        return {
+          lat,
+          lon,
+          row: r,
+          size: Number.isFinite(size as number) ? (size as number) : null,
+          time: Number.isFinite(time as number) ? (time as number) : null,
+        };
       })
-      .filter((p): p is { lat: number; lon: number; row: Row; size: number | null } => p !== null);
-  }, [rows, latAttr, lonAttr, sizeAttr]);
+      .filter((p): p is { lat: number; lon: number; row: Row; size: number | null; time: number | null } => p !== null);
+  }, [rows, latAttr, lonAttr, sizeAttr, timelineKey]);
+
+  // Timeline bounds — null when timeline isn't active or rows lack timestamps.
+  const timeBounds = useMemo(() => {
+    if (!timelineKey) return null;
+    const vals = points.map((p) => p.time).filter((t): t is number => t !== null);
+    if (vals.length < 2) return null;
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    return { min, max, span: max - min };
+  }, [points, timelineKey]);
+
+  // Playhead state. `playT === null` means the timeline is inactive — all
+  // points show. Once the user hits Play we seed it to timeBounds.min.
+  const [playT, setPlayT] = useState<number | null>(null);
+  const [playing, setPlaying] = useState(false);
+
+  // Reset the timeline when the dataset (or its rows) changes underneath us.
+  useEffect(() => {
+    setPlaying(false);
+    setPlayT(null);
+  }, [timelineKey, timeBounds?.min, timeBounds?.max]);
+
+  // RAF loop — advance playT at a rate that covers the full span over
+  // TIMELINE_DURATION_MS. Pauses automatically on reaching the end.
+  useEffect(() => {
+    if (!playing || !timeBounds) return;
+    let raf = 0;
+    let last = performance.now();
+    const speed = timeBounds.span / TIMELINE_DURATION_MS;
+    const tick = (now: number) => {
+      const dt = now - last;
+      last = now;
+      setPlayT((prev) => {
+        const cur = prev ?? timeBounds.min;
+        const next = cur + speed * dt;
+        if (next >= timeBounds.max) {
+          setPlaying(false);
+          return timeBounds.max;
+        }
+        return next;
+      });
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing, timeBounds]);
+
+  function togglePlay() {
+    if (!timeBounds) return;
+    if (!playing) {
+      // If we're at the end (or never started), rewind to start before playing.
+      setPlayT((prev) => (prev === null || prev >= timeBounds.max ? timeBounds.min : prev));
+      setPlaying(true);
+    } else {
+      setPlaying(false);
+    }
+  }
+
+  function scrubTo(t: number) {
+    setPlaying(false);
+    setPlayT(t);
+  }
+
+  function clearTimeline() {
+    setPlaying(false);
+    setPlayT(null);
+  }
+
+  // Effective set of points after the playhead filter. When playT is null,
+  // everything is visible (timeline inactive).
+  const visiblePoints = useMemo(() => {
+    if (!timeBounds || playT === null) return points;
+    return points.filter((p) => p.time !== null && p.time <= playT);
+  }, [points, timeBounds, playT]);
+
+  // Flash window — points whose time falls within the trailing 5 % of span
+  // before the playhead get a brief highlight so the eye can track "what just
+  // happened" instead of just "what has happened so far".
+  const flashThreshold = useMemo(() => {
+    if (!timeBounds || playT === null) return null;
+    return playT - timeBounds.span * FLASH_WINDOW_FRACTION;
+  }, [timeBounds, playT]);
 
   const sizeBounds = useMemo(() => {
+    // Size scale is computed against the FULL point set (not the playback
+    // slice) so dot radii stay stable as the timeline reveals more events.
     const vals = points.map((p) => p.size).filter((s): s is number => s !== null);
     if (vals.length === 0) return null;
     return { min: Math.min(...vals), max: Math.max(...vals) };
@@ -199,7 +307,9 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
     <div className="w-full h-full flex flex-col gap-2">
       <div className="shrink-0 flex items-center gap-3 flex-wrap text-xs text-ink-muted">
         <span>
-          {points.length.toLocaleString()} points · {dataset.name}
+          {timeBounds && playT !== null
+            ? `${visiblePoints.length.toLocaleString()} of ${points.length.toLocaleString()} points`
+            : `${points.length.toLocaleString()} points`} · {dataset.name}
         </span>
         {sizeAttr && sizeBounds && (
           <span>
@@ -316,17 +426,20 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
 
           {/* Points */}
           <g>
-            {points.map((p, i) => {
+            {visiblePoints.map((p, i) => {
               const { x, y } = project(p.lat, p.lon, W, H);
+              const isFlashing =
+                flashThreshold !== null && p.time !== null && p.time >= flashThreshold;
+              const baseR = radius(p.size);
               return (
                 <circle
                   key={i}
                   cx={x}
                   cy={y}
-                  r={radius(p.size)}
+                  r={isFlashing ? baseR * 1.6 : baseR}
                   fill={colorOf(p.row)}
-                  fillOpacity={0.6}
-                  stroke={hovered === p ? '#1A2A52' : 'transparent'}
+                  fillOpacity={isFlashing ? 0.95 : 0.6}
+                  stroke={hovered === p ? '#1A2A52' : isFlashing ? '#1A2A52' : 'transparent'}
                   strokeWidth={1.5 / zoom}
                   onMouseEnter={() => setHovered(p)}
                   onMouseLeave={() => setHovered(null)}
@@ -337,6 +450,48 @@ export default function MapView({ dataset, rows, latAttr, lonAttr, colorAttr, si
           </g>
         </svg>
       </div>
+
+      {timeBounds && (
+        <div className="shrink-0 flex items-center gap-3 bg-surface-subtle/60 border border-surface-line rounded-md px-3 py-2">
+          <button
+            type="button"
+            onClick={togglePlay}
+            className="text-xs font-semibold px-3 py-1 rounded-md bg-brand-700 text-white hover:bg-brand-800 transition shrink-0"
+            title={playing ? 'Pause' : 'Play timeline'}
+          >
+            {playing ? '❚❚ Pause' : '▶ Play'}
+          </button>
+          <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+            <input
+              type="range"
+              min={timeBounds.min}
+              max={timeBounds.max}
+              step={Math.max(1, Math.round(timeBounds.span / 1000))}
+              value={playT ?? timeBounds.min}
+              onChange={(e) => scrubTo(Number(e.target.value))}
+              className="w-full accent-brand-700"
+              aria-label="Scrub timeline"
+            />
+            <div className="flex items-center justify-between text-[10px] text-ink-muted font-mono tabular-nums">
+              <span>{formatTimelineLabel(timeBounds.min, timeBounds.span)}</span>
+              <span className="font-semibold text-ink">
+                {timelineLabel ?? 'Time'}: {formatTimelineLabel(playT ?? timeBounds.min, timeBounds.span)}
+              </span>
+              <span>{formatTimelineLabel(timeBounds.max, timeBounds.span)}</span>
+            </div>
+          </div>
+          {playT !== null && (
+            <button
+              type="button"
+              onClick={clearTimeline}
+              className="text-[11px] font-semibold px-2 py-1 rounded-md text-ink-soft hover:text-brand-700 hover:bg-surface-raised border border-transparent hover:border-surface-line transition shrink-0"
+              title="Show all events"
+            >
+              Show all
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="shrink-0 text-[10px] text-ink-muted italic">
         Equirectangular projection · graticule every 30° · dashed lines: tropics (±23.5°) and arctic/antarctic (±66.5°). Continental outlines: Natural Earth 1:110m.

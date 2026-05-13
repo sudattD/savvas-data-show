@@ -434,6 +434,7 @@ export const EARTHQUAKES_DATASET: Dataset = {
   ],
   featured: { type: 'map', x: 'lon', y: 'lat', color: 'type' },
   geo: { lat: 'lat', lon: 'lon', size: 'magnitude' },
+  timeline: { key: 'time', label: 'Event time (UTC)' },
   chapterFits: [
     {
       course: 'geometry',
@@ -503,5 +504,9 @@ export const EARTHQUAKES_DATASET: Dataset = {
     depthKm: r.depthKm,
     lat: r.lat,
     lon: r.lon,
+    // Carried on rows but intentionally absent from `attributes`: epoch ms is
+    // unreadable as a column or axis; the Map view's Play control consumes it
+    // directly via `dataset.timeline.key`.
+    time: r.time,
   })),
 };

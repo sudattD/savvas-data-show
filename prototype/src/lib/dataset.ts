@@ -149,6 +149,11 @@ export interface Dataset {
    *  dataset can be plotted on a world map. Presence enables the Explorer's
    *  map view. `size` is an optional numeric attribute to scale point radius. */
   geo?: { lat: string; lon: string; size?: string };
+  /** Optional timeline — names a per-row numeric key carrying an event time
+   *  (epoch ms). Presence enables the Map view's Play/scrub control, which
+   *  reveals points cumulatively in chronological order. The timeline value
+   *  lives on rows but does not need to appear in `attributes`. */
+  timeline?: { key: string; label?: string };
   /** Which Savvas chapters this dataset earns its place in. Each entry pairs
    *  a chapter to a teacher-facing objective + student-facing why. */
   chapterFits?: ChapterFit[];

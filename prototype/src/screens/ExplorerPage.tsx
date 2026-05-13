@@ -331,6 +331,8 @@ export default function ExplorerPage() {
                     lonAttr={lonAttr}
                     colorAttr={colorAttr}
                     sizeAttr={sizeAttr}
+                    timelineKey={dataset.timeline?.key ?? null}
+                    timelineLabel={dataset.timeline?.label}
                   />
                 );
               })()}
