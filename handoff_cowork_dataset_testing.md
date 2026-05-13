@@ -535,3 +535,54 @@ Net: all three creative re-anchorings work, but bathymetry and lidarRuins both w
 
 — Cowork Claude (follow-up) · 2026-05-12
 
+---
+
+## Cowork acceptance test on Terminal's Wednesday-demo fixes · 2026-05-13
+
+All 5 fixes from commit `0046b30` + the prior `0d2073e` (N3) verified live. Caveats noted inline.
+
+| Fix | Status | Evidence |
+|---|---|---|
+| **B16** — companion-callout dataset count | ✓ verified | The "Companion proposal" box on the alignment hero now reads **"Explorer, 40 datasets, 9 lessons, 7 built activities."** (Was "21 datasets.") |
+| **B15** — per-chapter "Real data" link navigates | ✓ verified | Element is now an `<a>` (was a `<span>`/generic). Clicking the "US state recycling rates · container & packaging" link on A1·T01 opens a new tab at `https://prototype-five-iota.vercel.app/explorer?dataset=recyclingRates`. The ↗ external-link indicator is visible. `target="_blank"` confirmed (new tab opens, alignment page stays). |
+| **N3** — large-N scatter cold-paint | ✓ verified | Hard-navigate to `/explorer?dataset=stars` paints all 750 dots immediately, no hover trigger needed. Main sequence diagonal, red giants, supergiants all visible on first frame. My earlier "still on production" flag in the synthesis was against a stale build — the fix was already live at commit `0d2073e`. Apologies for the false alarm. |
+| **tallestBuildings → GM·T7 framing** | ✓ softened cleanly | New `exploration` reads: *"The Savvas Act-1 scales a town model up to the real Mayor: same proportional reasoning powers a 1:500 architectural model of the Burj Khalifa (1.66 m tower; 1 cm per floor) up to the 828 m real building."* This is the 1:500 architectural-model reframing — pedagogy now centers on the canonical scale-model story (which IS what similarity/proportional reasoning teaches), with the between-building dataset values as secondary observation. Lands. |
+| **runningSurfaces → A2·T5 framing** | ✓ softened cleanly | New `exploration`: *"path length on each leg is a direct radical, √((D−x)² + W²) on the soft side and √(x² + L²) on the hard side. Students compute and graph these radical expressions; real surface speeds make the math concrete without slipping into calculus-only territory."* Drops the Snell's-law claim, replaces with direct radical-distance computation, and explicitly acknowledges the avoided-calculus pivot. Perfect. |
+
+### Still open (not Wednesday-blocking)
+
+Carrying forward from my earlier synthesis + Terminal's follow-up:
+
+- **B12** — Bar-chart default on `uspsBoxes` / `waterFixtures` / `recyclingRates` plots one bar per row at the numeric X position rather than category-grouped. `recyclingRates` is the worst case (50 unit-tall bars across the X-axis). Cosmetic but visible.
+- **B13** — Surface attribute `description` field on `/datasets/<id>` story-page Shape table.
+- **B14** — `/datasets` hub at 40 cards is 4,300 px tall with no family-filter chip row.
+- **B17** — Strong-fit tile says 30; handoff TL;DR says 31 (now updated to 30 in Terminal's edit). Resolved.
+- **Cape Cod / Caracol default-filter recommendations** for `bathymetry` and `lidarRuins` (from my targeted vision-check follow-up above) — Terminal hasn't picked these up yet. Re-flagging in case they want them before Wednesday: a ~10-line registry-config change per dataset to set the cold-open default filter to the showpiece subset. `bathymetry → Cape Cod` and `lidarRuins → Caracol`. Without them, both datasets default-render in a way that obscures their pedagogical hooks.
+
+### Demo-ready net
+
+Wednesday is in good shape. The Savvas pitch on `pitch-eosin-gamma.vercel.app` and the full prototype on `prototype-five-iota.vercel.app` both land hard. The two creative re-anchorings with default-view concerns (`bathymetry` + `lidarRuins`) are real but recoverable in a final ~20-minute pre-demo pass, OR you can navigate around them by demoing the Cape Cod / Caracol view yourself on stage rather than landing on the cold-open default.
+
+— Cowork Claude (acceptance test) · 2026-05-13
+
+---
+
+# Terminal follow-up #2 — 2026-05-13 (cold-open default filters)
+
+Cowork's acceptance test re-flagged the Cape Cod / Caracol default-filter recommendations as still open. They're now shipped.
+
+**Added** an optional `featured.defaultFilter: { attrKey, include[] }[]` field on the Dataset schema. ExplorerPage seeds `filters` state from it on cold-load and dataset-switch; FilterPanel renders it as normal filter state so users can clear/expand normally. URL params are unaffected (filters were never URL-serialized).
+
+**Defaults set:**
+- `bathymetry` cold-opens to `transect = 'Cape Cod'` only — the two-zero-crossing peninsula is now legible on first paint instead of compressed to ~0.3% of a 20,000 m Y range.
+- `lidarRuins` cold-opens to `site = 'Caracol'` only — aligns with the alignment-row narrative (midpoint of two known plazas predicted a third dig site). User toggles Angkor + Mosquitia back in from the FilterPanel.
+- `gameSprites` left as-is per Cowork ("existing chart types are adequate, Bar mode reveals the count-by-transformation view").
+
+Verified `defaultFilter:[{attrKey:\`transect\`...]` and `defaultFilter:[{attrKey:\`site\`...]` in the live bundle.
+
+Commit: `f106c95`. Live on both URLs.
+
+**Net for Wednesday:** every blocker and recommendation in Cowork's acceptance test is now ✓. Open items are the genuinely-non-blocking polish (B12 bar-chart default, B13 attribute descriptions on story pages, B14 family-filter on `/datasets` hub).
+
+— Terminal Claude · 2026-05-13
+
