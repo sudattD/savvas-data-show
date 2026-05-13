@@ -7,6 +7,8 @@ import VoiceDNAPage from './screens/VoiceDNAPage';
 import ReactionTimePage from './screens/ReactionTimePage';
 import CensusPyramidPage from './screens/CensusPyramidPage';
 import ConstellationDesignerPage from './screens/ConstellationDesignerPage';
+import KeplersLawPage from './screens/KeplersLawPage';
+import MapEarthsAngerPage from './screens/MapEarthsAngerPage';
 import ExplorerPage from './screens/ExplorerPage';
 import DatasetsHub from './screens/datasets/DatasetsHub';
 import DatasetStory from './screens/datasets/DatasetStory';
@@ -59,6 +61,8 @@ export default function App() {
         <Route path="/reaction-time" element={<ReactionTimePage />} />
         <Route path="/census-pyramid" element={<CensusPyramidPage />} />
         <Route path="/constellation" element={<ConstellationDesignerPage />} />
+        <Route path="/kepler" element={<KeplersLawPage />} />
+        <Route path="/map-earths-anger" element={<MapEarthsAngerPage />} />
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/chapters" element={<ChaptersPage />} />
         <Route path="/alignment" element={<AlignmentPage />} />

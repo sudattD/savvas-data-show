@@ -234,9 +234,16 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: "USGS earthquake feed for the past week — plot lat/long on a world map. The Ring of Fire emerges.",
     connection: 'Coordinates as the foundation of geometric description.',
     format: ['CDS'], datasets: ['earthquakes'],
-    design: {
-      hook: 'USGS earthquake feed for the past week, one row per quake. Plot lat/long on a world map.',
-      reveal: 'Without anyone naming it, the Ring of Fire emerges. Coordinates as the foundation of every geometric thing to come.',
+    route: '/map-earths-anger',
+    teacher: {
+      objective: 'Students will plot real (lat, lon) coordinates for hundreds of weekly earthquakes on a world map, observe and describe the curve-shaped clustering that emerges, and identify the Pacific Ring of Fire as a geometric pattern produced by physical structure.',
+      standards: ['HSG-CO.A.1', 'HSG-GPE.B.7', 'HSN-Q.A.1', 'HSS-ID.B.6a'],
+      minutes: 20,
+      discussion: [
+        'Where do quakes cluster, and why those places? What stops them from clustering anywhere else?',
+        'If quake locations were random, what would the map look like? In what specific ways is what you see different from random?',
+        'Pick one cluster and describe its shape with one geometry word — a line? an arc? a band? What does that shape tell you physically?',
+      ],
     },
   },
   {
@@ -427,12 +434,20 @@ export const CHAPTERS: ChapterEntry[] = [
   {
     course: 'algebra2', topic: 5, topicName: 'Rational Exponents and Radical Functions',
     activity: "Kepler's Third Law",
-    blurb: 'For every confirmed exoplanet, plot orbital period² vs. semi-major axis³ (log-log). A perfect line.',
-    connection: 'T² = (constant)·a³ is a radical/rational-exponent equation living in the data.',
-    format: ['CDS'], datasets: ['exoplanets'],
-    design: {
-      hook: 'Thousands of confirmed exoplanets, each with an orbital period and a semi-major axis. Plot them on a log-log scatter.',
-      reveal: "Period² vs. axis³ is a perfect line. Kepler's third law, discovered in 1619, still holds for thousand-light-year-distant worlds.",
+    blurb: 'Plot all eleven solar-system bodies (8 planets + 3 dwarfs). Slide the exponent k in T = a^k until the line lands on every dot.',
+    connection: 'T² = a³ is a radical/rational-exponent equation living in the data.',
+    format: ['CDS'], datasets: ['solarSystem', 'exoplanets'],
+    route: '/kepler',
+    flagship: true,
+    teacher: {
+      objective: 'Students will recognize a power-law relationship between two real measured quantities, linearize by toggling to log-log axes, fit the exponent k in T = a^k by slider, and read off the rational value k = 3/2 (so T² = a³).',
+      standards: ['HSA-REI.A.2', 'HSF-IF.C.7b', 'HSF-BF.A.1a', 'HSA-SSE.B.3c'],
+      minutes: 30,
+      discussion: [
+        'On a linear scatter the inner planets pile into the corner. On a log-log scatter they spread out and line up. Why?',
+        'The exponent k = 3/2 is a rational number, not an integer. Where does the 3/2 come from physically? (Hint: Newton, F = G·m₁·m₂/r².)',
+        'Kepler found this law without knowing gravity existed. Did he find the pattern or the cause first — and which would you want first as a scientist?',
+      ],
     },
   },
   {
