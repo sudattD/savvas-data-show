@@ -6,7 +6,6 @@ import ProgressDots from '../components/ProgressDots';
 import HurricaneWonder from './hurricane/HurricaneWonder';
 import HurricaneCount from './hurricane/HurricaneCount';
 import HurricaneClaim from './hurricane/HurricaneClaim';
-import type { PredictionBucket } from './hurricane/HurricaneWonder';
 import type { HurricaneTally } from './hurricane/HurricaneCount';
 import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
@@ -15,7 +14,7 @@ import { getDataset } from '../data/registry';
 export default function HurricaneCoinPage() {
   useDocumentTitle('The Hurricane Coin');
   const [act, setAct] = useState<1 | 2 | 3>(1);
-  const [prediction, setPrediction] = useState<PredictionBucket | null>(null);
+  const [prediction, setPrediction] = useState<number | null>(null);
   const [tally, setTally] = useState<HurricaneTally | null>(null);
 
   const restart = () => {

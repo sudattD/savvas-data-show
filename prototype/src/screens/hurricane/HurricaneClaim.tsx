@@ -1,31 +1,35 @@
 import { useState } from 'react';
 import HostBubble from '../../components/HostBubble';
 import type { HurricaneTally } from './HurricaneCount';
-import type { PredictionBucket } from './HurricaneWonder';
 
 interface HurricaneClaimProps {
   tally: HurricaneTally;
-  prediction: PredictionBucket | null;
+  prediction: number | null;
   onRestart: () => void;
 }
 
-const PREDICTION_LABEL: Record<PredictionBucket, string> = {
-  low: 'Under 50%',
-  mid: '50–80%',
-  high: 'Over 80%',
-};
+type GuessVerdict = 'bullseye' | 'close' | 'wider';
 
-function bucketContains(bucket: PredictionBucket, p: number): boolean {
-  if (bucket === 'low') return p < 0.5;
-  if (bucket === 'mid') return p >= 0.5 && p <= 0.8;
-  return p > 0.8;
+function judgeGuess(guess: number, actual: number): GuessVerdict {
+  const off = Math.abs(guess - actual);
+  if (off <= 2) return 'bullseye';
+  if (off <= 5) return 'close';
+  return 'wider';
 }
+
+const VERDICT_HEADER: Record<GuessVerdict, string> = {
+  bullseye: 'BULLSEYE',
+  close: 'CLOSE',
+  wider: 'WIDER THAN THE DATA',
+};
 
 export default function HurricaneClaim({ tally, prediction, onRestart }: HurricaneClaimProps) {
   const [caption, setCaption] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const correctPrediction = prediction !== null && bucketContains(prediction, tally.pYear);
+  const verdict =
+    prediction !== null ? judgeGuess(prediction, tally.qualifyingYears) : null;
+  const off = prediction !== null ? Math.abs(prediction - tally.qualifyingYears) : 0;
 
   return (
     <div className="space-y-6">
@@ -70,19 +74,28 @@ export default function HurricaneClaim({ tally, prediction, onRestart }: Hurrica
         />
       </div>
 
-      {prediction && (
-        <div className={`rounded-xl border p-4 text-sm ${
-          correctPrediction ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-slate-50 border-slate-200 text-slate-700'
-        }`}>
+      {prediction !== null && verdict !== null && (
+        <div
+          className={`rounded-xl border p-4 text-sm ${
+            verdict === 'bullseye'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              : verdict === 'close'
+                ? 'bg-amber-50 border-amber-200 text-amber-900'
+                : 'bg-slate-50 border-slate-200 text-slate-700'
+          }`}
+        >
           <div className="text-[10px] font-semibold tracking-widest mb-1">
-            {correctPrediction ? 'YOU CALLED IT' : 'YOUR GUESS WAS'}
+            {VERDICT_HEADER[verdict]}
           </div>
           <div className="text-base">
-            <strong>{PREDICTION_LABEL[prediction]}</strong> · the truth was{' '}
-            <strong className="tabular-nums">{(tally.pYear * 100).toFixed(1)}%</strong>
-            {correctPrediction
-              ? ' — your bucket contained the real answer.'
-              : ' — the real number landed outside your bucket. Worth a second guess at a new severity.'}
+            You guessed <strong className="tabular-nums">{prediction}</strong>{' '}
+            of {tally.totalYears} seasons. The data says{' '}
+            <strong className="tabular-nums">{tally.qualifyingYears}</strong>.{' '}
+            {verdict === 'bullseye'
+              ? "You read the long coin clean."
+              : verdict === 'close'
+                ? `Off by ${off} — within a strong reader's range.`
+                : `Off by ${off} — the long coin surprised you. Worth a second look at a new severity.`}
           </div>
         </div>
       )}
