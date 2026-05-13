@@ -205,7 +205,17 @@ export const BATHYMETRY_DATASET: Dataset = {
     { key: 'approxLat',    label: 'Approx latitude',    kind: 'numeric', unit: '°N', description: 'Approximate latitude of the sample point along the transect.' },
     { key: 'approxLon',    label: 'Approx longitude',   kind: 'numeric', unit: '°E', description: 'Approximate longitude of the sample point (negative = west).' },
   ],
-  featured: { type: 'scatter', x: 'distanceKm', y: 'elevationM', color: 'transect' },
+  featured: {
+    type: 'scatter',
+    x: 'distanceKm',
+    y: 'elevationM',
+    color: 'transect',
+    // Cold-open to Cape Cod only — it's the polynomial-roots-as-shoreline
+    // showpiece, with two zero-crossings legible at ±50 m. The other 3
+    // transects (Mariana Trench at -10,935 m, Mauna Kea at +4,207 m) compress
+    // the Cape Cod range to ~0.3% of the Y axis when all 4 are shown.
+    defaultFilter: [{ attrKey: 'transect', include: ['Cape Cod'] }],
+  },
   geo: { lat: 'approxLat', lon: 'approxLon', size: 'depthM' },
   chapterFits: [
     {

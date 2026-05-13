@@ -73,6 +73,33 @@ function attrExists(d: Dataset, key: string | null): boolean {
   return d.attributes.some((a) => a.key === key);
 }
 
+// Build the cold-open Filter[] from a dataset's featured.defaultFilter. For
+// each "include only [vals]" hint, compute the categorical filter as
+// "exclude everything else" — the storage shape used by FilterPanel.
+function defaultFilters(d: Dataset): Filter[] {
+  const hints = d.featured?.defaultFilter;
+  if (!hints || hints.length === 0) return [];
+  const out: Filter[] = [];
+  for (const hint of hints) {
+    const attr = d.attributes.find((a) => a.key === hint.attrKey);
+    if (!attr || attr.kind !== 'categorical') continue;
+    const allValues = new Set<string>();
+    for (const row of d.rows) {
+      const v = row[hint.attrKey];
+      if (typeof v === 'string') allValues.add(v);
+    }
+    const include = new Set(hint.include);
+    const excluded = new Set<string>();
+    for (const v of allValues) {
+      if (!include.has(v)) excluded.add(v);
+    }
+    if (excluded.size > 0) {
+      out.push({ kind: 'categorical', attrKey: hint.attrKey, excluded });
+    }
+  }
+  return out;
+}
+
 function readConfigFromURL(d: Dataset, params: URLSearchParams): ChartConfig {
   const base = defaultConfig(d);
   const t = params.get('type');
@@ -123,7 +150,7 @@ export default function ExplorerPage() {
   // on the right view. After mount, config <-> URL stays in sync via the
   // effect below.
   const [config, setConfig] = useState<ChartConfig>(() => readConfigFromURL(dataset, searchParams));
-  const [filters, setFilters] = useState<Filter[]>([]);
+  const [filters, setFilters] = useState<Filter[]>(() => defaultFilters(dataset));
 
   useDocumentTitle(`Explorer · ${dataset.name}`);
 
@@ -144,7 +171,7 @@ export default function ExplorerPage() {
     const next = DATASETS.find((d) => d.id === id)!;
     setDatasetId(id);
     setConfig(defaultConfig(next));
-    setFilters([]);
+    setFilters(defaultFilters(next));
   };
 
   const filteredRows = useMemo(() => applyFilters(dataset.rows, filters), [dataset, filters]);

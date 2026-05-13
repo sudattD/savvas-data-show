@@ -152,7 +152,18 @@ export const LIDAR_RUINS_DATASET: Dataset = {
     { key: 'approxLon',        label: 'Longitude',        kind: 'numeric', unit: '°E', description: 'Approximate WGS-84 longitude (negative = west).' },
     { key: 'yearLidarRevealed', label: 'Year revealed',   kind: 'numeric', description: 'Year the lidar campaign that revealed this structure was published.' },
   ],
-  featured: { type: 'scatter', x: 'xMeters', y: 'yMeters', color: 'site' },
+  featured: {
+    type: 'scatter',
+    x: 'xMeters',
+    y: 'yMeters',
+    color: 'site',
+    // Cold-open to Caracol — each site uses its own local (0,0) origin, so
+    // overlaying all 3 collapses different real places onto the same point.
+    // Caracol carries the midpoint-of-two-temples-predicts-the-third-plazuela
+    // story that the alignment text references. Map view is the right cross-
+    // site comparison; the local-grid scatter is best one site at a time.
+    defaultFilter: [{ attrKey: 'site', include: ['Caracol'] }],
+  },
   geo: { lat: 'approxLat', lon: 'approxLon', size: 'baseSideM' },
   chapterFits: [
     {

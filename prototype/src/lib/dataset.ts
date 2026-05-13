@@ -139,6 +139,11 @@ export interface Dataset {
     xScale?: 'linear' | 'log';
     /** Initial Y-axis scale for scatter view. */
     yScale?: 'linear' | 'log';
+    /** Optional cold-open filter — author as "include only these category
+     *  values" per categorical attribute. Used when the full dataset is too
+     *  broad to read on first paint (e.g. bathymetry → Cape Cod, lidarRuins
+     *  → Caracol). Users can clear or expand the filter in the panel. */
+    defaultFilter?: { attrKey: string; include: string[] }[];
   };
   /** Optional geo coordinates — names of the lat / lon attributes if this
    *  dataset can be plotted on a world map. Presence enables the Explorer's
