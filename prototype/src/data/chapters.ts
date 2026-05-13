@@ -300,9 +300,16 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: 'Real bright-star sky data. Pick 5–9 stars, connect them, name your constellation, claim it.',
     connection: 'Constellations are polygons projected on a sphere — perimeter, interior angles, classification all apply.',
     format: ['CDS'], datasets: ['stars'],
-    design: {
-      hook: 'A sky full of real bright stars. Pick 5–9 that look like something to you, connect them, and name your constellation.',
-      reveal: 'Your constellation is a polygon — compute perimeter, interior angles, classification. Compare which constellations the class made compact vs. spread.',
+    route: '/constellation',
+    teacher: {
+      objective: 'Students will pick 3–9 real stars on a sky-coordinate canvas, close the polygon, then read off vertex count, perimeter, and interior-angle sum (n−2)·180° from a live computation tied to their picks.',
+      standards: ['HSG-CO.C.11', 'HSG-GPE.B.7', 'HSG-MG.A.3'],
+      minutes: 25,
+      discussion: [
+        'Compare two student constellations with the same number of vertices but very different perimeters. What makes one "compact" and the other "spread"?',
+        'On a sphere, the angles of a polygon sum to more than (n−2)·180°. Where did the extra angle come from?',
+        'A constellation drawn with a self-crossing path is not a simple polygon. Why does (n−2)·180° fail for those, and how would you fix the rule?',
+      ],
     },
   },
   {
