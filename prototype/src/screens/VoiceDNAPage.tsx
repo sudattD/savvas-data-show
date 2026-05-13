@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import VoiceWonder from './voice/VoiceWonder';
 import VoiceLadder from './voice/VoiceLadder';
+import VoiceScript from './voice/VoiceScript';
+import VoiceMath from './voice/VoiceMath';
 import VoiceShare from './voice/VoiceShare';
 import type { VowelCapture } from './voice/VowelStep';
+import type { ScriptTake } from './voice/VoiceScript';
 import ProgressDots from '../components/ProgressDots';
 import Masthead from '../components/Masthead';
 import EnvisionVideoLink from '../components/EnvisionVideoLink';
@@ -10,14 +13,18 @@ import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { getDataset } from '../data/registry';
 
+const TOTAL_ACTS = 5;
+
 export default function VoiceDNAPage() {
   useDocumentTitle('Voice DNA');
-  const [act, setAct] = useState<1 | 2 | 3>(1);
+  const [act, setAct] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [captures, setCaptures] = useState<VowelCapture[]>([]);
+  const [scriptTakes, setScriptTakes] = useState<ScriptTake[]>([]);
 
   const restart = () => {
     setAct(1);
     setCaptures([]);
+    setScriptTakes([]);
   };
 
   return (
@@ -28,7 +35,7 @@ export default function VoiceDNAPage() {
         right={
           <div className="flex items-center gap-4">
             <EnvisionVideoLink course="algebra2" topic={7} />
-            <ProgressDots current={act} />
+            <ProgressDots current={act} total={TOTAL_ACTS} />
           </div>
         }
       />
@@ -43,7 +50,22 @@ export default function VoiceDNAPage() {
             }}
           />
         )}
-        {act === 3 && <VoiceShare captures={captures} onRestart={restart} />}
+        {act === 3 && (
+          <VoiceScript
+            onNext={(takes) => {
+              setScriptTakes(takes);
+              setAct(4);
+            }}
+          />
+        )}
+        {act === 4 && <VoiceMath captures={captures} onNext={() => setAct(5)} />}
+        {act === 5 && (
+          <VoiceShare
+            captures={captures}
+            scriptTakes={scriptTakes}
+            onRestart={restart}
+          />
+        )}
 
         <div className="mt-12">
           <ChapterFitsSection dataset={getDataset('tides')} pin={{ course: 'algebra2', topic: 7 }} />

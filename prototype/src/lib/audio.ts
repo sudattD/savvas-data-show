@@ -74,6 +74,121 @@ export function renderSnapshot(frames: Uint8Array[], W = 480, H = 200): string {
   return canvas.toDataURL('image/png');
 }
 
+export interface ToneHandle {
+  audioCtx: AudioContext;
+  analyser: AnalyserNode;
+  donePromise: Promise<void>;
+  stop: () => void;
+}
+
+// Play one or more pure sine waves simultaneously through an AnalyserNode.
+// Used in the math reveal — each frequency draws one horizontal band on
+// the spectrogram, and stacks of them show "voice = sum of sines."
+export function playTones(freqs: number[], durationMs = 1800, fftSize = 2048): ToneHandle {
+  const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = fftSize;
+  analyser.smoothingTimeConstant = 0.2;
+
+  const gain = audioCtx.createGain();
+  // Per-tone amplitude — divide so combined tones don't clip or shred ears.
+  const perTone = 0.18 / Math.max(1, freqs.length);
+  gain.gain.value = 0;
+  const t0 = audioCtx.currentTime;
+  const durSec = durationMs / 1000;
+  // Quick attack, sustain, short release to avoid clicks.
+  gain.gain.setValueAtTime(0, t0);
+  gain.gain.linearRampToValueAtTime(perTone * freqs.length, t0 + 0.02);
+  gain.gain.setValueAtTime(perTone * freqs.length, t0 + durSec - 0.08);
+  gain.gain.linearRampToValueAtTime(0, t0 + durSec);
+
+  const oscillators = freqs.map((f) => {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = f;
+    osc.connect(gain);
+    osc.start(t0);
+    osc.stop(t0 + durSec + 0.05);
+    return osc;
+  });
+
+  gain.connect(analyser);
+  analyser.connect(audioCtx.destination);
+
+  let resolveDone!: () => void;
+  const donePromise = new Promise<void>((r) => {
+    resolveDone = r;
+  });
+  const timer = window.setTimeout(() => resolveDone(), durationMs);
+
+  const stop = () => {
+    window.clearTimeout(timer);
+    oscillators.forEach((osc) => {
+      try {
+        osc.stop();
+      } catch {
+        // already stopped
+      }
+    });
+    audioCtx.close().catch(() => {});
+    resolveDone();
+  };
+
+  return { audioCtx, analyser, donePromise, stop };
+}
+
+// Find the strongest spectral peak inside a frequency range. Used for
+// estimating formant locations from a captured frame.
+export function peakInRange(
+  freqData: Uint8Array,
+  sampleRate: number,
+  fftSize: number,
+  minHz: number,
+  maxHz: number,
+): { hz: number; magnitude: number } {
+  const binHz = sampleRate / fftSize;
+  const minBin = Math.max(1, Math.floor(minHz / binHz));
+  const maxBin = Math.min(freqData.length - 1, Math.floor(maxHz / binHz));
+  let bestBin = minBin;
+  let bestVal = 0;
+  for (let i = minBin; i <= maxBin; i++) {
+    if (freqData[i] > bestVal) {
+      bestVal = freqData[i];
+      bestBin = i;
+    }
+  }
+  return { hz: bestBin * binHz, magnitude: bestVal };
+}
+
+// Pick the highest-energy frame from a sequence (the loudest moment).
+export function loudestFrame(frames: Uint8Array[]): Uint8Array | null {
+  if (frames.length === 0) return null;
+  let bestIdx = 0;
+  let bestEnergy = -1;
+  for (let i = 0; i < frames.length; i++) {
+    let e = 0;
+    for (let j = 0; j < frames[i].length; j++) e += frames[i][j];
+    if (e > bestEnergy) {
+      bestEnergy = e;
+      bestIdx = i;
+    }
+  }
+  return frames[bestIdx];
+}
+
+// Extract approximate F1 and F2 formants from a frame. Ranges are wide
+// enough to cover the spread of adult and child speakers without leaking
+// into pitch-fundamentals (F1 floor) or fricative noise (F2 ceiling).
+export function extractFormants(
+  freqData: Uint8Array,
+  sampleRate: number,
+  fftSize: number,
+): { F1: number; F2: number } {
+  const F1 = peakInRange(freqData, sampleRate, fftSize, 250, 950).hz;
+  const F2 = peakInRange(freqData, sampleRate, fftSize, 950, 3200).hz;
+  return { F1, F2 };
+}
+
 export async function startMic(fftSize = 2048): Promise<MicHandle> {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: {

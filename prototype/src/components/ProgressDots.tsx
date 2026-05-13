@@ -1,11 +1,13 @@
 interface ProgressDotsProps {
-  current: 1 | 2 | 3;
+  current: number;
+  total?: number;
 }
 
-export default function ProgressDots({ current }: ProgressDotsProps) {
+export default function ProgressDots({ current, total = 3 }: ProgressDotsProps) {
+  const dots = Array.from({ length: total }, (_, i) => i + 1);
   return (
     <div className="flex items-center gap-2">
-      {[1, 2, 3].map((n) => (
+      {dots.map((n) => (
         <div key={n} className="flex items-center gap-2">
           <div
             className={`w-8 h-8 rounded-full grid place-items-center text-sm font-semibold transition-all ${
@@ -18,7 +20,7 @@ export default function ProgressDots({ current }: ProgressDotsProps) {
           >
             {n}
           </div>
-          {n < 3 && (
+          {n < total && (
             <div
               className={`w-8 h-0.5 ${n < current ? 'bg-sky-600' : 'bg-slate-200'}`}
             />

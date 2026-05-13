@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import HostBubble from '../../components/HostBubble';
 import type { VowelCapture } from './VowelStep';
+import type { ScriptTake } from './VoiceScript';
 
 interface VoiceShareProps {
   captures: VowelCapture[];
+  scriptTakes?: ScriptTake[];
   onRestart: () => void;
 }
 
-export default function VoiceShare({ captures, onRestart }: VoiceShareProps) {
+export default function VoiceShare({ captures, scriptTakes = [], onRestart }: VoiceShareProps) {
   const [caption, setCaption] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -31,13 +33,13 @@ export default function VoiceShare({ captures, onRestart }: VoiceShareProps) {
         </div>
         <div>
           <div className="text-[10px] font-semibold tracking-widest text-purple-700">
-            ACT 3 · SHARE
+            ACT 5 · SHARE
           </div>
           <h1 className="font-display text-2xl md:text-3xl font-bold text-ink leading-tight">
-            Your voice ladder.
+            Your voice, on one card.
           </h1>
           <p className="text-sm text-slate-600">
-            Four sounds, four pictures. Yours vs. the reference.
+            Ladder, fingerprint, math — wrapped up.
           </p>
         </div>
       </div>
@@ -117,6 +119,42 @@ export default function VoiceShare({ captures, onRestart }: VoiceShareProps) {
                 highlight
               />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fingerprint summary — from VoiceScript */}
+      {scriptTakes.length === 2 && (
+        <div className="rounded-2xl border border-purple-200 bg-purple-50 p-4">
+          <div className="text-[10px] font-semibold tracking-widest text-purple-700 mb-2">
+            YOUR FINGERPRINT · FROM ACT 3
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {scriptTakes.map((t, i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-purple-200 bg-white p-3"
+              >
+                <div className="text-xs font-semibold text-ink mb-1.5">
+                  Take {i + 1}
+                </div>
+                <img
+                  src={t.snapshot}
+                  alt={`Take ${i + 1}`}
+                  className="w-full rounded-lg border border-slate-800 mb-2"
+                  style={{ height: 90, objectFit: 'cover' }}
+                />
+                <div className="text-xs font-mono text-slate-700">
+                  F1 = <span className="text-purple-700 font-semibold">{t.F1.toFixed(0)} Hz</span>{' · '}
+                  F2 = <span className="text-purple-700 font-semibold">{t.F2.toFixed(0)} Hz</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="text-xs text-slate-700 mt-3 leading-snug">
+            ΔF1 = {Math.abs(scriptTakes[0].F1 - scriptTakes[1].F1).toFixed(0)} Hz · ΔF2 ={' '}
+            {Math.abs(scriptTakes[0].F2 - scriptTakes[1].F2).toFixed(0)} Hz between your two takes.
+            That gap is your repeatability — the smaller it is, the more uniquely-you your voice is.
           </div>
         </div>
       )}
