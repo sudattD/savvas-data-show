@@ -165,6 +165,8 @@ export default function InputWidget({
   const [showJson, setShowJson] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("Saved!");
+  const [toastKind, setToastKind] = useState<"success" | "error">("success");
+  const [lastError, setLastError] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userName, setUserNameState] = useState<string>("");
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
@@ -252,13 +254,18 @@ export default function InputWidget({
     }
   };
 
-  const showToastWithMessage = (message: string) => {
+  const showToastWithMessage = (message: string, kind: "success" | "error" = "success") => {
     setToastMessage(message);
+    setToastKind(kind);
     setShowToast(true);
-    setTimeout(() => setShowToast(false), 2000);
+    // Error toasts linger so the visitor actually reads them; success toasts
+    // get out of the way quickly.
+    setTimeout(() => setShowToast(false), kind === "error" ? 5000 : 2000);
   };
 
-  const postItem = async (item: InputItem): Promise<boolean> => {
+  type PostResult = { ok: true } | { ok: false; reason: string };
+
+  const postItem = async (item: InputItem): Promise<PostResult> => {
     const endpoint = reviewUrl
       ? `${apiEndpoint}?url=${encodeURIComponent(reviewUrl)}`
       : apiEndpoint;
@@ -271,25 +278,43 @@ export default function InputWidget({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(wire),
       });
-      return res.ok;
-    } catch {
-      return false;
+      if (res.ok) return { ok: true };
+      // Capture the server's reason if it sent one — helps debugging
+      // (e.g. "400: Invalid feedback item" from a schema mismatch).
+      let body = "";
+      try {
+        body = await res.text();
+      } catch {
+        /* ignore */
+      }
+      const trimmed = body.trim();
+      const truncated = trimmed.length > 120 ? `${trimmed.slice(0, 120)}…` : trimmed;
+      return { ok: false, reason: `HTTP ${res.status}${truncated ? ` — ${truncated}` : ""}` };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return { ok: false, reason: `Network error — ${msg}` };
     }
   };
 
-  const flushPending = useCallback(async (): Promise<{ sent: number; pending: number }> => {
+  const flushPending = useCallback(async (): Promise<{ sent: number; pending: number; lastReason?: string }> => {
     const items = loadPending();
     if (items.length === 0) return { sent: 0, pending: 0 };
     const stillPending: InputItem[] = [];
     let sent = 0;
+    let lastReason: string | undefined;
     for (const item of items) {
-      const ok = await postItem(item);
-      if (ok) sent++;
-      else stillPending.push(item);
+      const r = await postItem(item);
+      if (r.ok) sent++;
+      else {
+        stillPending.push(item);
+        lastReason = r.reason;
+      }
     }
     savePending(stillPending);
     setPendingCount(stillPending.length);
-    return { sent, pending: stillPending.length };
+    if (stillPending.length === 0) setLastError(null);
+    else if (lastReason) setLastError(lastReason);
+    return { sent, pending: stillPending.length, lastReason };
   }, [apiEndpoint, reviewUrl]);
 
   // Recovery: merge any locally-pending items (items previously saved while
@@ -340,13 +365,16 @@ export default function InputWidget({
     setInputCount((c) => c + 1);
     setPendingCount(loadPending().length);
 
-    const ok = await postItem(enriched);
-    if (ok && enriched._localId) {
+    const r = await postItem(enriched);
+    if (r.ok && enriched._localId) {
       removePending(enriched._localId);
       setPendingCount(loadPending().length);
+      setLastError(null);
       showToastWithMessage("Saved!");
     } else {
-      showToastWithMessage("Saved locally — couldn't reach server");
+      const reason = r.ok ? "Couldn't reach server" : r.reason;
+      setLastError(reason);
+      showToastWithMessage(`Save failed: ${reason} — kept locally`, "error");
     }
   };
 
@@ -469,7 +497,11 @@ export default function InputWidget({
       className="fixed bottom-4 right-4 z-[9999] font-sans"
     >
       {showToast && (
-        <div className="absolute bottom-16 right-0 rounded-lg bg-green-600 px-3 py-2 text-sm text-white shadow-lg">
+        <div
+          className={`absolute bottom-16 right-0 max-w-xs rounded-lg px-3 py-2 text-sm text-white shadow-lg ${
+            toastKind === "error" ? "bg-red-600" : "bg-green-600"
+          }`}
+        >
           {toastMessage}
         </div>
       )}
@@ -582,13 +614,27 @@ export default function InputWidget({
           ) : inputCount > 0 ? (
             <button
               onClick={() => setMode("viewing")}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-xs text-gray-600 hover:bg-gray-200 transition border border-gray-200 animate-pulse ring-2 ring-blue-400 ring-offset-2"
-              title="Click to view and share feedback"
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-xs transition border animate-pulse ring-2 ring-offset-2 ${
+                lastError
+                  ? "bg-red-100 text-red-700 border-red-300 hover:bg-red-200 ring-red-400"
+                  : "bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 ring-blue-400"
+              }`}
+              title={lastError ? `Save error — click to see details: ${lastError}` : "Click to view and share feedback"}
             >
               {inputCount}
             </button>
           ) : null}
         </div>
+        {lastError && (
+          <button
+            onClick={() => setMode("viewing")}
+            className="max-w-xs text-left rounded-md border border-red-300 bg-red-50 px-2 py-1.5 text-[11px] text-red-800 hover:bg-red-100 shadow-sm"
+            title="Click for details"
+          >
+            <div className="font-semibold">Save failed — kept locally</div>
+            <div className="text-[10px] text-red-600 break-words line-clamp-2">{lastError}</div>
+          </button>
+        )}
         {isShareMode && (
           <a
             href="https://getinput.io"
@@ -674,6 +720,24 @@ export default function InputWidget({
             </button>
           </div>
 
+          {lastError && (
+            <div className="mb-3 flex items-start justify-between gap-2 rounded-md border border-red-300 bg-red-50 px-2.5 py-2 text-xs text-red-900">
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold">Last save failed</div>
+                <div className="mt-0.5 text-[11px] text-red-700 break-words">{lastError}</div>
+                <div className="mt-1 text-[10px] text-red-600">
+                  Items are kept locally — copy the JSON below as a fallback.
+                </div>
+              </div>
+              <button
+                onClick={() => setLastError(null)}
+                className="shrink-0 text-[11px] text-red-500 hover:text-red-700 underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {pendingCount > 0 && (
             <div className="mb-3 flex items-center justify-between rounded-md border border-amber-300 bg-amber-50 px-2.5 py-2 text-xs text-amber-900">
               <span>
@@ -686,6 +750,7 @@ export default function InputWidget({
                     r.pending === 0
                       ? "All sent"
                       : `${r.sent} sent, ${r.pending} still pending`,
+                    r.pending === 0 ? "success" : "error",
                   );
                 }}
                 className="rounded bg-amber-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-amber-500"
