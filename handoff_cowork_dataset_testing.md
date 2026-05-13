@@ -1173,3 +1173,50 @@ Cowork's table from round-2 — updated:
 The chrome-devtools MCP is a game-changer for debugging "the bundle looks right but the page looks wrong." Adding it earlier in the session would have caught the SkyView projection bug in ~2 minutes instead of 3 round-trips with screenshots.
 
 — Terminal Claude · 2026-05-13
+
+---
+
+# Terminal follow-up #7 — Sky view polish · opacity-as-brightness + all 88 IAU constellation stick figures (2026-05-13, commits c36ce3a + 1ae7f78)
+
+After the Sky view bug-fix landed, Derek noted the dots were too big and overlapped too much: *"the stars probably show up too big, btw, they shouldn't overlap so much... maybe seeing them based on their color and slightly bigger, but otherwise opacity?"* Two passes:
+
+## Pass 1 — Opacity as the primary brightness encoding (commit c36ce3a)
+
+Replaced size-as-brightness (radii 1–8 px via ZAxis range) with a points-of-light pattern:
+- **Radius range tightened to 0.9–3.5 px.** Sirius (mag -1.4) ~3 px; mag +6 (naked-eye limit) ~0.9 px. Most stars cluster around 1.5–2.5 px — they read as points of light, not disks.
+- **Per-point opacity 0.32–1.0** mapped from apparent magnitude. Brightest stars are saturated; faint stars near-transparent so they recede into the background.
+
+Dropped Recharts ZAxis in favor of a custom Scatter `shape` function that reads mag from `props.payload`. (The custom-shape pattern works now that the wrapper + projection bugs are fixed — neither was true when I first tried it.)
+
+Verified live via Chrome DevTools: 750 circles, sample radii 1.5–2.5 px, fill-opacity varying ~0.7–0.99 across mag bands.
+
+## Pass 2 — All 88 IAU constellation stick figures (commit 1ae7f78)
+
+Derek: *"any constellations i could see?"* Yes — built the data pipeline:
+
+- **Source:** Stellarium `stellarium-skycultures` repo, `western/index.json` (CC-BY-SA-4.0). The IAU's modern western skyculture — canonical 88-constellation set astronomers use. Each constellation is a list of paths; each path is a sequence of Hipparcos catalog numbers.
+- **Expand offline:** `/tmp/build_constellations.py` reads HYG v4.1 (HIP → RA, Dec) and Stellarium's index.json, emits `prototype/src/data/constellationLines.ts` with 88 constellations × 674 [ra1, dec1, ra2, dec2] segments. Only 6 HIPs missing (faint stars even HYG doesn't catalog). Static module — no runtime fetches.
+- **Render inside the chart:** new `<ConstellationLines />` component that uses Recharts 3.x's `useXAxisScale()` + `useYAxisScale()` hooks to project every (RA, Dec) endpoint to pixel coordinates and renders SVG `<line>` elements at `stroke="#3a4a78"` / opacity 0.55 / strokeWidth 0.7 px. Faint enough to read as background context; not so faint that constellations vanish.
+
+**Recharts 3.x note:** the obvious `<Customized>` API path is **deprecated** in 3.x and no longer passes `xAxisMap`/`yAxisMap` to children — silently renders an empty `<g class="recharts-customized-wrapper">`. The hook-based pattern (`useXAxisScale` / `useYAxisScale`) is the new way to access live chart scales from a child component. Took me one failed deploy to discover this; documenting here for the next Recharts integration.
+
+**Verified live via Chrome DevTools:**
+- 674 `.constellation-lines line` elements with valid pixel coords
+- 750 scatter symbols still rendering correctly underneath
+- Screenshot `screenshots/sky-c2.png` shows recognizable patterns — Big Dipper, Orion, Cassiopeia stick figures all identifiable
+
+## What the Sky view is actually FOR (Derek asked, "how does it connect?")
+
+Honest answer: the Sky view is a credibility moment + back-door exploration, not a math activity in itself. The dataset's math anchor is GM·T8 (right-triangle trig / parallax / "Measure a Star") via the HR diagram. The Sky view with constellations sits in the Explorer back-door step — "after the activity, here's where these 750 measured stars actually live in the sky. There's Orion." It's the moment that turns "I did the trig exercise" into "I'm looking at the actual night sky."
+
+Matches Derek's project memory: *"Explorer is the back door, not the front — guided activities lead; open dataset exploration is the post-activity payoff."*
+
+## Outstanding asks for Cowork (browser-side)
+
+- Vision check on the Sky view at <https://prototype-five-iota.vercel.app/explorer?dataset=stars&type=sky> — does the constellation overlay read as helpful background or visual clutter? Specifically:
+  - Is the line color (`#3a4a78` at 0.55 opacity) at the right contrast vs. the dot brightness?
+  - Should we add constellation NAME labels at centroids? ~88 small text elements, payoff = "oh, that's Orion!" without having to recognize the shape from memory.
+  - Are bright stars (Sirius, Vega) discernible from the background population? If not, the opacity contrast may need more headroom.
+- Should the Sky view be the cold-open default for stars, with HR diagram one click over? Or keep HR as the default (pedagogy anchor) and Sky as one click over (current)? My instinct: keep HR default to preserve the math hook for teachers landing fresh; Sky is the "show me more" payoff.
+
+— Terminal Claude · 2026-05-13
