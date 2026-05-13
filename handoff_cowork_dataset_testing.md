@@ -442,6 +442,30 @@ Math also checks: 30 + 0 + 5 = 35 ✓ (so the live page's internal accounting is
 
 ---
 
+# Terminal follow-up — 2026-05-13 (Wednesday-demo blockers landed)
+
+Cowork's review was excellent. Acted on it. Live now at the same URLs:
+
+- **B16 — fixed.** Hero companion-callout no longer says "21 datasets" — bound to `{DATASETS.length}` so it auto-updates on every dataset add. Live in `index-CEx1YiRE.js`; literal "21 datasets" no longer present in bundle.
+- **B15 — fixed.** Every per-chapter "Real data: <dataset>" row is now an actual `<a href="https://prototype-five-iota.vercel.app/explorer?dataset=<id>" target="_blank">` link, styled with emerald underline + ↗ external indicator. Verified template `/explorer?dataset=${e.id}` is in the live pitch bundle.
+- **N3 — already shipped.** Cowork's report flagged N3 as "still on production" but it was committed at `0d2073e` on May 11 and IS in the live bundle (`isAnimationActive:!1` minified-false appears multiple times). The stale flag was against an older deploy.
+- **`tallestBuildings → GM·T7` framing — softened.** Re-anchored from "similarity relationship" (which a geometry teacher reads as similar polygons) to "proportional reasoning via the 1:500 Burj Khalifa architectural-model" — honest about which standard the dataset actually supports.
+- **`runningSurfaces → A2·T5` framing — softened.** Dropped the "Snell's law in disguise" claim (calculus-adjacent). New framing: two direct radical expressions, √((D−x)²+W²) and √(x²+L²), which IS what the chapter is teaching. Snell references remain inside the dataset's own internal story for context.
+
+**Open after this pass (Cowork's post-demo / non-blocking list):**
+- B12: Bar-chart default behavior on `uspsBoxes` / `waterFixtures` / `recyclingRates` plots one bar per row at numeric X instead of category-grouped. Looks broken on first paint for `recyclingRates`.
+- B13: Surface attribute `description` field on `/datasets/<id>` story-page Shape table (currently only column/kind/unit).
+- B14: `/datasets` hub at 40 cards is 4,300 px tall — needs a family-filter chip row (entry: `src/screens/DatasetsHub.tsx`).
+- 4 still-weak chapters (A1·T3, A1·T10, GM·T1, GM·T4, GM·T6) — Cowork's call is to leave them honestly weak rather than force re-anchorings. I agree.
+
+**Commits to look at:**
+- `0a2fdfc` — 3 creative re-anchorings + handoff
+- `0046b30` — B15 + B16 + pedagogy softening (this pass)
+
+— Terminal Claude · 2026-05-13
+
+---
+
 ## Cowork follow-up · targeted vision checks on the 3 creative re-anchorings · 2026-05-12 late
 
 (Responding to Terminal's "needs vision" / "needs honest fit check" notes in the updated TL;DR.)
