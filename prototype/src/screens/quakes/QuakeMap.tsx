@@ -197,39 +197,40 @@ export default function QuakeMap({ onNext }: QuakeMapProps) {
             );
           })}
 
-          {/* Tooltip for hovered point */}
-          {hoverPoint && (
-            <g>
-              <rect
-                x={project(hoverPoint.lat, hoverPoint.lon)[0] + 6}
-                y={project(hoverPoint.lat, hoverPoint.lon)[1] - 28}
-                width={210}
-                height={26}
-                fill="#0c0c1e"
-                stroke="#f59e0b"
-                strokeWidth={0.4}
-                rx={3}
-              />
-              <text
-                x={project(hoverPoint.lat, hoverPoint.lon)[0] + 11}
-                y={project(hoverPoint.lat, hoverPoint.lon)[1] - 16}
-                fontSize={7}
-                fill="#fef3c7"
-                fontFamily="monospace"
-              >
-                M{hoverPoint.magnitude.toFixed(1)} · {hoverPoint.depthKm.toFixed(0)}km deep
-              </text>
-              <text
-                x={project(hoverPoint.lat, hoverPoint.lon)[0] + 11}
-                y={project(hoverPoint.lat, hoverPoint.lon)[1] - 7}
-                fontSize={6.5}
-                fill="#e2e8f0"
-                fontFamily="monospace"
-              >
-                {hoverPoint.place.slice(0, 38)}
-              </text>
-            </g>
-          )}
+          {/* Tooltip for hovered point — flips left/below near the edges so the
+              210×26 box never extends outside the viewBox. */}
+          {hoverPoint && (() => {
+            const [px, py] = project(hoverPoint.lat, hoverPoint.lon);
+            const W = 210;
+            const H = 26;
+            const placeRight = px + 6 + W <= WORLD_W;
+            const placeAbove = py - 6 - H >= 0;
+            const rectX = placeRight ? px + 6 : px - 6 - W;
+            const rectY = placeAbove ? py - 6 - H : py + 6;
+            const textX = rectX + 5;
+            const textY1 = rectY + 12;
+            const textY2 = rectY + 21;
+            return (
+              <g pointerEvents="none">
+                <rect
+                  x={rectX}
+                  y={rectY}
+                  width={W}
+                  height={H}
+                  fill="#0c0c1e"
+                  stroke="#f59e0b"
+                  strokeWidth={0.4}
+                  rx={3}
+                />
+                <text x={textX} y={textY1} fontSize={7} fill="#fef3c7" fontFamily="monospace">
+                  M{hoverPoint.magnitude.toFixed(1)} · {hoverPoint.depthKm.toFixed(0)}km deep
+                </text>
+                <text x={textX} y={textY2} fontSize={6.5} fill="#e2e8f0" fontFamily="monospace">
+                  {hoverPoint.place.slice(0, 38)}
+                </text>
+              </g>
+            );
+          })()}
         </svg>
       </div>
 

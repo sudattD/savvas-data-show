@@ -1,11 +1,17 @@
 # Testing plan — new walkthroughs + calibrators
 
-**Date**: 2026-05-13
+**Date**: 2026-05-13 (last revised same day, late afternoon)
 **Branch**: `main` (already pushed)
 **Dev URL**: `http://localhost:5173` (`npm run dev` in `prototype/`)
-**Scope**: 5 new walkthroughs, 3 new calibrators, 1 hub page, embeds in 2 existing walkthroughs
+**Scope**: 6 new walkthroughs, 3 new calibrators, 1 hub page, 1 generic chapter tee-up route, embeds in 3 existing walkthroughs
 
-For each route below: open it, perform the click-by-click smoke test, confirm the expected behaviour, and flag anything that looks off (visual, math, copy, console errors). All routes have already been type-checked clean (`npx tsc --noEmit` from `prototype/`) and load 200 OK on the dev server.
+> **Revision note (late 2026-05-13):**
+> - New: generic chapter tee-up at `/c/:anchor` (paired with the artisanal `/c/alg1-t11`). Section 7 below covers it.
+> - Map Earth's Anger tooltip now flips left/below near map edges so it never clips outside the viewBox (verify by hovering quakes in the corners — Aleutians, Tonga, Antarctic ridge).
+> - Built-chapter tee-ups now demote the dataset "Open in Explorer" link to a ghost-styled secondary button (because the guided activity is the recommended path). Verify on `/c/geo-t6`, `/c/alg2-t5`.
+> - Voice DNA Act 2 was restructured from `VoicePlay` to `VoiceLadder` + `VowelStep` in a separate session. Not covered by this plan — see `handoff_pre_demo_checklist.md` item 2.
+
+For each route below: open it, perform the click-by-click smoke test, confirm the expected behaviour, and flag anything that looks off (visual, math, copy, console errors). All routes have been type-checked clean (`npx tsc --noEmit` from `prototype/`) and load 200 OK on the dev server.
 
 ---
 
@@ -194,6 +200,39 @@ For each route below: open it, perform the click-by-click smoke test, confirm th
 
 **What to watch for**
 - For the Sun (4.85e-6 pc), distance display switches to AU. That's intentional — parsecs aren't useful at that scale.
+
+---
+
+### 7. `/c/:anchor` — chapter tee-up
+
+Generic landing page for any chapter row clicked from `/chapters`. Sits between the scope-and-sequence map and either the built activity or the raw Explorer.
+
+**Test 7a — built chapter** (`/c/geo-t6` Constellation, `/c/alg2-t5` Kepler, `/c/alg1-t11` Reaction Time)
+
+- Header has chapter eyebrow, activity title, blurb, italic connection line, format chips.
+- "Guided activity — recommended path" section appears with:
+  - On the left (md+): a small dark "MATHEMATICAL MODELING IN 3 ACTS" badge with 1 / 2 / 3 dots in the chapter's tone color.
+  - On the right: activity name, "flagship" chip if applicable, two small Act-preview cards (ACT 1 · NOTICE + ACT 3 · REVEAL) populated from `chapter.design.hook` / `design.reveal`.
+  - A bold dark "Start the activity →" button below.
+- Dataset section title reads "THE DATASET · the activity above uses this — explore here after you finish".
+- Each dataset card has an amber chip reading **"Recommended: do the activity above first"** above the CTAs, and the "Open in Explorer →" button is rendered in the **secondary/ghost** style (white background, slate border) — NOT bold brand-color.
+- For `/c/alg1-t11`, the artisanal Reaction Time page should still load (static route wins). Confirm the textbook-style 3 ACTS badge is full-size (the artisanal version) rather than the small generic one.
+
+**Test 7b — unbuilt chapter** (`/c/alg1-t3` Find Your Slope, `/c/geo-t9` Storm Track)
+
+- No "Start the activity" block. Instead, an amber **"DESIGN BRIEF — ACTIVITY NOT YET BUILT"** section shows Act 1 hook + Act 3 reveal verbatim.
+- Dataset section title reads "THE DATASET" with no "back-door" eyebrow.
+- Each dataset card's "Open in Explorer →" button is rendered as the **primary (bold dark)** style — no amber chip above it.
+- For chapters with multiple datasets (`/c/alg2-t6` Log Trick), all are listed.
+
+**Test 7c — 404** (`/c/nonsense`)
+
+- Renders a "Chapter not found" page with a "← Back to chapters" link.
+
+**Test 7d — links into and out of the tee-up**
+
+- `/chapters` → click any "Open chapter" / "How it fits the data" button → land on `/c/<anchor>`.
+- "← back to all chapters" link in the tee-up header → returns to `/chapters` with the matching row scrolled into view and briefly ring-highlighted.
 
 ---
 

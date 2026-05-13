@@ -118,9 +118,28 @@ export default function HitTheTarget() {
                   <text x={xScale(t.x)} y={H - MARGIN - 18} textAnchor="middle" fontSize="9" fill="#64748B">{t.label}</text>
                 </g>
               ))}
-              {/* Cannon */}
-              <g transform={`translate(${xScale(0)} ${H - MARGIN}) rotate(${-angle})`}>
-                <rect x={-6} y={-3} width={20} height={6} fill="#0E1E33" rx={1} />
+              {/* Cannon — wheeled field gun, barrel rotates with angle */}
+              <g transform={`translate(${xScale(0)} ${H - MARGIN})`}>
+                {/* trail (drag pole behind the carriage) */}
+                <line x1={-2} y1={-3} x2={-16} y2={2} stroke="#475569" strokeWidth={2.5} strokeLinecap="round" />
+                {/* barrel — rotates around its pivot at the carriage axle */}
+                <g transform={`rotate(${-angle})`}>
+                  <rect x={2} y={-3} width={22} height={6} fill="#1F2937" rx={1} />
+                  <rect x={22} y={-4} width={3} height={8} fill="#0F172A" rx={0.5} />
+                  <circle cx={3} cy={0} r={1.4} fill="#475569" />
+                </g>
+                {/* wheel + spokes */}
+                <circle cx={0} cy={-2} r={7} fill="#1F2937" stroke="#0F172A" strokeWidth={1} />
+                <circle cx={0} cy={-2} r={1.5} fill="#94A3B8" />
+                {[0, 60, 120].map((deg) => (
+                  <line
+                    key={deg}
+                    x1={0} y1={-2}
+                    x2={Math.cos((deg * Math.PI) / 180) * 6}
+                    y2={-2 + Math.sin((deg * Math.PI) / 180) * 6}
+                    stroke="#94A3B8" strokeWidth={0.8}
+                  />
+                ))}
               </g>
               {/* Range readout */}
               <text x={xScale(range)} y={H - MARGIN - 28} textAnchor="middle" fontSize="11" fill="#3B82F6" fontFamily="monospace" fontWeight="700">
