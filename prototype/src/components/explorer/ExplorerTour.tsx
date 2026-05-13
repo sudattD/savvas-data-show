@@ -10,13 +10,18 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 
 export type TourStep = {
   title: string;
-  body: string;
+  /** Optional lead paragraph. Pair with `points` for bulleted observations. */
+  body?: string;
+  /** Bulleted observations (2-3 short lines, rendered as a list). */
+  points?: string[];
   /** CSS selector for the element to spotlight. Omit for a centered card. */
   selector?: string;
   /** Optional state mutation when the step opens (switch dataset, change chart, etc.). */
   setup?: () => void;
   /** Override the "Next" button label (used for the final step). */
   cta?: string;
+  /** Eyebrow override (defaults to "Stop N"). Useful for "Dataset 2 of 4". */
+  eyebrow?: string;
 };
 
 type Props = {
@@ -80,10 +85,22 @@ export default function ExplorerTour({ steps, onClose }: Props) {
         style={cardStyle}
         className="absolute w-[340px] bg-surface-raised border-2 border-accent-400 rounded-xl shadow-2xl p-5 pointer-events-auto"
       >
-        <div className="eyebrow text-accent-700 mb-1">{isLast ? 'Last stop' : `Stop ${i + 1}`}</div>
+        <div className="eyebrow text-accent-700 mb-1">
+          {step.eyebrow ?? (isLast ? 'Last stop' : `Stop ${i + 1}`)}
+        </div>
         <h3 className="font-display text-lg font-bold text-brand-900 mb-2 leading-snug">{step.title}</h3>
-        <p className="text-sm text-ink-soft leading-relaxed mb-5">{step.body}</p>
-        <div className="flex items-center justify-between">
+        {step.body && <p className="text-sm text-ink-soft leading-relaxed mb-3">{step.body}</p>}
+        {step.points && step.points.length > 0 && (
+          <ul className="text-sm text-ink-soft leading-relaxed mb-4 space-y-1.5 list-none">
+            {step.points.map((p, idx) => (
+              <li key={idx} className="flex gap-2">
+                <span className="text-accent-500 font-bold mt-px">·</span>
+                <span>{p}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="mt-1 flex items-center justify-between">
           <button
             onClick={() => setI(Math.max(0, i - 1))}
             disabled={isFirst}

@@ -1,10 +1,77 @@
-// Lightweight WebAudio mic helper for the Voice DNA spectrogram.
+// Lightweight WebAudio helpers for the Voice DNA spectrogram.
 
 export interface MicHandle {
   audioCtx: AudioContext;
   analyser: AnalyserNode;
   stream: MediaStream;
   stop: () => void;
+}
+
+export interface PlaybackHandle {
+  audioCtx: AudioContext;
+  analyser: AnalyserNode;
+  source: AudioBufferSourceNode;
+  donePromise: Promise<void>;
+  stop: () => void;
+}
+
+// Decode and play an audio file, routing through an AnalyserNode so the
+// same Spectrogram component can render it just like a live mic feed.
+export async function playAudio(url: string, fftSize = 2048): Promise<PlaybackHandle> {
+  const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const arrayBuffer = await fetch(url).then((r) => r.arrayBuffer());
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  const source = audioCtx.createBufferSource();
+  source.buffer = audioBuffer;
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = fftSize;
+  analyser.smoothingTimeConstant = 0.4;
+  source.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  let resolveDone!: () => void;
+  const donePromise = new Promise<void>((r) => {
+    resolveDone = r;
+  });
+  source.onended = () => resolveDone();
+  source.start();
+  const stop = () => {
+    try {
+      source.stop();
+    } catch {
+      // already stopped
+    }
+    audioCtx.close().catch(() => {});
+  };
+  return { audioCtx, analyser, source, donePromise, stop };
+}
+
+// Render a sequence of FFT frequency frames into an offscreen canvas using
+// the same colormap and layout the live Spectrogram uses. Returns a PNG
+// dataURL. Used for "frozen" snapshots of reference + user recordings.
+export function renderSnapshot(frames: Uint8Array[], W = 480, H = 200): string {
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#0B1B2B';
+  ctx.fillRect(0, 0, W, H);
+  if (frames.length === 0) return canvas.toDataURL();
+  const bins = frames[0].length;
+  const binsToShow = Math.floor(bins * 0.45);
+  const colW = W / frames.length;
+  for (let f = 0; f < frames.length; f++) {
+    const x = Math.floor(f * colW);
+    const data = frames[f];
+    const yStep = H / binsToShow;
+    for (let i = 0; i < binsToShow; i++) {
+      const v = data[i];
+      const [r, g, b] = magnitudeToColor(v);
+      ctx.fillStyle = `rgb(${r},${g},${b})`;
+      const y = H - (i + 1) * yStep;
+      ctx.fillRect(x, y, Math.max(1, Math.ceil(colW) + 0.5), yStep + 1);
+    }
+  }
+  return canvas.toDataURL('image/png');
 }
 
 export async function startMic(fftSize = 2048): Promise<MicHandle> {

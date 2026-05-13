@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import HostBubble from '../../components/HostBubble';
 import type { IdentifyState } from './ReactionIdentify';
 import type { ReactionTrials } from './ReactionPlay';
@@ -240,37 +241,146 @@ export default function ReactionInterpret({ identify, trials, onRestart }: Inter
         </div>
       </div>
 
-      {/* Card */}
+      {/* ─── End of Experience · wrap + three doors out ──────────────────── */}
+      <EndOfExperience
+        v={v}
+        a={a}
+        trialsCount={trials.visual.length}
+        onRestart={onRestart}
+        submitted={submitted}
+        setSubmitted={setSubmitted}
+      />
+    </div>
+  );
+}
+
+function describeFit(median: number, benchmark: number): { tone: 'faster' | 'on' | 'slower'; phrase: string } {
+  const gap = benchmark - median;
+  if (gap >= 30) return { tone: 'faster', phrase: `faster than typical by ${gap} ms` };
+  if (gap <= -30) return { tone: 'slower', phrase: `slower than typical by ${-gap} ms` };
+  return { tone: 'on', phrase: 'right on the published benchmark' };
+}
+
+interface EndProps {
+  v: ReturnType<typeof summarize>;
+  a: ReturnType<typeof summarize>;
+  trialsCount: number;
+  onRestart: () => void;
+  submitted: boolean;
+  setSubmitted: (v: boolean) => void;
+}
+
+function EndOfExperience({ v, a, trialsCount, onRestart, submitted, setSubmitted }: EndProps) {
+  const visualFit = describeFit(v.median, CANONICAL_VISUAL);
+  const audioFit = describeFit(a.median, CANONICAL_AUDIO);
+
+  const toneColor: Record<'faster' | 'on' | 'slower', string> = {
+    faster: 'text-emerald-200',
+    on: 'text-accent-300',
+    slower: 'text-rose-200',
+  };
+
+  return (
+    <section aria-label="End of experience" className="space-y-4">
+      {/* Data card — what you did, in one card */}
       <div className="bg-gradient-to-br from-violet-700 to-brand-900 rounded-2xl shadow-editorial p-6 text-white">
         <div className="flex items-start gap-4">
           <div className="shrink-0 w-16 h-16 rounded-md bg-white/15 backdrop-blur grid place-items-center font-display text-2xl font-bold">
             11
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="eyebrow text-violet-200 mb-1">DATA CARD · ALG 1 · TOPIC 11 · STATISTICS</div>
             <h3 className="font-display text-2xl font-bold mb-1">Reaction Time Arena</h3>
             <p className="text-sm text-violet-100 mb-4">
-              You generated two datasets of {trials.visual.length} trials each. Visual median {v.median} ms; audio median {a.median} ms.
+              You generated two datasets of {trialsCount} trials each. Visual median {v.median} ms; audio median {a.median} ms.
             </p>
+
+            {/* Where you fit — one honest sentence per sense */}
+            <div className="grid sm:grid-cols-2 gap-3 mb-5">
+              <FitCard sense="With your eyes" value={v.median} benchmark={CANONICAL_VISUAL} phrase={visualFit.phrase} toneCls={toneColor[visualFit.tone]} />
+              <FitCard sense="With your ears" value={a.median} benchmark={CANONICAL_AUDIO} phrase={audioFit.phrase} toneCls={toneColor[audioFit.tone]} />
+            </div>
+
             <div className="flex flex-wrap gap-2">
               {!submitted ? (
-                <button onClick={() => setSubmitted(true)} className="px-4 py-2 rounded-md bg-white text-violet-800 font-semibold hover:bg-violet-50 transition">
+                <button onClick={() => setSubmitted(true)} className="px-4 py-2 rounded-md bg-white text-violet-800 font-semibold hover:bg-violet-50 transition text-sm">
                   Save to my notebook
                 </button>
               ) : (
-                <div className="px-4 py-2 rounded-md bg-emerald-500 text-white font-semibold">
+                <div className="px-4 py-2 rounded-md bg-emerald-500 text-white font-semibold text-sm">
                   Saved to notebook
                 </div>
               )}
-              <button onClick={onRestart} className="px-4 py-2 rounded-md bg-white/10 backdrop-blur text-white font-semibold hover:bg-white/20 transition border border-white/20">
-                Start over
+              <button onClick={onRestart} className="px-4 py-2 rounded-md bg-white/10 backdrop-blur text-white font-semibold hover:bg-white/20 transition border border-white/20 text-sm">
+                Run again
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Three doors out — no quiz, just agency */}
+      <div>
+        <div className="eyebrow text-ink-muted mb-3">Where to go next</div>
+        <div className="grid md:grid-cols-3 gap-3">
+          <DoorOut
+            to="/c/alg1-t11"
+            kicker="Back to your chapter"
+            title="Topic 11 · Statistics"
+            body="Return to the textbook landing. Retake the Arena, or move on to the next lesson with your data in hand."
+          />
+          <DoorOut
+            to="/explorer?dataset=marathon"
+            kicker="Apply this thinking"
+            title="Boston Marathon finishers"
+            body={`Compare two distributions at scale: 32,000 runners, men vs women. The same compare-the-medians move you just used on yourself.`}
+          />
+          <DoorOut
+            to="/c/alg1-t11"
+            kicker="Or — try another 3-Acts"
+            title="Wind Power Curve"
+            body="Algebra 1 · Topic 8 · Quadratic Functions. Same Mathematical-Modeling-in-3-Acts shape, different math, real wind-turbine data."
+            disabled
+            note="Tee-up coming soon"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FitCard({ sense, value, benchmark, phrase, toneCls }: { sense: string; value: number; benchmark: number; phrase: string; toneCls: string }) {
+  return (
+    <div className="bg-white/10 backdrop-blur rounded-md p-3 border border-white/15">
+      <div className="text-[10px] eyebrow text-violet-200 mb-1">{sense}</div>
+      <div className="flex items-baseline gap-2">
+        <span className="font-display text-2xl font-bold tabular-nums">{value}</span>
+        <span className="text-xs text-violet-200">ms</span>
+        <span className="text-[10px] font-mono text-violet-300 ml-auto">vs {benchmark}</span>
+      </div>
+      <div className={`text-xs mt-1 ${toneCls}`}>{phrase}</div>
     </div>
   );
+}
+
+function DoorOut({ to, kicker, title, body, disabled, note }: { to: string; kicker: string; title: string; body: string; disabled?: boolean; note?: string }) {
+  const className = `block bg-surface-raised border border-surface-line rounded-lg p-4 h-full transition ${
+    disabled ? 'opacity-60 cursor-not-allowed' : 'hover:border-violet-400 hover:bg-violet-50/30 hover:shadow-sm'
+  }`;
+  const inner = (
+    <>
+      <div className="eyebrow text-[10px] text-violet-700 mb-1">{kicker}</div>
+      <div className="font-display text-base font-bold text-brand-900 mb-1.5">{title}</div>
+      <p className="text-xs text-ink-soft leading-relaxed">{body}</p>
+      {note && <div className="text-[10px] eyebrow text-ink-muted mt-2 italic">{note}</div>}
+      {!disabled && (
+        <div className="text-xs text-violet-700 mt-3 font-semibold inline-flex items-center gap-1">
+          Go <span aria-hidden>→</span>
+        </div>
+      )}
+    </>
+  );
+  return disabled ? <div className={className}>{inner}</div> : <Link to={to} className={className}>{inner}</Link>;
 }
 
 function Stat({ label, value, unit, tone, sub }: { label: string; value: string; unit: string; tone: 'amber' | 'emerald' | 'rose' | 'brand'; sub?: string }) {

@@ -1,5 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import HostBubble from '../../components/HostBubble';
+import Spectrogram from '../../components/Spectrogram';
+import { playAudio, renderSnapshot } from '../../lib/audio';
+import type { PlaybackHandle } from '../../lib/audio';
+import { VOWEL_LADDER } from '../../data/vowels';
+import type { VowelRef } from '../../data/vowels';
 
 interface VoiceWonderProps {
   onStart: () => void;
@@ -8,6 +13,10 @@ interface VoiceWonderProps {
 export default function VoiceWonder({ onStart }: VoiceWonderProps) {
   const [notice, setNotice] = useState('');
   const [prediction, setPrediction] = useState('');
+
+  // Use the AH and EE references — most dramatic contrast (F1/F2 gap).
+  const ahVowel = VOWEL_LADDER[0];
+  const eeVowel = VOWEL_LADDER[1];
 
   return (
     <div className="space-y-6">
@@ -27,22 +36,29 @@ export default function VoiceWonder({ onStart }: VoiceWonderProps) {
       </div>
 
       <HostBubble accent="purple" name="Sami">
-        Two people just said <em>"aaa."</em> Their voices made these pictures.
-        Take ten seconds — what jumps out? Then we'll turn on the mic and
-        compare yours.
+        Here's the same person making two different sounds. Each sound makes a
+        picture — that picture is called a <strong>spectrogram</strong>. Play
+        them and watch. Time runs left-to-right; high notes go up, low notes go
+        down; brighter means louder.
       </HostBubble>
 
-      <TwoVoicesTeaser />
+      <div className="grid sm:grid-cols-2 gap-4">
+        <ReferenceCard vowel={ahVowel} annotation="Two bright bands, close together." />
+        <ReferenceCard vowel={eeVowel} annotation="One low band, one much higher — big gap." />
+      </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
         <div>
           <label className="text-sm font-semibold text-ink block mb-1.5">
-            What do you notice? <span className="text-[10px] text-slate-500 italic font-normal">(one line is fine)</span>
+            What do you notice?{' '}
+            <span className="text-[10px] text-slate-500 italic font-normal">
+              (one line is fine)
+            </span>
           </label>
           <textarea
             value={notice}
             onChange={(e) => setNotice(e.target.value)}
-            placeholder="e.g. Both have stripes, but Voice A's are closer together."
+            placeholder='e.g. "AH" has two stripes close together; "EE" has one way up high.'
             className="w-full p-3 rounded-md border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-sm resize-none"
             rows={2}
           />
@@ -53,15 +69,16 @@ export default function VoiceWonder({ onStart }: VoiceWonderProps) {
             TODAY'S QUESTION
           </div>
           <div className="text-sm font-semibold text-ink mb-3">
-            Will your voice look the same every time you say the same vowel?
+            If you say <em>"AAAH"</em>, will your picture look like theirs?
           </div>
           <label className="text-xs font-semibold text-slate-700 block mb-1.5">
-            Predict before you test <span className="text-[10px] text-slate-500 italic font-normal">(optional)</span>
+            Predict before you test{' '}
+            <span className="text-[10px] text-slate-500 italic font-normal">(optional)</span>
           </label>
           <input
             value={prediction}
             onChange={(e) => setPrediction(e.target.value)}
-            placeholder="e.g. Same shape every time. Different vowels will look different."
+            placeholder='e.g. "Same shape, but my voice has its own signature on top."'
             className="w-full px-3 py-2 rounded-md border border-slate-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-100 outline-none text-sm"
           />
         </div>
@@ -78,77 +95,95 @@ export default function VoiceWonder({ onStart }: VoiceWonderProps) {
           Turn on the mic →
         </button>
       </div>
+
+      <div className="text-[10px] text-slate-400 text-center pt-2">
+        Reference vowel recordings by Denelson83, via Wikimedia Commons, CC&nbsp;BY-SA&nbsp;3.0.
+      </div>
     </div>
   );
 }
 
-// Stylized side-by-side spectrograms for Voice A and Voice B saying "aaa".
-// Visual approximation — meant to show formant bands and harmonic stacks
-// differ between voices. Not a real recording — explicitly labeled as
-// illustrative.
-function TwoVoicesTeaser() {
-  return (
-    <div className="grid sm:grid-cols-2 gap-3">
-      <Spectrogram label="Voice A (higher pitch)" tone="violet" formants={[12, 26, 44]} formantStrength={0.85} />
-      <Spectrogram label="Voice B (lower pitch)" tone="rose" formants={[15, 32, 50]} formantStrength={0.7} />
-    </div>
-  );
-}
+function ReferenceCard({ vowel, annotation }: { vowel: VowelRef; annotation: string }) {
+  const [playback, setPlayback] = useState<PlaybackHandle | null>(null);
+  const [snapshot, setSnapshot] = useState<string | null>(null);
+  const framesRef = useRef<Uint8Array[]>([]);
 
-function Spectrogram({ label, tone, formants, formantStrength }: { label: string; tone: 'violet' | 'rose'; formants: number[]; formantStrength: number }) {
-  const W = 320;
-  const H = 130;
-  const cols = 80;
-  const rows = 60;
-  const cellW = W / cols;
-  const cellH = H / rows;
+  useEffect(() => {
+    return () => {
+      playback?.stop();
+    };
+  }, [playback]);
 
-  const palette = tone === 'violet'
-    ? ['#FAF5FF', '#E9D5FF', '#C084FC', '#9333EA', '#581C87']
-    : ['#FFF1F2', '#FECDD3', '#FB7185', '#E11D48', '#881337'];
-
-  // Build a grid of energy values. Energy is high near formant rows and at
-  // harmonic columns. Falls off otherwise. Add noise for texture.
-  const cells: Array<{ x: number; y: number; energy: number }> = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      // Distance to nearest formant (low = bright)
-      const dF = Math.min(...formants.map((f) => Math.abs(r - (rows - f))));
-      const formantBoost = Math.max(0, 1 - dF / 4) * formantStrength;
-      // Harmonic stack: bright every baseFreq frames horizontally during the vowel
-      const harmonic = (c % Math.max(2, Math.round(cellW * 4))) === 0 ? 0.15 : 0;
-      // Vowel window: only sustain in middle 60% of time
-      const window = c > cols * 0.15 && c < cols * 0.85 ? 1 : 0.2;
-      // Random texture
-      const noise = Math.random() * 0.1;
-      const energy = (formantBoost + harmonic + noise) * window;
-      cells.push({ x: c * cellW, y: r * cellH, energy });
-    }
-  }
-
-  // Bin energy into palette steps
-  const ramp = (e: number) => {
-    const i = Math.min(palette.length - 1, Math.max(0, Math.floor(e * palette.length)));
-    return palette[i];
+  const play = async () => {
+    playback?.stop();
+    framesRef.current = [];
+    setSnapshot(null);
+    const handle = await playAudio(vowel.audioUrl, 2048);
+    setPlayback(handle);
+    handle.donePromise.then(() => {
+      const snap = renderSnapshot(framesRef.current);
+      setSnapshot(snap);
+      setPlayback((p) => (p === handle ? null : p));
+      try {
+        handle.audioCtx.close();
+      } catch {
+        // already closed
+      }
+    });
   };
 
+  const onFrame = (data: Uint8Array) => {
+    framesRef.current.push(new Uint8Array(data));
+  };
+
+  const isPlaying = playback !== null;
+  const hasSnap = snapshot !== null;
+
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-3">
-      <div className="text-[11px] font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
-        <span>{label}</span>
-        <span className="text-[9px] font-mono text-slate-400 uppercase tracking-wider">illustrative</span>
+    <div className="bg-white rounded-2xl border border-slate-200 p-3">
+      <div className="flex items-baseline justify-between mb-2">
+        <div className="flex items-baseline gap-2">
+          <span className="font-display text-2xl font-black text-ink">{vowel.letter}</span>
+          <span className="text-xs text-slate-500">
+            as in "{vowel.exampleWord}"
+          </span>
+        </div>
+        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+          {vowel.ipa}
+        </span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ background: palette[0] }}>
-        {cells.map((c, i) => (
-          <rect key={i} x={c.x} y={c.y} width={cellW + 0.5} height={cellH + 0.5} fill={ramp(c.energy)} />
-        ))}
-        {/* Axis labels */}
-        <text x={4} y={H - 4} fontSize="8" fontFamily="monospace" fill="#64748B">time →</text>
-        <text x={W - 4} y={H - 4} fontSize="8" fontFamily="monospace" fill="#64748B" textAnchor="end">{label.includes('higher') ? '↑ higher pitch' : '↑ frequency'}</text>
-      </svg>
-      <div className="text-[10px] text-slate-500 mt-1.5 leading-snug">
-        Horizontal stripes = formants (resonant frequencies of your throat). Different shape per person — and per vowel.
-      </div>
+
+      {isPlaying ? (
+        <Spectrogram
+          analyser={playback!.analyser}
+          height={160}
+          scrollSpeed={3}
+          onFrame={onFrame}
+        />
+      ) : hasSnap ? (
+        <img
+          src={snapshot!}
+          alt={`Spectrogram of ${vowel.letter}`}
+          className="w-full rounded-xl border border-slate-800"
+          style={{ height: 160, objectFit: 'cover' }}
+        />
+      ) : (
+        <div
+          className="w-full rounded-xl border border-slate-800 bg-[#0B1B2B] grid place-items-center text-slate-400 text-xs font-mono"
+          style={{ height: 160 }}
+        >
+          Press play to see this vowel
+        </div>
+      )}
+
+      <button
+        onClick={play}
+        disabled={isPlaying}
+        className="w-full mt-2.5 px-4 py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 font-semibold text-sm hover:bg-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+      >
+        {isPlaying ? 'Playing…' : hasSnap ? '▶ Play again' : `▶ Hear "${vowel.letter}"`}
+      </button>
+      <div className="text-xs text-slate-600 mt-2 leading-snug">{annotation}</div>
     </div>
   );
 }

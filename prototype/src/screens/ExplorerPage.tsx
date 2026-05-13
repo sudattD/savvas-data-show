@@ -185,45 +185,71 @@ export default function ExplorerPage() {
     setSearchParams(next, { replace: true });
   };
 
+  // Four-stop dataset sampler + a final hand-off. Each dataset stop switches
+  // the explorer to a deliberately different chart type so the user sees the
+  // range of what the library does: scatter on log-Y, geographic map,
+  // distribution histogram, celestial sky chart.
   const tourSteps: TourStep[] = [
     {
-      title: 'A quick tour of the Explorer',
-      body: "Six stops, about ninety seconds. You'll meet one dataset closely, then we'll switch to a second so you can see the breadth. Skip whenever you want to take over.",
+      eyebrow: 'Dataset 1 of 4 · Scatter, log-Y',
+      title: "Moore's Law",
+      points: [
+        '1971: 2,300 transistors on a chip. 2023: ~100 billion.',
+        'A straight diagonal on a log-Y scale = exponential growth.',
+        'Slope ≈ doubles every two years — Gordon Moore, 1965.',
+      ],
       setup: () => {
         if (datasetId !== 'moore') handleDatasetChange('moore');
       },
     },
     {
-      title: 'Each dot is one real thing',
-      selector: '[data-tour="chart"]',
-      body: "This is Moore's Law: every microprocessor ever made, plotted by year and transistor count. The line shoots upward because the Y-axis is logarithmic — each gridline is 10×.",
-    },
-    {
-      title: 'Reshape the view from up here',
-      selector: '[data-tour="toolbar"]',
-      body: 'These controls swap the chart type, change which columns map to X and Y, color by a category, or flip between linear and log scales. You can break things — refresh fixes everything.',
-    },
-    {
-      title: 'Filters thin the data',
-      selector: '[data-tour="filters"]',
-      body: 'Toggle a manufacturer off and watch the chart shrink. Drag a numeric range slider to keep only a slice. The whole chart, stats, and table redraw together.',
-    },
-    {
-      title: 'The numbers update live',
-      selector: '[data-tour="stats"]',
-      body: 'As you filter, mean, median, range, and correlations track what you can see. Useful when your eye says "looks like a trend" — the stats say whether it really is one.',
-    },
-    {
-      title: 'Different dataset, same controls',
-      selector: '[data-tour="picker"]',
-      body: 'There are 30-plus datasets in the library. Some are timelines, some are geographic, some are tiny. We just switched to global earthquakes so you can see the map view.',
+      eyebrow: 'Dataset 2 of 4 · Map',
+      title: 'Global earthquakes',
+      points: [
+        'Every magnitude-4.5+ quake from the past 30 days.',
+        'The Ring of Fire emerges without anyone naming it.',
+        'Dot size = magnitude. Click any dot for depth and time.',
+      ],
       setup: () => {
         if (datasetId !== 'earthquakes') handleDatasetChange('earthquakes');
       },
     },
     {
-      title: "You've got the keys",
-      body: 'Pick any dataset from the dropdown, ask your own question, and see what the data actually says. If you get stuck, the chapters page links datasets to lessons.',
+      eyebrow: 'Dataset 3 of 4 · Histogram',
+      title: 'Boston Marathon finishers',
+      points: [
+        '~26,000 finishers, 2023 race.',
+        'Right-skewed bell — fast runners thin out on the right.',
+        'Watch for clumps at round times — humans push to beat 4:00.',
+      ],
+      setup: () => {
+        if (datasetId !== 'marathon') handleDatasetChange('marathon');
+        setConfig((c) => ({
+          ...c,
+          type: 'histogram',
+          xKey: 'officialTime',
+          yKey: null,
+          colorKey: null,
+        }));
+      },
+    },
+    {
+      eyebrow: 'Dataset 4 of 4 · Sky chart',
+      title: 'The brightest stars in the sky',
+      points: [
+        '~250 naked-eye stars plotted on the celestial sphere.',
+        'Color = spectral class. Blue = hot, red = cool.',
+        'Dot size = apparent brightness from Earth.',
+      ],
+      setup: () => {
+        if (datasetId !== 'stars') handleDatasetChange('stars');
+        setConfig((c) => ({ ...c, type: 'sky' }));
+      },
+    },
+    {
+      title: "Now pick your own",
+      selector: '[data-tour="picker"]',
+      body: "30-plus datasets live in this dropdown — NOAA, NASA, World Bank, the BAA, Wikipedia. Pick whichever pulls you in and ask your own question.",
       cta: 'Start exploring →',
     },
   ];

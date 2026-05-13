@@ -307,17 +307,26 @@ function ChapterRow({ entry, viewMode }: { entry: ChapterEntry; viewMode: ViewMo
               <span aria-hidden>→</span>
             </Link>
           )}
-          {datasetObjs.map((d) => (
+          {!isBuilt && datasetObjs.length > 0 && (
             <Link
-              key={d.id}
-              to={`/explorer?dataset=${d.id}`}
-              className="inline-flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-md bg-surface-raised border border-surface-line text-ink-soft text-xs font-semibold hover:bg-surface-subtle hover:text-brand-700 hover:border-brand-300 transition"
-              title={`Open the explorer with the ${d.name} dataset`}
+              to={`/c/${chapterAnchorId(entry)}`}
+              className="inline-flex items-center justify-between gap-1.5 px-3 py-2 rounded-md bg-brand-900 text-white text-sm font-semibold hover:bg-brand-700 transition shadow-sm"
+              title="See how this chapter connects to its dataset, then open the Explorer"
             >
-              <span className="truncate">Explore {d.name}</span>
+              <span>Open chapter</span>
+              <span aria-hidden>→</span>
+            </Link>
+          )}
+          {isBuilt && datasetObjs.length > 0 && (
+            <Link
+              to={`/c/${chapterAnchorId(entry)}`}
+              className="inline-flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-md bg-surface-raised border border-surface-line text-ink-soft text-xs font-semibold hover:bg-surface-subtle hover:text-brand-700 hover:border-brand-300 transition"
+              title="See how this chapter connects to its dataset"
+            >
+              <span className="truncate">How it fits the data</span>
               <span aria-hidden className="shrink-0">→</span>
             </Link>
-          ))}
+          )}
           {videoUrl && (
             <a
               href={videoUrl}
