@@ -163,13 +163,13 @@ export const CHAPTERS: ChapterEntry[] = [
   },
   {
     course: 'algebra1', topic: 7, topicName: 'Polynomials and Factoring',
-    activity: 'Where Does the Curve Cross Zero?',
-    blurb: 'Real cubic-shaped data; the roots are physical events — cut-in wind, closest asteroid approach.',
-    connection: "Roots aren't abstractions — they're the moment something turns on, lands, or crosses.",
-    format: ['CDS'], datasets: ['wind', 'neo'],
+    activity: 'Find the Real Roots',
+    blurb: 'Three short scenarios, each modeled by a polynomial — a stuntwoman\'s jump, a startup\'s quarterly profit, a national park\'s deer population. Factor each. Every root is a moment that actually happened.',
+    connection: "Factoring tells you the inputs that make a polynomial zero. The chapter teaches the method; the activity makes the answer mean something specific.",
+    format: ['SIM'], datasets: [],
     design: {
-      hook: "Pick a curve: a wind turbine's power crosses zero at cut-in speed; an asteroid's distance crosses zero at fly-by.",
-      reveal: 'Factor the polynomial. The roots are physical events — cut-in wind, closest approach. Math meets the world.',
+      hook: 'Three scenarios. (1) A stuntwoman launches off a ramp; h(t) is quadratic. (2) A startup\'s profit by quarter is cubic — three sign changes in three years. (3) A deer population is quartic — two culls, two recoveries. Each polynomial is given to you in expanded form.',
+      reveal: 'Factor each polynomial. The roots have names: when the stunt cleared the ramp and when she hit the airbag; the quarter the startup broke even and the quarter it relapsed; the year the herd crashed and the year it recovered. Coefficients are tuned so the factoring is clean — the events behind them are not.',
     },
   },
   {
@@ -212,12 +212,12 @@ export const CHAPTERS: ChapterEntry[] = [
   {
     course: 'algebra1', topic: 10, topicName: 'Working with Functions',
     activity: 'Function Fingerprint',
-    blurb: "A song is a function. Spotify reduces it to (danceability, energy, valence, tempo) — each axis IS a function of the audio.",
-    connection: 'Functions take inputs to outputs — students see this for music they love.',
+    blurb: 'Spotify exposes four functions of any song: f(audio)=danceability, g(audio)=energy, h(audio)=valence, k(audio)=tempo. Evaluate each on your song. Then transform — what does doubling the tempo do to each?',
+    connection: 'Function notation, evaluation, and transformations — the chapter\'s core moves — done on real audio. Each Spotify feature IS a function; the chapter teaches you to read and bend them.',
     format: ['IMP', 'CDS'], datasets: ['spotify'],
     design: {
-      hook: 'A song is a function: time → pressure wave. Spotify reduces it to four numbers (danceability, energy, valence, tempo). Bring your own song in.',
-      reveal: 'See your song placed in the feature space. Its three nearest neighbors are songs you have probably never heard — but should.',
+      hook: 'A song is a function: time → pressure wave. Spotify exposes four more functions of the same song: f(audio) returns danceability, g(audio) returns energy, and so on. Bring your own song in and read off f, g, h, k.',
+      reveal: 'Transform the input. Pitch it up an octave: what does that do to energy? Slow it to 0.75×: which functions change, which stay the same? Each Spotify feature responds differently to the same transformation — the chapter\'s vocabulary (shift, stretch, reflect) describes what you observe.',
     },
   },
   {
@@ -244,18 +244,18 @@ export const CHAPTERS: ChapterEntry[] = [
   {
     course: 'geometry', topic: 1, topicName: 'Foundations of Geometry',
     activity: "Map Earth's Anger",
-    blurb: "USGS earthquake feed for the past week — plot lat/long on a world map. The Ring of Fire emerges.",
-    connection: 'Coordinates as the foundation of geometric description.',
+    blurb: 'Real USGS quakes plotted as points on a world map. Use the chapter\'s foundational vocabulary — point, line, distance, betweenness — to describe the Ring of Fire as geometry, not just a heatmap.',
+    connection: 'The chapter\'s foundational primitives (point, line segment, distance, betweenness, collinearity) earn their keep when you apply them to real locations. Coordinates make foundational geometry concrete.',
     format: ['CDS'], datasets: ['earthquakes'],
     route: '/map-earths-anger',
     teacher: {
-      objective: 'Students will plot real (lat, lon) coordinates for hundreds of weekly earthquakes on a world map, observe and describe the curve-shaped clustering that emerges, and identify the Pacific Ring of Fire as a geometric pattern produced by physical structure.',
+      objective: 'Students will plot real (lat, lon) points for hundreds of weekly earthquakes, then use the chapter\'s foundational vocabulary — point as location, distance between two points, segment, betweenness, collinearity — to describe the Ring of Fire pattern with geometric precision rather than informal language.',
       standards: ['HSG-CO.A.1', 'HSG-GPE.B.7', 'HSN-Q.A.1', 'HSS-ID.B.6a'],
       minutes: 20,
       discussion: [
-        'Where do quakes cluster, and why those places? What stops them from clustering anywhere else?',
+        'Pick two quakes in one cluster. What is the distance between them? Now pick a third quake — is it between them, off the line, or roughly collinear?',
+        'A "line" of quakes along a coast is not exactly straight. What\'s the precise geometric word for the curve you see, and how would the chapter\'s definitions name it?',
         'If quake locations were random, what would the map look like? In what specific ways is what you see different from random?',
-        'Pick one cluster and describe its shape with one geometry word — a line? an arc? a band? What does that shape tell you physically?',
       ],
     },
   },
