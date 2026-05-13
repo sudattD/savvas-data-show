@@ -4,7 +4,7 @@
 // surface colour when colour attribute is spectClass.
 
 import { useMemo } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
 import { categoryColor } from './ColorScale';
 
@@ -24,18 +24,26 @@ const STELLAR_COLOR: Record<string, string> = {
   M: '#ffcc6f',
 };
 
-// Apparent magnitude → Recharts ZAxis z-value. Lower mag = brighter = larger.
-// Range chosen so faintest naked-eye (mag +6) maps to ~1, Sirius (mag -1.4)
-// maps to ~100. Recharts then scales z through the range prop into px²-area.
-function magToZ(mag: number): number {
-  const z = 100 - (mag + 1.5) * (99 / 7.5);
-  return Math.max(1, Math.min(100, z));
+// Apparent magnitude → dot radius (px) and opacity (0–1). A real night sky
+// reads as points of light of varying brightness, not blobs of varying size.
+// We use OPACITY as the primary brightness encoding (bright stars saturated,
+// faint stars near-transparent) with a small radius bump for the very brightest
+// few. Mag scale is logarithmic and inverted: Sirius -1.4, Vega 0.0, naked-eye
+// limit ~+6.
+function magToRadius(mag: number): number {
+  // Sirius (-1.4) → ~3.0 px, Vega (0.0) → ~2.3 px, mag +3 → ~1.4 px, +6 → ~0.9 px
+  const r = 2.5 - (mag + 1.5) * 0.28;
+  return Math.max(0.9, Math.min(3.5, r));
+}
+function magToOpacity(mag: number): number {
+  // Brightest (-1.5) → 1.0, faintest (+6) → 0.32
+  const o = 1.0 - (mag + 1.5) * 0.09;
+  return Math.max(0.32, Math.min(1.0, o));
 }
 
 interface SkyPoint {
   x: number;
   y: number;
-  z: number;
   mag: number;
   name: string;
   constellation?: string;
@@ -48,7 +56,6 @@ function toPoint(row: Row): SkyPoint {
   return {
     x: Number(row.raHours),
     y: Number(row.decDeg),
-    z: magToZ(mag),
     mag,
     name: String(row.name ?? ''),
     constellation: row.constellation ? String(row.constellation) : undefined,
@@ -122,7 +129,6 @@ export default function SkyView({ rows, colorAttr }: SkyViewProps) {
               style: { textAnchor: 'middle' },
             }}
           />
-          <ZAxis type="number" dataKey="z" range={[6, 240]} />
           <ReferenceLine y={0} stroke="#3a3a55" strokeDasharray="3 5" />
           <Tooltip
             cursor={{ stroke: '#3a3a55', strokeDasharray: '3 3' }}
@@ -149,10 +155,15 @@ export default function SkyView({ rows, colorAttr }: SkyViewProps) {
               name={g.name}
               data={g.points}
               fill={g.color}
-              fillOpacity={0.9}
-              stroke={g.color}
-              strokeOpacity={0.5}
               isAnimationActive={false}
+              shape={(props: any) => {
+                const { cx, cy, fill, payload } = props;
+                if (cx == null || cy == null || Number.isNaN(cx) || Number.isNaN(cy)) return null as any;
+                const mag = Number(payload?.mag ?? 5);
+                const r = magToRadius(mag);
+                const op = magToOpacity(mag);
+                return <circle cx={cx} cy={cy} r={r} fill={fill} fillOpacity={op} />;
+              }}
             />
           ))}
           </ScatterChart>
