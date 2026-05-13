@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import SavvasVideoEmbed from '../components/SavvasVideoEmbed';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { COURSE_TITLE, chaptersForCourse } from '../data/chapters';
@@ -36,10 +36,8 @@ export default function AlignmentPage() {
   const [strengthFilter, setStrengthFilter] = useState<StrengthFilter>('all');
   const [courseFilter, setCourseFilter] = useState<'all' | CourseId>('all');
 
-  const courses: CourseId[] = useMemo(
-    () => courseFilter === 'all' ? ['algebra1', 'geometry', 'algebra2'] : [courseFilter],
-    [courseFilter],
-  );
+  const courses: CourseId[] =
+    courseFilter === 'all' ? ['algebra1', 'geometry', 'algebra2'] : [courseFilter];
 
   const visibleCount = ALIGNMENT.filter((r) => {
     if (courseFilter !== 'all' && r.course !== courseFilter) return false;
@@ -308,6 +306,18 @@ function AlignmentCard({ entry }: { entry: ChapterEntry }) {
     .map((id) => DATASETS.find((d) => d.id === id))
     .filter(Boolean) as { id: string; name: string }[];
 
+  // Pull Common Core HS Math standards from each wired dataset's chapterFit
+  // for this course + topic. Deduplicate across datasets so a chapter wired
+  // to multiple datasets doesn't show the same code twice.
+  const standards: string[] = [];
+  for (const id of a.datasetIds) {
+    const ds = DATASETS.find((d) => d.id === id);
+    const fit = ds?.chapterFits?.find((f) => f.course === entry.course && f.topic === entry.topic);
+    if (fit?.standards) {
+      for (const s of fit.standards) if (!standards.includes(s)) standards.push(s);
+    }
+  }
+
   return (
     <article className="bg-surface-raised border border-surface-line rounded-lg overflow-hidden">
       {/* Header strip */}
@@ -377,6 +387,20 @@ function AlignmentCard({ entry }: { entry: ChapterEntry }) {
               <span className="text-[11px] text-ink-muted italic">No data extension</span>
             )}
           </div>
+
+          {standards.length > 0 && (
+            <div className="mt-3 pt-2 border-t border-emerald-100/60 flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
+              <span className="eyebrow text-emerald-700/80 text-[10px] mr-1">Standards</span>
+              {standards.map((code) => (
+                <span
+                  key={code}
+                  className="font-mono text-[10px] text-emerald-900/80 bg-emerald-100/40 border border-emerald-200/60 px-1.5 py-0.5 rounded"
+                >
+                  {code}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </article>

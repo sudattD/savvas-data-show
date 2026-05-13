@@ -235,7 +235,7 @@ export default function SliderOfLies() {
                     ticks={honestYTicks}
                     stroke="#64748B"
                   />
-                  <Line type="monotone" dataKey="co2" stroke="#10B981" strokeWidth={2.5} dot={false} />
+                  <Line type="monotone" dataKey="co2" stroke="#10B981" strokeWidth={3.5} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

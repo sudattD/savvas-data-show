@@ -221,11 +221,11 @@ export default function CensusInterpret({ identify, onRestart }: InterpretProps)
               </Link>
               {!submitted ? (
                 <button onClick={() => setSubmitted(true)} className="px-4 py-2 rounded-md bg-white/10 backdrop-blur text-white font-semibold hover:bg-white/20 transition border border-white/20">
-                  Submit this finding
+                  Save to my notebook
                 </button>
               ) : (
                 <div className="px-4 py-2 rounded-md bg-emerald-500 text-white font-semibold">
-                  Submitted to class wall
+                  Saved to notebook
                 </div>
               )}
               <button onClick={onRestart} className="px-4 py-2 rounded-md bg-white/10 backdrop-blur text-white font-semibold hover:bg-white/20 transition border border-white/20">
