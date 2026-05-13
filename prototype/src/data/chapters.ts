@@ -387,9 +387,16 @@ export const CHAPTERS: ChapterEntry[] = [
     blurb: '70+ years of Atlantic hurricane data → empirical probabilities. Chance of Cat 4+ in any year? Major hurricane in October?',
     connection: 'Frequency-based probability becomes calculable from real history.',
     format: ['CDS'], datasets: ['hurricanes'],
-    design: {
-      hook: '70+ years of Atlantic hurricane records. How often does a Cat 4+ form? How often does one hit the US?',
-      reveal: 'Count the events, divide by years. Frequency-based probability becomes a calculable answer instead of a guess.',
+    route: '/hurricane-coin',
+    teacher: {
+      objective: 'Students will compute empirical probabilities from real historical data (957 named Atlantic storms across 75 years), distinguishing P(year contains an event of severity X) from P(any individual event is of severity X) — two probabilities derived from the same dataset that answer different questions.',
+      standards: ['HSS-CP.A.1', 'HSS-CP.A.4', 'HSS-IC.A.1', 'HSS-MD.A.4'],
+      minutes: 25,
+      discussion: [
+        'Why is "P(year with Cat 4+)" so much higher than "P(any storm is Cat 4+)" — even though they describe the same data?',
+        'Which probability matters more for an insurance company writing policies for coastal homeowners? Which for a meteorologist deciding which storms to track?',
+        'Empirical probability needs many trials to converge. With only 75 years, how stable are these numbers? What would change if we restricted to the last 25 years?',
+      ],
     },
   },
 
@@ -430,12 +437,19 @@ export const CHAPTERS: ChapterEntry[] = [
   {
     course: 'algebra2', topic: 4, topicName: 'Rational Functions',
     activity: 'Inverse Square',
-    blurb: 'Pick a star. If we moved it twice as far away, how dim would it look? The 1/r² law — plot an absolute-magnitude HR diagram.',
+    blurb: 'Pick a star. Push it farther. Watch the brightness collapse by the distance-factor squared.',
     connection: 'Rational functions describe inverse relationships — distance vs. brightness is the cleanest example.',
     format: ['CDS'], datasets: ['stars'],
-    design: {
-      hook: 'Pick a real star. If we moved it twice as far away, how dim would it look? Three times as far?',
-      reveal: '1/r² law in action. Plot apparent magnitude as a rational function of distance, then build the absolute-magnitude HR diagram for all stars at one fixed distance.',
+    route: '/inverse-square',
+    teacher: {
+      objective: 'Students will pick a real star (Sun, Proxima, Sirius, Betelgeuse, Deneb…), drag a distance multiplier from 0.5× to 10×, and read off the rational function brightness ∝ 1/r² — confirming that the dimming factor equals the distance factor squared.',
+      standards: ['HSF-IF.C.7d', 'HSF-BF.A.1a', 'HSF-IF.B.5', 'HSA-CED.A.2'],
+      minutes: 20,
+      discussion: [
+        'The brightness drops with 1/r² not 1/r. Where does the square come from physically? (Hint: surface area of a sphere.)',
+        'Same 1/r² rule applies to gravity, radio signal strength, and how loud a speaker sounds across a stadium. What\'s the common geometry that makes the same denominator show up everywhere?',
+        'If you wanted a star to look exactly half as bright, by what factor would you push it?',
+      ],
     },
   },
   {

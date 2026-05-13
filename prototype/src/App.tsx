@@ -11,6 +11,8 @@ import KeplersLawPage from './screens/KeplersLawPage';
 import MapEarthsAngerPage from './screens/MapEarthsAngerPage';
 import CalibratorsPage from './screens/CalibratorsPage';
 import DoublingTimePage from './screens/DoublingTimePage';
+import HurricaneCoinPage from './screens/HurricaneCoinPage';
+import InverseSquarePage from './screens/InverseSquarePage';
 import ExplorerPage from './screens/ExplorerPage';
 import DatasetsHub from './screens/datasets/DatasetsHub';
 import DatasetStory from './screens/datasets/DatasetStory';
@@ -67,6 +69,8 @@ export default function App() {
         <Route path="/map-earths-anger" element={<MapEarthsAngerPage />} />
         <Route path="/calibrators" element={<CalibratorsPage />} />
         <Route path="/doubling-time" element={<DoublingTimePage />} />
+        <Route path="/hurricane-coin" element={<HurricaneCoinPage />} />
+        <Route path="/inverse-square" element={<InverseSquarePage />} />
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/chapters" element={<ChaptersPage />} />
         <Route path="/alignment" element={<AlignmentPage />} />

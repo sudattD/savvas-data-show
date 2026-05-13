@@ -1,6 +1,7 @@
 import Masthead from '../components/Masthead';
 import LogAxisLens from '../components/calibrators/LogAxisLens';
 import QuakeEnergyMeter from '../components/calibrators/QuakeEnergyMeter';
+import ParsecRuler from '../components/calibrators/ParsecRuler';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function CalibratorsPage() {
@@ -48,13 +49,26 @@ export default function CalibratorsPage() {
           <QuakeEnergyMeter />
         </section>
 
+        <section className="space-y-2">
+          <header>
+            <div className="text-[10px] font-semibold tracking-widest text-cyan-700">
+              FOR: STARS / EXOPLANETS / ANY ASTRONOMICAL DISTANCE
+            </div>
+            <h2 className="font-display text-xl font-bold text-ink">Parsec Ruler</h2>
+            <p className="text-sm text-slate-600">
+              Climb the cosmic distance ladder. Each rung is the previous one shrunk down.
+            </p>
+          </header>
+          <ParsecRuler />
+        </section>
+
         <section className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-sm text-slate-700 leading-relaxed">
-          <div className="font-semibold text-ink mb-1">What's next on the calibrator list?</div>
+          <div className="font-semibold text-ink mb-1">Calibrator backlog</div>
           <ul className="list-disc pl-5 space-y-1 text-slate-600">
-            <li><strong>Parsec ruler</strong> — stack of AUs growing into a parsec. For stars / exoplanets.</li>
             <li><strong>Decibel comparator</strong> — slider with everyday sounds at each level. For audio / Voice DNA.</li>
-            <li><strong>Doubling-time timer</strong> — set a growth rate, watch the doubling time. For Moore's Law / exponentials.</li>
+            <li><strong>Doubling-time timer</strong> — set a growth rate, watch the doubling time. For exponentials.</li>
             <li><strong>Polygon sum animator</strong> — drag a vertex, watch the (n−2)·180° proof draw itself.</li>
+            <li><strong>Random vs. pattern</strong> — side-by-side "is this random?" before any data activity.</li>
           </ul>
         </section>
       </main>
