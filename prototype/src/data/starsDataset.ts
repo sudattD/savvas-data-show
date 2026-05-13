@@ -864,5 +864,7 @@ export const STARS_DATASET: Dataset = {
     absMag: r.absMag,
     colorIndex: r.colorIndex,
     distancePc: r.distancePc,
+    raHours: r.raHours,
+    decDeg: r.decDeg,
   })),
 };

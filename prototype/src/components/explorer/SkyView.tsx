@@ -1,10 +1,10 @@
-// Dedicated "Sky" chart type for datasets carrying celestial coordinates
-// (raHours 0–24, decDeg -90 to +90). Dark background, dot radius scales with
-// inverse apparent magnitude via Recharts ZAxis (brighter = bigger), stellar-
-// color hues by spectral class. Currently used by the Visible Stars dataset.
+// "Sky" chart type for celestial-coordinate datasets (raHours / decDeg).
+// Dark background, dot radius scales with apparent magnitude via Recharts
+// ZAxis (brighter star = bigger dot), spectral-class hues by stellar
+// surface colour when colour attribute is spectClass.
 
 import { useMemo } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
 import { categoryColor } from './ColorScale';
 
@@ -14,8 +14,6 @@ interface SkyViewProps {
   colorAttr?: Attribute | null;
 }
 
-// Harvard spectral-class → approximate stellar surface colour. Used when the
-// user picks spectClass as the color attribute (the default for stars).
 const STELLAR_COLOR: Record<string, string> = {
   O: '#9bb0ff',
   B: '#aabfff',
@@ -26,22 +24,12 @@ const STELLAR_COLOR: Record<string, string> = {
   M: '#ffcc6f',
 };
 
-// Apparent magnitude → relative dot "z" (Recharts ZAxis size). Lower mag =
-// brighter = larger. We map to z in [1, 100] which Recharts then scales to
-// the pixel-radius range we pass on ZAxis.range.
+// Apparent magnitude → Recharts ZAxis z-value. Lower mag = brighter = larger.
+// Range chosen so faintest naked-eye (mag +6) maps to ~1, Sirius (mag -1.4)
+// maps to ~100. Recharts then scales z through the range prop into px²-area.
 function magToZ(mag: number): number {
-  // mag -1.5 -> 100; mag +6 -> 1
   const z = 100 - (mag + 1.5) * (99 / 7.5);
   return Math.max(1, Math.min(100, z));
-}
-
-function fmtRA(h: number): string {
-  return `${Math.round(h)}h`;
-}
-
-function fmtDec(d: number): string {
-  if (d === 0) return '0°';
-  return d > 0 ? `+${d}°` : `${d}°`;
 }
 
 interface SkyPoint {
@@ -69,9 +57,9 @@ function toPoint(row: Row): SkyPoint {
   };
 }
 
-export default function SkyView({ dataset, rows, colorAttr }: SkyViewProps) {
+export default function SkyView({ rows, colorAttr }: SkyViewProps) {
   const groups = useMemo(() => {
-    if (colorAttr) {
+    if (colorAttr && colorAttr.kind === 'categorical') {
       const bucketsByValue = new Map<string, Row[]>();
       for (const row of rows) {
         const key = String(row[colorAttr.key] ?? 'other');
@@ -92,21 +80,24 @@ export default function SkyView({ dataset, rows, colorAttr }: SkyViewProps) {
   }, [rows, colorAttr]);
 
   return (
-    <div className="w-full h-full bg-[#06060e] rounded">
-      <ResponsiveContainer width="100%" height="100%">
-        <ScatterChart margin={{ top: 16, right: 24, bottom: 36, left: 32 }}>
+    <div className="w-full h-full flex flex-col bg-[#06060e] rounded">
+      <div className="flex-1 min-h-0 relative">
+        <ResponsiveContainer width="100%" height="100%">
+          <ScatterChart margin={{ top: 16, right: 24, bottom: 28, left: 24 }}>
           <CartesianGrid stroke="#1f2240" strokeDasharray="2 4" />
           <XAxis
             type="number"
             dataKey="x"
+            name="RA"
             domain={[0, 24]}
             ticks={[0, 3, 6, 9, 12, 15, 18, 21, 24]}
-            tickFormatter={fmtRA}
-            stroke="#8a8aa8"
+            tickFormatter={(v) => `${v}h`}
+            stroke="#9090b0"
+            tick={{ fill: '#a8a8c0', fontSize: 11 }}
             label={{
-              value: 'Right Ascension (hours, 0 → 24)',
+              value: 'Right Ascension (hours)',
               position: 'insideBottom',
-              offset: -16,
+              offset: -10,
               fill: '#a8a8c0',
               fontSize: 12,
             }}
@@ -115,12 +106,15 @@ export default function SkyView({ dataset, rows, colorAttr }: SkyViewProps) {
           <YAxis
             type="number"
             dataKey="y"
+            name="Dec"
             domain={[-90, 90]}
             ticks={[-90, -60, -30, 0, 30, 60, 90]}
-            tickFormatter={fmtDec}
-            stroke="#8a8aa8"
+            tickFormatter={(v) => (v > 0 ? `+${v}°` : `${v}°`)}
+            stroke="#9090b0"
+            tick={{ fill: '#a8a8c0', fontSize: 11 }}
+            width={48}
             label={{
-              value: 'Declination (degrees)',
+              value: 'Declination',
               angle: -90,
               position: 'insideLeft',
               fill: '#a8a8c0',
@@ -128,57 +122,42 @@ export default function SkyView({ dataset, rows, colorAttr }: SkyViewProps) {
               style: { textAnchor: 'middle' },
             }}
           />
-          {/* ZAxis maps each point's `z` field to a dot-area range in px²,
-              which Recharts converts into circle radius. Range [4, 220] gives
-              roughly 1–8 px radius across mag +6 → -1.5. */}
-          <ZAxis type="number" dataKey="z" range={[4, 220]} />
-          {/* Celestial equator */}
-          <ReferenceLine y={0} stroke="#3a3a55" strokeDasharray="4 4" />
+          <ZAxis type="number" dataKey="z" range={[6, 240]} />
+          <ReferenceLine y={0} stroke="#3a3a55" strokeDasharray="3 5" />
           <Tooltip
-            cursor={false}
+            cursor={{ stroke: '#3a3a55', strokeDasharray: '3 3' }}
             contentStyle={{
               background: '#101020',
               border: '1px solid #2a2a40',
               borderRadius: 6,
-              color: '#e8e8f0',
               fontSize: 12,
+              color: '#e8e8f0',
             }}
             labelStyle={{ color: '#a8a8c0' }}
-            formatter={(value, name, payload) => {
-              if (name === 'x') return [`${Number(value).toFixed(2)} h`, 'RA'];
-              if (name === 'y') return [`${Number(value).toFixed(2)}°`, 'Dec'];
-              if (name === 'z') {
-                const p = payload?.payload as SkyPoint | undefined;
-                return [p ? `${p.mag.toFixed(2)}` : '', 'mag'];
-              }
-              return [value as any, name as any];
-            }}
-            labelFormatter={(_v, payload) => {
-              const p = payload?.[0]?.payload as SkyPoint | undefined;
-              if (!p) return '';
-              const sub = p.constellation
-                ? ` · ${p.constellation}${p.spectralType ? ` · ${p.spectralType}` : ''}`
-                : '';
-              return `${p.name}${sub}`;
+            formatter={(value, name) => {
+              if (name === 'RA') return [`${Number(value).toFixed(2)} h`, 'RA'];
+              if (name === 'Dec') return [`${Number(value).toFixed(2)}°`, 'Dec'];
+              return [String(value), String(name)];
             }}
           />
+          {groups.length > 1 && (
+            <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 11, paddingBottom: 4, color: '#a8a8c0' }} />
+          )}
           {groups.map((g) => (
             <Scatter
               key={g.name}
               name={g.name}
               data={g.points}
               fill={g.color}
-              fillOpacity={0.85}
+              fillOpacity={0.9}
               stroke={g.color}
-              strokeOpacity={0.4}
+              strokeOpacity={0.5}
               isAnimationActive={false}
             />
           ))}
-        </ScatterChart>
-      </ResponsiveContainer>
-      {!dataset.attributes.find((a) => a.key === 'raHours') && (
-        <div className="text-xs text-rose-300 p-2">This dataset lacks celestial coordinates.</div>
-      )}
+          </ScatterChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
