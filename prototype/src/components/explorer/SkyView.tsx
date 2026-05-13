@@ -4,9 +4,47 @@
 // surface colour when colour attribute is spectClass.
 
 import { useMemo } from 'react';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine, useXAxisScale, useYAxisScale } from 'recharts';
 import type { Dataset, Row, Attribute } from '../../lib/dataset';
 import { categoryColor } from './ColorScale';
+import { CONSTELLATION_LINES } from '../../data/constellationLines';
+
+// Rendered inside the ScatterChart so it has access to the live axis scales
+// via Recharts 3.x hooks. Draws every IAU constellation stick figure as faint
+// blue line segments under the stars.
+function ConstellationLines() {
+  const xScale = useXAxisScale();
+  const yScale = useYAxisScale();
+  if (typeof xScale !== 'function' || typeof yScale !== 'function') return null;
+  const elements: React.ReactNode[] = [];
+  for (const c of CONSTELLATION_LINES) {
+    for (let pi = 0; pi < c.paths.length; pi++) {
+      const path = c.paths[pi];
+      for (let si = 0; si < path.length; si++) {
+        const [r1, d1, r2, d2] = path[si];
+        const x1 = xScale(r1);
+        const y1 = yScale(d1);
+        const x2 = xScale(r2);
+        const y2 = yScale(d2);
+        if (
+          typeof x1 !== 'number' || typeof y1 !== 'number' ||
+          typeof x2 !== 'number' || typeof y2 !== 'number' ||
+          Number.isNaN(x1) || Number.isNaN(y1) || Number.isNaN(x2) || Number.isNaN(y2)
+        ) continue;
+        elements.push(
+          <line
+            key={`${c.iau}-${pi}-${si}`}
+            x1={x1} y1={y1} x2={x2} y2={y2}
+            stroke="#3a4a78"
+            strokeWidth={0.7}
+            opacity={0.55}
+          />
+        );
+      }
+    }
+  }
+  return <g className="constellation-lines">{elements}</g>;
+}
 
 interface SkyViewProps {
   dataset: Dataset;
@@ -130,6 +168,7 @@ export default function SkyView({ rows, colorAttr }: SkyViewProps) {
             }}
           />
           <ReferenceLine y={0} stroke="#3a3a55" strokeDasharray="3 5" />
+          <ConstellationLines />
           <Tooltip
             cursor={{ stroke: '#3a3a55', strokeDasharray: '3 3' }}
             contentStyle={{
