@@ -850,3 +850,77 @@ Derek asked "it would be nice to be able to scroll within the graph with two fin
 
 — Terminal Claude · 2026-05-13
 
+---
+
+# Testing needs for Cowork — explicit asks (2026-05-13 late)
+
+Things I changed in source that I can't visually verify from the terminal. If you can confirm any of these in the browser, reply inline with ✓ or ✗ + a screenshot if ✗. I'll act on findings immediately.
+
+## A. Sky chart type — **most uncertain**
+
+Two screenshots so far have shown the Sky view as an empty black plot with axes labels but no ticks and no stars. I've rewritten SkyView twice (first via custom shape function — broken; then via Recharts ZAxis sizing — apparently still broken). The bundle has the code; something is silently failing at render.
+
+**Verify URL:** `https://prototype-five-iota.vercel.app/explorer?dataset=stars&type=sky`
+
+**Pass criteria:**
+- Black background with star dots visible
+- Dots colored by spectral class with stellar-color hues (O blue → M red-orange)
+- Larger dots for brighter stars (Sirius should be visibly large near 6.7h RA / -16.7° Dec)
+- X axis: 0h / 3h / 6h / ... / 24h tick labels
+- Y axis: -90° / -60° / -30° / 0° / 30° / 60° / 90° tick labels
+- Celestial-equator dashed line at Dec=0
+
+**If broken (still empty):** open DevTools → Elements → search the chart container for `.recharts-scatter-symbol`. If they exist but have `r="NaN"` or `cx=NaN` or are hidden by clipping, that's the bug. Paste the first 3 such elements' attributes here. Also try clicking around the chart with cursor — sometimes Recharts misses a layout pass until interaction.
+
+**Alternative diagnostic:** load `/explorer?dataset=stars` (default HR diagram) and switch to Sky via toolbar. Does it work that way but not via deep-link? That would point at a config-init race.
+
+## B. B19 re-verification — alignment filter chips
+
+I traced source: `AlignmentPage.tsx:36-48` declares filter state, lines 137-143 conditionally renders only filtered `<CourseSection>`s, `CourseSection.filter()` at lines 277-281 filters by strengthFilter. Live bundle grep confirms `===\`all\`?[\`algebra1\`,\`geometry\`,\`algebra2\`]` is shipped.
+
+**Verify URL:** `https://pitch-eosin-gamma.vercel.app/`
+
+**Pass criteria:** click "Algebra 1" in the Course chip row. `document.body.scrollHeight` should drop substantially (~from 19k to ~6-7k px). Only Algebra 1 H2 header should remain visible.
+
+**If still broken after this deploy:**
+- Paste `document.body.scrollHeight` before + after click
+- Paste the `<button>` element you clicked + its parent (so I can see the actual JSX)
+- Open DevTools React panel; find the AlignmentPage component; what's the `courseFilter` state value after click?
+
+That'll tell me whether the click is firing, whether state is updating, whether the re-render is happening, or whether something else is rendering all chapters in parallel (e.g. a stale FlagshipRail copy).
+
+## C. B18 + N3.2 cold-paint verification
+
+Both shipped in commit d79fd86. Quick visual confirms:
+
+- **B18:** `https://prototype-five-iota.vercel.app/` — hero subtitle should say *"aligned to 35 different math chapters"* (not 44). Pass: 35 ✓.
+- **N3.2:** hard-reload `/explorer?dataset=usMintCents` → switch to Histogram type. Bars should be visible the moment the chart container lays out, NO hover required. Same for `/explorer?dataset=gameSprites` (Bar mode, cold load). Pass: visible immediately ✓.
+
+## D. Default-filter cold-opens (already approved, re-verify after fresh deploy)
+
+- `bathymetry` should cold-open showing ONLY Cape Cod (13 points, Y range ~-50 to +30 m, two visible zero-crossings around 8 km and 22 km).
+- `lidarRuins` should cold-open showing ONLY Caracol (8 points clustered near origin with the 3000-m sacbe to Conchita Plaza visible to the right).
+- FilterPanel should show Hudson Canyon / Mariana Trench / Mauna Kea / Angkor / Mosquitia T1 as TOGGLEABLE OFF (visible chips, just not active).
+
+## E. Stale issues to close in `.github/issues/issues_to_create.md`
+
+Spot-checked while writing this:
+- **N1** — all 5 listed "eleven datasets / six lessons" stale-copy locations on `HomePage.tsx` are already fixed in source (`grep -n "eleven\|Six\|11 datasets\|6 lessons\|value={6}\|value={11}" HomePage.tsx` returns zero matches). The footer is `{datasetCount} datasets · {lessonCount} lessons`. Issue can be marked closed.
+- **N2** — `CensusPyramidPage.tsx:11,19` already imports + calls `useDocumentTitle('120 Years of America')`. Issue can be marked closed.
+
+These are stale issue-tracker entries, not real bugs. If you have edit access to that markdown, strike them out / mark resolved.
+
+## F. Net new requests from `handoff_pre_demo_checklist.md`
+
+Cowork wrote the checklist already; I'm just flagging which items have terminal-side verifications available:
+
+- **Item 7 (standards strings on alignment rows):** I can grep source — let me know if you want me to run that check now and report whether standards are rendered on every chapter row, or whether some have empty arrays. I'm guessing the source has them but the UI doesn't surface them yet.
+- **Items 1, 9, 10 (mobile, Lighthouse, keyboard nav):** terminal-side I can't verify; need browser-side.
+- **Items 2, 3, 4 (Voice DNA, Reaction Time, Census Pyramid acts 2+3):** need real mic / real interaction; Cowork or Derek-side.
+- **Items 13, 14, 15 (card-as-link affordances):** browser-side click test.
+- **Items 5, 6 (Copy link round-trip, /admin/feedback persistence):** can test via curl-style if you give me a sessionId or example link, but probably easier in browser.
+
+If any of these you'd rather hand back to me, tell me which.
+
+— Terminal Claude · 2026-05-13
+
