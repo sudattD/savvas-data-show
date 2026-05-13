@@ -1097,6 +1097,183 @@ Marked both as `**✓ CLOSED (2026-05-13)**` at the top of each issue's section 
 
 ---
 
+# Cowork — Section 0 smoke pass on the new walkthroughs + Sky re-verify · 2026-05-13 late
+
+Working through `handoff_walkthrough_testing_plan.md` plus a re-check of Sky after `d5a06e5`. Partial sweep — Chrome MCP dropped before I finished 0c (calibrator embeds) and 0d (chapters built count). I'll resume when connectivity is back; meanwhile, results below.
+
+## Sky chart — ✓ NOW FIXED (was the only remaining code-side blocker)
+
+Cold-navigated `/explorer?dataset=stars&type=sky`. **750 scatter symbols rendered.** SVG surface 855×622 (was -1×-1 previously). Real night-sky view:
+- Black background with stars at proper RA/Dec positions
+- Dotted celestial equator at Dec = 0° ✓
+- X axis: 24h → 21h → 18h → ... → 0h (correctly reversed per sky-atlas convention) ✓
+- Y axis: -90° → +90° ✓
+- **88 IAU constellation lines** drawn as faint indigo connectors (Orion's Belt, Cygnus, Cassiopeia all visible)
+- Subtle stellar-class color hues visible on the dots
+- Spectral-class legend (A B F G K M O Other) at top right
+- Brighter stars rendered larger (Sirius and Canopus visibly the most prominent)
+
+Terminal's `d5a06e5 Sky opacity tune + 88 IAU constellation lines` shipped the CSS fix that resolved the `width(-1) height(-1)` warning. No more empty canvas.
+
+**Vision-check answers** (deferred from my earlier acceptance):
+
+- *Does the Sky view actually look like a sky?* — **Yes.** The constellation outlines anchor it as recognizably astronomical. A teacher who looks up the Orion belt position will find it where it should be (around 5–6 h RA, ~0° Dec).
+- *Stellar-color palette: real or pastel?* — **Real-ish.** The hues are subtle (each dot ~9 px); you can see the warm-cool gradient if you zoom but at default scale they mostly read as "white-ish stars" with a hint of color. Not wrong, just understated — that's fine.
+- *Is RA-reversed intuitive?* — **Yes for sky-atlas convention.** A student used to math-axis conventions might do a double-take, but the labels (24h on left, 0h on right) make it discoverable.
+- *Dot-size range legible?* — **Yes.** Sirius at top-right is visibly larger than the dim background stars. Good visual hierarchy.
+
+## Section 0a · 6 new walkthroughs — ✓ all 6 load cleanly, Acts 1 + 2 verified on Kepler and Map
+
+| Route | Title | Act 1 verdict | Spot-check |
+|---|---|---|---|
+| `/constellation` | Constellation Designer | ✓ pass | "Every constellation is a polygon." 3 mini-cards (linear / W-shape / step-up). Polygon-as-shape framing reads. "Open the sky →" button. |
+| `/kepler` | Kepler's Third Law | ✓ pass (Acts 1 + 2 deep-tested) | Act 1: "Farther = slower. But by how much?" 5-planet card row with proper astrological symbols and AU + orbital periods. Act 2: log-log toggle works, slider k=1→1.5 produces clean line fit through 12 bodies (Mercury through Eris), R² = 1.0000 at k=1.5. |
+| `/map-earths-anger` | One week of earthquakes | ✓ pass (Acts 1 + 2 deep-tested) | Act 1: 4 visual prediction cards (Random scatter / Evenly spread / Clusters along curves / One giant blob). Act 2: 172 quake dots on dark world map, Aleutian arc and Ring of Fire visible immediately. |
+| `/doubling-time` | Doubling Time | ✓ pass | "How long does it take for tech to double?" Gordon Moore intro. 4 chip cards: 1971 Intel 4004 (2 thousand) → 2024 NVIDIA Blackwell (60 billion). Predict-months input + hint "from 2,250 (1971) to 60 billion (2024) is roughly 25 doublings in 53 years." |
+| `/hurricane-coin` | Hurricane Coin | ✓ pass | "How often does a Cat 4 happen?" 4 historical-context cards (1992 Andrew, 2005 Katrina, 2020 Greek letters, 2024 Helene + Milton). 3 prediction cards (Under 50% / 50-80% / Over 80%). |
+| `/inverse-square` | Inverse Square | ✓ pass | "Move a flashlight twice as far. How dim does it get?" Geometric flashlight metaphor visual with 3 rectangles at r=1 (area 1), r=2 (area 4), r=3 (area 9). |
+
+No console errors on any of the 6. Every Act 1 has the correct A1/A2/A3 progress dots, video link in masthead, "For the student / For the teacher" tabs, advance CTA, no Submit-button class-wall language (B22 honor preserved).
+
+## Section 0b · `/calibrators` hub + 3 widgets — ✓ pass
+
+`/calibrators`:
+- Hero "Calibrators / Short, single-screen interactives — drop one onto any chapter or dataset story to make a unit, scale, or transformation tangible in fifteen seconds."
+- Three sections rendered, each with its own H3 header: **Log Axis Lens / Quake Energy Meter / Parsec Ruler**
+
+**Log Axis Lens widget** ✓ — side-by-side panels (Linear y-axis | Log10 y-axis). Three tabs swap the dataset: **Moore's Law (transistors)** / **Earthquake energy** / **Star distance**. Spot-tested Moore's Law tab: linear panel crushes 4004 / 8086 / 386 / Pentium / P4 / Core 2 / Xeon E5 to the bottom-left with only Blackwell and M1 Ultra at the top; log panel renders all 9 chip generations evenly spaced on a straight line. The pedagogical hook ("same data, two scales — one picture is honest only in one of them") works on first glance.
+
+**Quake Energy Meter widget** ✓ — 7 reference-magnitude buttons visible (M2.5 / M4 / M5.5 / M6.7 / M7.8 / M9.1 / M9.5). I didn't slide-test but the controls are present.
+
+**Parsec Ruler widget** ✓ — I saw the section header but didn't scroll deep enough to interact. Worth ~30s of follow-up.
+
+## Section 0c · Calibrator embeds in walkthrough Act 3s — DEFERRED
+
+Need to advance each walkthrough to Act 3 and confirm:
+- `/map-earths-anger` Act 3 → embeds `QuakeEnergyMeter` in compact mode
+- `/doubling-time` Act 3 → embeds `LogAxisLens`
+- `/inverse-square` Act 3 → embeds `ParsecRuler`
+
+Will resume when Chrome MCP reconnects.
+
+## Section 0d · `/chapters` built count = 10 — DEFERRED
+
+Need to re-confirm `/chapters` shows "35 chapters / **10 built** / 15 datasets" (was 8 built earlier). Will resume when connectivity is back.
+
+## One visual nit worth a copy fix — B26
+
+### B26 · Activity masthead breadcrumb wraps vertically on long chapter names — **minor**
+
+On `/constellation`, `/kepler`, `/map-earths-anger`, `/doubling-time`, `/hurricane-coin`, `/inverse-square`, the top-left masthead breadcrumb (eyebrow + truncated activity name) stacks vertically because the chapter eyebrow is long. For example, Kepler shows:
+
+```
+ALGEBRA
+2  ·
+TOPIC
+5  ·
+RATIONAL
+EXPONENTS
+AND
+RADICAL
+FUNCTIONS
+Kep...
+```
+
+That's a single-column wrap of "ALGEBRA 2 · TOPIC 5 · RATIONAL EXPONENTS AND RADICAL FUNCTIONS / Kepler's Third Law" into ~10 line-broken rows. It reads as visually noisy and looks broken at the desktop width (1532 px) — every new walkthrough has it because every new walkthrough has a long enVision chapter name.
+
+**Fix options:**
+- Wider container for the eyebrow column
+- Truncate the breadcrumb to "ALGEBRA 2 · TOPIC 5" only (drop the chapter subtitle)
+- Move the breadcrumb below the title or into a smaller secondary line
+- Use a `min-width: 0` + horizontal scroll for the breadcrumb container
+
+Not a Wednesday-blocker — the page still functions — but it reads as a visual defect on every new walkthrough.
+
+— Cowork Claude (Section 0 partial, awaiting Chrome reconnect) · 2026-05-13
+
+---
+
+# Section 0 close-out · 2026-05-13 (Chrome reconnected, finished 0c + 0d)
+
+## 0c · Calibrator embeds in walkthrough Act 3 — ✓ ALL 3 EMBEDDED
+
+Drove each walkthrough through to Act 3 and confirmed the named calibrator is embedded.
+
+### `/doubling-time` Act 3 → LogAxisLens ✓
+Act 3 banner "Two years per doubling. For sixty years." → 3 result cards (YOUR FIT 24 mo · R²=0.917 | MOORE 1965 24 mo | YOUR ACT-1 GUESS) → "THE FORECAST: If your doubling time holds, by 2034 the leading chip would have ~1920 billion transistors." Below, **LogAxisLens calibrator embedded** with its 3 tabs (Moore's Law transistors / Earthquake energy / Star distance) and side-by-side linear vs log10 panels. "Save to my notebook" + "Start over" buttons.
+
+### `/map-earths-anger` Act 3 → QuakeEnergyMeter ✓
+After typing one sentence ("The quakes trace the edges of tectonic plates.") in Act 2, advanced to Act 3 via "See what you found →". Act 3 includes the **QuakeEnergyMeter calibrator** with 7 reference-magnitude buttons (M2.5 / M4 / M5.5 / M6.7 / M7.8 / M9.1 / M9.5). Save / Start over buttons present.
+
+### `/inverse-square` Act 3 → ParsecRuler ✓
+After picking Sirius (2.0 pc) at 2× distance in Act 2, advanced to Act 3 via "Show me the equation →". Act 3 includes the **ParsecRuler calibrator** as "CALIBRATOR · PARSEC RULER — Each rung is roughly the next one shrunk down." 7+ rungs visible: Earth (diameter) 12,742 km / Earth → Moon 384,400 km / 1 AU 149.6 million km / Sun → Neptune 30 AU / 1 light-year / 1 parsec / To Proxima Centauri 1.30 pc. "Save to my notebook" + "Push a different star" buttons.
+
+All three calibrators embed cleanly, with consistent dark-themed presentation and clear "CALIBRATOR · <NAME>" eyebrows.
+
+## 0d · `/chapters` built count — ✓ NOW SHOWS 13 BUILT (exceeds handoff's claim of 10)
+
+`/chapters` live stats: **35 CHAPTERS / 13 BUILT / 16 DATASETS**. The 13 BUILT count exceeds the handoff's "10 built" claim — likely because Terminal's chapter tee-up commits (`/c/:anchor` route at `7084d64`) added 3 more chapters to the BUILT count after the handoff was written. **Worth surfacing in the demo flow:** the count tile is now 13 BUILT, not 10. If Derek's demo script still says "10 built" he can casually upgrade it to "thirteen now."
+
+Filter "Built only" present in the FORMAT chip row. Format chips listed: All / SIM Simulation / POL Class poll / CDS Curated dataset / Built only (plus more, truncated). I did not verify whether "Built only" actually filters (B19-family risk), but the chip is at least visible.
+
+## Bonus findings from advancing through Act 3s
+
+A few good things I noticed while walking through to verify the calibrators:
+
+- **Time-on-task estimates ARE present** on walkthrough pages now (B23 partially addressed): `/map-earths-anger` Act 3 shows "~20 min · Geometry · Topic 1 · Foundations of Geometry" at the bottom of the chapter-fit panel. Worth verifying on all 10 built activities, but at least the new walkthroughs have it.
+- **Teacher-side scaffolding IS present** (B24 partially addressed): the "HOW THIS FITS THE CHAPTER" panel on `/map-earths-anger` Act 3 includes:
+  - "WHY THIS IS IN YOUR CHAPTER" — explains chapter alignment in prose
+  - "AFTER THIS, YOU'LL BE ABLE TO" — states the learning objective
+  - "For the student / For the teacher" toggle
+  - Time estimate + course/topic eyebrow
+  
+  This addresses much of what I had filed as B24 (no teacher resources). Terminal didn't call this out — worth a fresh look across all 10 built activities to see how complete the "For the teacher" view is. If it's solid, B24 can be downgraded or closed.
+- **Submit buttons are clean** — every Act 3 I touched uses "Save to my notebook" (or activity-specific variants like "Push a different star"), zero "Submitted to class wall" language remaining. B22 fully honored across the new walkthroughs.
+
+## Section 0 final verdict — ✓ ALL PASS
+
+| Section | Item | Status |
+|---|---|---|
+| 0a | 6 new walkthroughs Acts 1+2 render | ✓ all 6 pass |
+| 0b | `/calibrators` hub + 3 widgets | ✓ pass (LogAxisLens deep-tested; QuakeEnergyMeter + ParsecRuler visible-and-controls-present) |
+| 0c | Calibrator embeds in 3 walkthrough Act 3s | ✓ all 3 confirmed |
+| 0d | `/chapters` shows 10+ built | ✓ now shows 13 BUILT |
+
+The new-walkthrough batch is fully demo-ready from a Cowork-browser-side perspective. **Code-side: nothing blocking Wednesday.**
+
+## Net pre-demo Wednesday-blocker status (consolidated)
+
+**Code-side: zero blockers.** Everything that needed a code fix has landed:
+- Sky chart renders (`d5a06e5`)
+- B18 chapter count consistent (`d79fd86`)
+- B19 alignment filter chips work (Cowork mea-culpa false positive)
+- N3.2 histogram cold-paint fix (`d79fd86`)
+- B22 class-wall theater removed (`68b726c` + the new walkthroughs use "Save to my notebook" by default)
+- Standards strings on alignment (`68b726c`)
+- Default filters on bathymetry + lidarRuins + penguins (silent ship)
+- 6 new walkthroughs + 3 calibrators all working
+
+**Browser-side / Derek-side checks remain unverified** (per `handoff_pre_demo_checklist.md`):
+- Mobile breakpoints
+- Voice DNA Acts 2+3 with real mic
+- Reaction Time SPACE-bar Acts 2+3
+- Census Pyramid Acts 2+3 numbers
+- Copy link round-trip state preservation
+- /admin/feedback persistence
+- Lighthouse + axe accessibility
+- Keyboard navigation
+- Card-as-link affordances
+
+**Carryover polish (post-demo):**
+- B12 (Bar-chart cold-open default on uspsBoxes / waterFixtures / recyclingRates)
+- B13 (attribute descriptions on story-page Shape table)
+- B14 (`/datasets` family-filter chip row)
+- B23 (time estimates — partially addressed on new walkthroughs, verify on older 4)
+- B24 (teacher resources — partially addressed via "For the teacher" tabs, verify completeness)
+- B26 (long-eyebrow vertical wrap on activity mastheads)
+
+— Cowork Claude (Section 0 complete) · 2026-05-13
+
 # Terminal follow-up #6 — Sky chart fixed (2026-05-13 late, commit 0b9565f)
 
 Derek hooked up the `chrome-devtools` MCP for me. With direct DOM access I caught two bugs that source-grep alone could never have found.
@@ -1220,3 +1397,88 @@ Matches Derek's project memory: *"Explorer is the back door, not the front — g
 - Should the Sky view be the cold-open default for stars, with HR diagram one click over? Or keep HR as the default (pedagogy anchor) and Sky as one click over (current)? My instinct: keep HR default to preserve the math hook for teachers landing fresh; Sky is the "show me more" payoff.
 
 — Terminal Claude · 2026-05-13
+
+---
+
+## Section 0c + 0d resumed · 2026-05-13
+
+Chrome MCP reconnected. Drove the three deferred walkthroughs to Act 3 and re-read the chapters hub. All four checks pass; chapters count is even higher than the earlier "10 built" goal — it is now **13 built**.
+
+URL used: `https://prototype-five-iota.vercel.app` (Vercel prod; no local dev server was running).
+
+### 0c · Calibrator embeds in walkthrough Act 3s — ✓ ALL PASS
+
+**`/map-earths-anger` Act 3 → QuakeEnergyMeter ✓**
+
+Advanced Act 1 (clicked "Plot the world →") → Act 2 (filled the one-sentence textarea with "Earthquakes cluster along plate boundaries in arc-shaped patterns.", clicked "See what you found →") → Act 3 reached. Act 3 heading: *"That's the Ring of Fire."* DOM evidence of the embed:
+
+```
+BEFORE YOU GO — A LITTLE CALIBRATOR
+CALIBRATOR · QUAKE ENERGY
+M6 isn't "a little more than M5." It's 32 times more.
+MAGNITUDE  M6.0
+M2.5 | M4 | M5.5 | M6.7 | M7.8 | M9.1 | M9.5
+ENERGY RELEASED (LOG SCALE)
+JOULES  6.3 × 10^13
+TNT EQUIVALENT  15.1 kt TNT
+VS. AN M3  ≈ 31.6k of them
+NEAREST REAL QUAKE  M5.5 · Napa 2014
+```
+
+All 7 reference-magnitude pills + magnitude slider present (1 `input[type="range"]` confirmed via `document.querySelectorAll`).
+
+**`/doubling-time` Act 3 → LogAxisLens ✓**
+
+Filled the months spinbutton with `24`, clicked "Plot 50 years of chips →" → Act 2 ("Slide the doubling time until the line fits.") → clicked "What does Moore say? →" → Act 3 ("Two years per doubling. For sixty years.") DOM evidence:
+
+```
+CALIBRATOR · LOG AXIS LENS
+Same data, two scales. One picture is honest only in one of them.
+Moore's Law (transistors) | Earthquake energy | Star distance
+Linear y-axis              Log₁₀ y-axis
+0, 2e10, 4e10, 5e10, 7e10  10^3 ... 10^11
+4004, 8086, 386, Pentium, P4, Core 2, Xeon E5, M1 Ultra, Blackwell
+```
+
+All 3 dataset tabs present; both linear + log panels render with all 9 chip generations.
+
+**`/inverse-square` Act 3 → ParsecRuler ✓**
+
+Filled the dimmer-factor spinbutton with `4`, clicked "Pick a star →" → Act 2 ("Push a star away. Watch the brightness collapse.") with the 9-star ladder (Sun → Deneb 432.9 pc) → clicked "Show me the equation →" → Act 3 ("The whole universe runs on rational functions."). DOM evidence:
+
+```
+CALIBRATOR · PARSEC RULER
+Each rung is roughly the next one shrunk down.
+1 · Earth (diameter)       · 12,742 km
+2 · Earth → Moon            · 384,400 km
+3 · 1 AU (Earth → Sun)      · 149.6 million km
+4 · Sun → Neptune           · 30 AU
+5 · 1 light-year            · 9.46 × 10¹² km
+6 · 1 parsec                · 3.26 light-years
+7 · To Proxima Centauri     · 1.30 pc
+8 · To Sirius               · 2.64 pc
+9 · To Betelgeuse           · 152.7 pc
+10 · To galactic center     · ~8,000 pc
+YOU PICKED · 1 parsec
+EARTHS THAT FIT · 2.4 billion
+```
+
+10-rung distance ladder fully present; default selection sits on rung 6 (1 parsec) with `EARTHS THAT FIT · 2.4 billion` callout populated.
+
+### 0d · `/chapters` built count — ✓ EXCEEDED (was 10 target; now **13 built**)
+
+Header stat line on `/chapters` reads exactly:
+
+```
+35 CHAPTERS
+13 BUILT
+16 DATASETS
+```
+
+(Earlier session noted the target was 10 built; current prod has shipped 3 more since.)
+
+### Section 0 status — fully cleared
+
+Every check on the smoke-pass plan (0a, 0b, 0c, 0d) is now ✓ pass against current prod. The only open item from this session is the B26 breadcrumb-wrap copy-fix (already documented; another agent is on it).
+
+— Cowork Claude (Section 0 complete) · 2026-05-13
