@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 type Mode = "idle" | "editing" | "commenting" | "viewing";
 
@@ -12,6 +12,7 @@ interface TextEdit {
   timestamp: string;
   user?: string;        // self-reported display name (optional)
   sessionId?: string;   // random UUID, persisted in localStorage
+  _localId?: string;    // client-only handle for pending-store dedupe; stripped before POST
 }
 
 interface Comment {
@@ -23,6 +24,7 @@ interface Comment {
   timestamp: string;
   user?: string;
   sessionId?: string;
+  _localId?: string;
 }
 
 type InputItem = TextEdit | Comment;
@@ -45,6 +47,48 @@ function getUserName(): string {
 function setUserName(name: string) {
   if (name.trim()) localStorage.setItem("getinput-user-name", name.trim());
   else localStorage.removeItem("getinput-user-name");
+}
+
+// Local mirror of every feedback item we tried to POST. An entry stays here
+// until the server returns 2xx — so if the tab closes mid-flight or the POST
+// throws/4xx/5xx, the next mount can retry. Without this, every fetch failure
+// is silently lost despite the toast saying "Saved!".
+const PENDING_KEY = "getinput-pending";
+
+function loadPending(): InputItem[] {
+  try {
+    const raw = localStorage.getItem(PENDING_KEY);
+    return raw ? (JSON.parse(raw) as InputItem[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePending(items: InputItem[]): void {
+  try {
+    localStorage.setItem(PENDING_KEY, JSON.stringify(items));
+  } catch {
+    // Quota exhausted or storage disabled (private browsing) — best-effort.
+  }
+}
+
+function addPending(item: InputItem): void {
+  const items = loadPending();
+  items.push(item);
+  savePending(items);
+}
+
+function removePending(localId: string): void {
+  savePending(loadPending().filter((i) => i._localId !== localId));
+}
+
+function newLocalId(): string {
+  return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function sameItem(a: InputItem, b: InputItem): boolean {
+  if (a._localId && b._localId) return a._localId === b._localId;
+  return a.type === b.type && a.selector === b.selector && a.timestamp === b.timestamp;
 }
 
 function getSelector(el: Element): string {
@@ -117,11 +161,15 @@ export default function InputWidget({
   const [comment, setComment] = useState("");
   const [inputCount, setInputCount] = useState(0);
   const [feedbackItems, setFeedbackItems] = useState<InputItem[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [showJson, setShowJson] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("Saved!");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userName, setUserNameState] = useState<string>("");
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
+  const jsonTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const recoveryAttempted = useRef(false);
 
   useEffect(() => {
     const host = window.location.hostname;
@@ -155,6 +203,46 @@ export default function InputWidget({
     }
   }, [allowedHosts]);
 
+  // Focus + select the JSON textarea once when it opens, so the visitor can
+  // immediately Cmd+C. An inline ref would re-fire on every render and
+  // re-steal focus; an effect tied to showJson runs exactly when needed.
+  useEffect(() => {
+    if (showJson && jsonTextareaRef.current) {
+      jsonTextareaRef.current.focus();
+      jsonTextareaRef.current.select();
+    }
+  }, [showJson]);
+
+  // Recovery: merge any locally-pending items (items previously saved while
+  // the network was broken, or before a tab close) back into the panel and
+  // try to flush them to the server. Runs once per mount, after reviewUrl
+  // has been set so flushPending's closure points at the right endpoint.
+  useEffect(() => {
+    if (!isVisible || recoveryAttempted.current) return;
+    recoveryAttempted.current = true;
+
+    const pending = loadPending();
+    setPendingCount(pending.length);
+    if (pending.length === 0) return;
+
+    setFeedbackItems((prev) => {
+      const additions = pending.filter((p) => !prev.some((m) => sameItem(m, p)));
+      if (additions.length === 0) return prev;
+      return [...prev, ...additions];
+    });
+    setInputCount((c) => c + pending.length);
+
+    void flushPending().then((r) => {
+      if (r.sent > 0) {
+        showToastWithMessage(
+          r.pending === 0
+            ? "Pending feedback sent"
+            : `Sent ${r.sent}, ${r.pending} still pending`,
+        );
+      }
+    });
+  }, [isVisible, flushPending]);
+
   const dismissOnboarding = () => {
     setShowOnboarding(false);
     localStorage.setItem("getinput-onboarding-seen", "true");
@@ -176,9 +264,18 @@ export default function InputWidget({
         : apiEndpoint;
       const res = await fetch(endpoint);
       if (res.ok) {
-        const data = await res.json();
-        setFeedbackItems(data);
-        setInputCount(data.length);
+        const data = (await res.json()) as InputItem[];
+        // Merge rather than replace — the recovery effect may have already
+        // pushed locally-pending items into feedbackItems by the time this
+        // async fetch resolves, and a blind replace would drop them.
+        setFeedbackItems((prev) => {
+          const merged = [...prev];
+          for (const d of data) {
+            if (!merged.some((m) => sameItem(m, d))) merged.push(d);
+          }
+          return merged;
+        });
+        setInputCount((c) => Math.max(c, data.length));
       }
     } catch (e) {
       // No input yet
@@ -191,6 +288,40 @@ export default function InputWidget({
     setTimeout(() => setShowToast(false), 2000);
   };
 
+  const postItem = async (item: InputItem): Promise<boolean> => {
+    const endpoint = reviewUrl
+      ? `${apiEndpoint}?url=${encodeURIComponent(reviewUrl)}`
+      : apiEndpoint;
+    try {
+      // _localId is a client-only handle — strip before sending.
+      const { _localId: _drop, ...wire } = item;
+      void _drop;
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(wire),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const flushPending = useCallback(async (): Promise<{ sent: number; pending: number }> => {
+    const items = loadPending();
+    if (items.length === 0) return { sent: 0, pending: 0 };
+    const stillPending: InputItem[] = [];
+    let sent = 0;
+    for (const item of items) {
+      const ok = await postItem(item);
+      if (ok) sent++;
+      else stillPending.push(item);
+    }
+    savePending(stillPending);
+    setPendingCount(stillPending.length);
+    return { sent, pending: stillPending.length };
+  }, [apiEndpoint, reviewUrl]);
+
   const saveInput = async (item: InputItem) => {
     // Tag every submission with the visitor's session id + name (if set).
     // The session id is enough to tell anonymous authors apart; the name
@@ -199,26 +330,24 @@ export default function InputWidget({
       ...item,
       sessionId: ensureSessionId(),
       user: getUserName() || undefined,
+      _localId: newLocalId(),
     };
-    // POST in both regular and share mode — share mode used to be local-only,
-    // which meant visitors' feedback never reached the API. That bug was
-    // why the feedback log only ever contained the page owner's own edits.
-    const endpoint = reviewUrl
-      ? `${apiEndpoint}?url=${encodeURIComponent(reviewUrl)}`
-      : apiEndpoint;
-    try {
-      await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(enriched),
-      });
-    } catch (e) {
-      // Network failure — keep the item locally and let the visitor copy it
-      // as a fallback. (Toast wording below reflects the regular path.)
-    }
+
+    // Write to the local pending store BEFORE attempting the network call.
+    // This is what survives tab close, network failures, and non-2xx responses.
+    addPending(enriched);
     setFeedbackItems((prev) => [...prev, enriched]);
     setInputCount((c) => c + 1);
-    showToastWithMessage("Saved!");
+    setPendingCount(loadPending().length);
+
+    const ok = await postItem(enriched);
+    if (ok && enriched._localId) {
+      removePending(enriched._localId);
+      setPendingCount(loadPending().length);
+      showToastWithMessage("Saved!");
+    } else {
+      showToastWithMessage("Saved locally — couldn't reach server");
+    }
   };
 
   const copyFeedback = async () => {
@@ -536,7 +665,7 @@ export default function InputWidget({
               Feedback ({feedbackItems.length})
             </h3>
             <button
-              onClick={() => setMode("idle")}
+              onClick={() => { setMode("idle"); setShowJson(false); }}
               className="text-gray-400 hover:text-gray-600"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -544,6 +673,27 @@ export default function InputWidget({
               </svg>
             </button>
           </div>
+
+          {pendingCount > 0 && (
+            <div className="mb-3 flex items-center justify-between rounded-md border border-amber-300 bg-amber-50 px-2.5 py-2 text-xs text-amber-900">
+              <span>
+                <strong>{pendingCount}</strong> not yet sent to server
+              </span>
+              <button
+                onClick={async () => {
+                  const r = await flushPending();
+                  showToastWithMessage(
+                    r.pending === 0
+                      ? "All sent"
+                      : `${r.sent} sent, ${r.pending} still pending`,
+                  );
+                }}
+                className="rounded bg-amber-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-amber-500"
+              >
+                Retry send
+              </button>
+            </div>
+          )}
 
           {feedbackItems.length === 0 ? (
             <p className="text-sm text-gray-400 py-4 text-center">
@@ -553,25 +703,38 @@ export default function InputWidget({
             </p>
           ) : (
             <>
-              <div className="max-h-60 overflow-y-auto mb-3 space-y-2">
-                {feedbackItems.map((item, i) => (
-                  <div key={i} className="bg-gray-50 rounded-lg p-2 text-xs border border-gray-100">
-                    {item.type === "text-edit" ? (
-                      <>
-                        <span className="text-amber-600 font-medium">Edit:</span>
-                        <p className="text-gray-400 line-through">{item.original.slice(0, 50)}...</p>
-                        <p className="text-gray-600">{item.edited.slice(0, 50)}...</p>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-blue-600 font-medium">Comment:</span>
-                        <p className="text-gray-600">{item.comment}</p>
-                        <p className="text-gray-400 text-[10px] mt-1">on: {item.elementText.slice(0, 30)}...</p>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {!showJson && (
+                <div className="max-h-60 overflow-y-auto mb-3 space-y-2">
+                  {feedbackItems.map((item, i) => (
+                    <div key={i} className="bg-gray-50 rounded-lg p-2 text-xs border border-gray-100">
+                      {item.type === "text-edit" ? (
+                        <>
+                          <span className="text-amber-600 font-medium">Edit:</span>
+                          <p className="text-gray-400 line-through">{item.original.slice(0, 50)}...</p>
+                          <p className="text-gray-600">{item.edited.slice(0, 50)}...</p>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-blue-600 font-medium">Comment:</span>
+                          <p className="text-gray-600">{item.comment}</p>
+                          <p className="text-gray-400 text-[10px] mt-1">on: {item.elementText.slice(0, 30)}...</p>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {showJson && (
+                <textarea
+                  readOnly
+                  value={JSON.stringify(feedbackItems, null, 2)}
+                  ref={jsonTextareaRef}
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="mb-3 w-full max-h-60 min-h-[140px] rounded border border-gray-200 bg-gray-50 p-2 text-[11px] font-mono text-gray-800 focus:outline-none"
+                  rows={10}
+                />
+              )}
 
               {isShareMode ? (
                 <>
@@ -584,6 +747,12 @@ export default function InputWidget({
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
                     Copy feedback to send
+                  </button>
+                  <button
+                    onClick={() => setShowJson((v) => !v)}
+                    className="w-full mt-2 text-[11px] text-gray-500 hover:text-gray-700 underline"
+                  >
+                    {showJson ? "Hide JSON" : "Show JSON (copy manually)"}
                   </button>
                   <p className="text-[10px] text-gray-400 text-center mt-2">
                     Paste this into Slack, email, or wherever you communicate
@@ -614,6 +783,12 @@ export default function InputWidget({
                       Share
                     </button>
                   </div>
+                  <button
+                    onClick={() => setShowJson((v) => !v)}
+                    className="w-full mt-2 text-[11px] text-gray-500 hover:text-gray-700 underline"
+                  >
+                    {showJson ? "Hide JSON" : "Show JSON (copy manually)"}
+                  </button>
                   <p className="text-[10px] text-gray-400 text-center mt-2">
                     Copy JSON for Claude Code, or share link with others
                   </p>
