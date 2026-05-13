@@ -32,45 +32,81 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Three pillars */}
+      {/* Two pitches for Savvas — A/B chapter alignment frame */}
+      <section className="border-b border-surface-line bg-surface-subtle/30">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <div className="mb-8 max-w-3xl">
+            <div className="eyebrow text-accent-600 mb-2">Two pitches</div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-brand-900">
+              One question for Savvas:<br />
+              <em className="not-italic text-accent-600">augment, or reimagine?</em>
+            </h2>
+            <p className="mt-3 text-ink-soft leading-relaxed">
+              Same {chapterCount} chapters. Two ways to bring data science in.
+              Each pitch is a separate, walkable alignment — pick the one that
+              fits the editorial appetite, or compare them side by side.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <PitchCard
+              to="/chapters/augment"
+              tag="Approach A"
+              title="Layer onto enVision"
+              body="Keep every existing 3-Act Math video. We add one data-exploration extension per chapter that launches from a QR code where Act 3 used to ask 'now what?'"
+              promise="Lowest lift. Familiar shape. Adds, never replaces."
+              tone="conservative"
+            />
+            <PitchCard
+              to="/chapters/new"
+              tag="Approach B"
+              title="Reimagined chapters"
+              body={`Every chapter gets a new flagship activity, designed from the dataset up. ${chapterCount} chapters, 7 interaction formats, ${datasetCount} real datasets.`}
+              promise="Bolder. Built for the data era. A clean break."
+              tone="bold"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* What's in the show — front door, back door, concepts */}
       <section className="border-b border-surface-line">
         <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex items-baseline justify-between mb-8">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-brand-900">Three doors in.</h2>
-            <div className="eyebrow text-ink-muted hidden sm:block">the show, in pieces</div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-brand-900">The show, in pieces.</h2>
+            <div className="eyebrow text-ink-muted hidden sm:block">front door, then the rest</div>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Pillar
               to="/chapters"
-              kicker="The Map"
+              kicker="Front door · the map"
               title="Chapters"
-              body="One activity per chapter — Algebra 1, Geometry, and Algebra 2. Built activities open in-app; concept chapters route to the dataset they hinge on."
+              body="One activity per chapter — Algebra 1, Geometry, Algebra 2. The guided experience that comes first. Built activities open in-app; concept chapters route to the dataset they hinge on."
               cta="See the map"
               tone="navy"
             />
             <Pillar
+              to="/lessons"
+              kicker="Front door · concepts"
+              title="Lessons"
+              body={`${lessonCount} interactive lessons on the data-literacy ideas students keep forever — tidy data, lying with statistics, mean vs median, survivorship bias, cherry-picked windows.`}
+              cta="See the lessons"
+              tone="rose"
+            />
+            <Pillar
               to="/datasets"
-              kicker="The Library"
+              kicker="Back door · the library"
               title="Datasets"
-              body={`${datasetCount} real-world datasets, fully sourced. From Mauna Loa CO₂ since 1958 to Boston Marathon finishers, every value is verifiable to its primary source.`}
+              body={`After the activity, ${datasetCount} real-world datasets to roam — fully sourced. Mauna Loa CO₂ since 1958, Boston Marathon finishers, every value verifiable to its primary source.`}
               cta="Browse the library"
               tone="amber"
             />
             <Pillar
               to="/explorer"
-              kicker="The Engine"
+              kicker="Back door · the engine"
               title="Explorer"
-              body="A CODAP-class exploration tool. Tables, scatter plots, histograms, box plots, filters, summary stats. Same interface, every dataset, every chapter."
+              body="A CODAP-class exploration tool. Tables, scatter plots, histograms, box plots, filters, summary stats. For the moment after a student has finished an activity and wants to keep looking."
               cta="Open the explorer"
               tone="navy"
-            />
-            <Pillar
-              to="/lessons"
-              kicker="The Concepts"
-              title="Lessons"
-              body={`${lessonCount} interactive lessons on the data-literacy concepts students keep forever — tidy data, lying with statistics, mean vs median, survivorship bias, cherry-picked windows.`}
-              cta="See the lessons"
-              tone="rose"
             />
           </div>
         </div>
@@ -181,6 +217,42 @@ export default function HomePage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function PitchCard({
+  to, tag, title, body, promise, tone,
+}: { to: string; tag: string; title: string; body: string; promise: string; tone: 'conservative' | 'bold' }) {
+  const styles = tone === 'conservative'
+    ? {
+        bg: 'bg-white border-surface-line hover:border-brand-300',
+        tag: 'bg-brand-50 text-brand-800 border-brand-200',
+        title: 'text-brand-900',
+        body: 'text-ink-soft',
+        promise: 'text-brand-700',
+        cta: 'text-brand-700 group-hover:text-accent-700',
+      }
+    : {
+        bg: 'bg-brand-950 border-brand-700 hover:border-accent-400',
+        tag: 'bg-accent-500/20 text-accent-300 border-accent-500/40',
+        title: 'text-white',
+        body: 'text-surface/80',
+        promise: 'text-accent-300',
+        cta: 'text-accent-300 group-hover:text-accent-200',
+      };
+  return (
+    <Link
+      to={to}
+      className={`group block border rounded-lg p-7 transition hover:shadow-editorial ${styles.bg}`}
+    >
+      <span className={`text-[11px] eyebrow px-2 py-0.5 rounded border ${styles.tag}`}>{tag}</span>
+      <h3 className={`font-display text-3xl md:text-4xl font-bold mt-4 mb-3 ${styles.title}`}>{title}</h3>
+      <p className={`text-sm leading-relaxed mb-5 ${styles.body}`}>{body}</p>
+      <div className={`text-xs italic mb-5 ${styles.promise}`}>{promise}</div>
+      <div className={`text-sm font-semibold inline-flex items-center gap-1 transition group-hover:translate-x-1 ${styles.cta}`}>
+        See the pitch <span aria-hidden>→</span>
+      </div>
+    </Link>
   );
 }
 

@@ -19,6 +19,8 @@ import DatasetStory from './screens/datasets/DatasetStory';
 import DatasetDictionary from './screens/datasets/DatasetDictionary';
 import LessonsHub from './screens/lessons/LessonsHub';
 import ChaptersPage from './screens/ChaptersPage';
+import AugmentChaptersPage from './screens/AugmentChaptersPage';
+import NewChaptersPage from './screens/NewChaptersPage';
 import AlignmentPage from './screens/AlignmentPage';
 import SliderOfLies from './screens/lessons/SliderOfLies';
 import WalkIntoABar from './screens/lessons/WalkIntoABar';
@@ -73,6 +75,8 @@ export default function App() {
         <Route path="/inverse-square" element={<InverseSquarePage />} />
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/chapters" element={<ChaptersPage />} />
+        <Route path="/chapters/augment" element={<AugmentChaptersPage />} />
+        <Route path="/chapters/new" element={<NewChaptersPage />} />
         <Route path="/alignment" element={<AlignmentPage />} />
         <Route path="/datasets" element={<DatasetsHub />} />
         <Route path="/datasets/:id" element={<DatasetStory />} />
