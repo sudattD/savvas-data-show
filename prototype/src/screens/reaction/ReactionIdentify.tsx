@@ -14,6 +14,13 @@ interface IdentifyProps {
   onNext: (data: IdentifyState) => void;
 }
 
+const WONDER_OPTIONS = [
+  'Is reaction time the same for everyone?',
+  'Does it get faster with practice?',
+  'Are your eyes faster than your ears?',
+  'Does coffee or sleep change it?',
+];
+
 export default function ReactionIdentify({ onNext }: IdentifyProps) {
   const [notice, setNotice] = useState('');
   const [conjecture, setConjecture] = useState('');
@@ -56,16 +63,28 @@ export default function ReactionIdentify({ onNext }: IdentifyProps) {
 
       <div className="bg-surface-raised border border-surface-line rounded-lg p-5 space-y-4">
         <div>
-          <label className="text-sm font-semibold text-ink block mb-1.5">
-            What do you wonder? <span className="text-[10px] text-ink-muted italic font-normal">(one line is fine)</span>
+          <label className="text-sm font-semibold text-ink block mb-2">
+            What do you wonder? <span className="text-[10px] text-ink-muted italic font-normal">(pick one)</span>
           </label>
-          <textarea
-            value={notice}
-            onChange={(e) => setNotice(e.target.value)}
-            placeholder="e.g. Is reaction time the same for everyone? Does coffee help?"
-            className="w-full p-3 rounded-md border border-surface-line focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none text-sm resize-none"
-            rows={2}
-          />
+          <div className="flex flex-col gap-1.5">
+            {WONDER_OPTIONS.map((opt) => {
+              const selected = notice === opt;
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setNotice(opt)}
+                  className={`text-left text-sm px-3 py-2 rounded-md border transition ${
+                    selected
+                      ? 'border-violet-500 bg-violet-50 text-violet-900 ring-2 ring-violet-100'
+                      : 'border-surface-line text-ink hover:border-violet-300 hover:bg-violet-50/40'
+                  }`}
+                >
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="border-t border-surface-line pt-4">

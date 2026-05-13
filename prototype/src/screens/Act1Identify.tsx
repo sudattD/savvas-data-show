@@ -7,6 +7,13 @@ interface Act1Props {
   onNext: (data: { conjecture: string; low: number; high: number }) => void;
 }
 
+const NOTICE_OPTIONS = [
+  'Power climbs steeply, then flattens near the top.',
+  'There’s a minimum wind speed before any power.',
+  'The relationship looks curved, not a straight line.',
+  'A cloud of dots, not a clean line — lots of scatter.',
+];
+
 export default function Act1Identify({ onNext }: Act1Props) {
   const [notice, setNotice] = useState('');
   const [guess, setGuess] = useState('');
@@ -34,16 +41,28 @@ export default function Act1Identify({ onNext }: Act1Props) {
 
       <div className="bg-white rounded-2xl shadow-sm border border-sky-100 p-5 space-y-4">
         <div>
-          <label className="text-sm font-semibold text-ink block mb-1.5">
-            What do you notice? <span className="text-[10px] text-slate-500 italic font-normal">(one line is fine)</span>
+          <label className="text-sm font-semibold text-ink block mb-2">
+            What do you notice? <span className="text-[10px] text-slate-500 italic font-normal">(pick one)</span>
           </label>
-          <textarea
-            value={notice}
-            onChange={(e) => setNotice(e.target.value)}
-            placeholder="e.g. Power climbs steeply, then flattens out near the top."
-            className="w-full p-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 outline-none text-sm resize-none"
-            rows={2}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {NOTICE_OPTIONS.map((opt) => {
+              const selected = notice === opt;
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setNotice(opt)}
+                  className={`text-left text-sm px-3 py-2.5 rounded-lg border transition ${
+                    selected
+                      ? 'border-sky-500 bg-sky-50 text-sky-900 ring-2 ring-sky-100'
+                      : 'border-slate-200 text-ink hover:border-sky-300 hover:bg-sky-50/50'
+                  }`}
+                >
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="border-t border-slate-100 pt-4">

@@ -14,6 +14,7 @@ import SkyView from '../components/explorer/SkyView';
 import DataTable from '../components/explorer/DataTable';
 import StatsPanel from '../components/explorer/StatsPanel';
 import FilterPanel from '../components/explorer/FilterPanel';
+import ExplorerTour, { type TourStep } from '../components/explorer/ExplorerTour';
 import Masthead from '../components/Masthead';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { datasetAccent } from '../lib/dataset';
@@ -165,14 +166,67 @@ export default function ExplorerPage() {
 
   // Sync the URL to the current config any time it changes. Only non-default
   // values are written (see configToParams) so canonical URLs stay short.
+  // The `tour` flag is preserved across syncs so the overlay survives state
+  // changes the tour itself triggers (dataset switches, config tweaks).
   useEffect(() => {
     const next = configToParams(datasetId, config, dataset);
-    // Don't trigger a re-render loop: only update when the serialized form differs.
+    const tour = searchParams.get('tour');
+    if (tour) next.set('tour', tour);
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datasetId, config]);
+
+  const tourActive = searchParams.get('tour') === '1';
+  const closeTour = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('tour');
+    setSearchParams(next, { replace: true });
+  };
+
+  const tourSteps: TourStep[] = [
+    {
+      title: 'A quick tour of the Explorer',
+      body: "Six stops, about ninety seconds. You'll meet one dataset closely, then we'll switch to a second so you can see the breadth. Skip whenever you want to take over.",
+      setup: () => {
+        if (datasetId !== 'moore') handleDatasetChange('moore');
+      },
+    },
+    {
+      title: 'Each dot is one real thing',
+      selector: '[data-tour="chart"]',
+      body: "This is Moore's Law: every microprocessor ever made, plotted by year and transistor count. The line shoots upward because the Y-axis is logarithmic — each gridline is 10×.",
+    },
+    {
+      title: 'Reshape the view from up here',
+      selector: '[data-tour="toolbar"]',
+      body: 'These controls swap the chart type, change which columns map to X and Y, color by a category, or flip between linear and log scales. You can break things — refresh fixes everything.',
+    },
+    {
+      title: 'Filters thin the data',
+      selector: '[data-tour="filters"]',
+      body: 'Toggle a manufacturer off and watch the chart shrink. Drag a numeric range slider to keep only a slice. The whole chart, stats, and table redraw together.',
+    },
+    {
+      title: 'The numbers update live',
+      selector: '[data-tour="stats"]',
+      body: 'As you filter, mean, median, range, and correlations track what you can see. Useful when your eye says "looks like a trend" — the stats say whether it really is one.',
+    },
+    {
+      title: 'Different dataset, same controls',
+      selector: '[data-tour="picker"]',
+      body: 'There are 30-plus datasets in the library. Some are timelines, some are geographic, some are tiny. We just switched to global earthquakes so you can see the map view.',
+      setup: () => {
+        if (datasetId !== 'earthquakes') handleDatasetChange('earthquakes');
+      },
+    },
+    {
+      title: "You've got the keys",
+      body: 'Pick any dataset from the dropdown, ask your own question, and see what the data actually says. If you get stuck, the chapters page links datasets to lessons.',
+      cta: 'Start exploring →',
+    },
+  ];
 
   // reset chart config + filters when dataset changes via the picker.
   // (Deep-link navigation goes through the initial-mount path instead.)
@@ -201,20 +255,24 @@ export default function ExplorerPage() {
             >
               Data dictionary →
             </Link>
-            <DatasetPicker datasetId={datasetId} onChange={handleDatasetChange} />
+            <div data-tour="picker">
+              <DatasetPicker datasetId={datasetId} onChange={handleDatasetChange} />
+            </div>
           </div>
         }
       />
 
       {/* Body: 3-column layout */}
       <div className="flex-1 max-w-[1600px] mx-auto w-full grid lg:grid-cols-[260px_1fr_280px] gap-0 border-x border-surface-line bg-surface-raised">
-        <aside className="border-r border-surface-line bg-surface-subtle/40 p-4 overflow-auto">
+        <aside data-tour="filters" className="border-r border-surface-line bg-surface-subtle/40 p-4 overflow-auto">
           <FilterPanel dataset={dataset} allRows={dataset.rows} filters={filters} onChange={setFilters} />
         </aside>
 
         <main className="flex flex-col bg-surface-raised border-r border-surface-line min-w-0">
-          <ChartToolbar dataset={dataset} config={config} onChange={setConfig} />
-          <div className="flex-1 min-h-[420px] max-h-[640px] bg-surface-subtle/30 p-2">
+          <div data-tour="toolbar">
+            <ChartToolbar dataset={dataset} config={config} onChange={setConfig} />
+          </div>
+          <div data-tour="chart" className="flex-1 min-h-[420px] max-h-[640px] bg-surface-subtle/30 p-2">
             <div className="w-full h-full bg-surface-raised rounded-lg shadow-editorial border border-surface-line" style={{ minHeight: 400 }}>
               {config.type === 'scatter' && xAttr && yAttr && (
                 <ScatterView
@@ -262,7 +320,7 @@ export default function ExplorerPage() {
           <DataTable dataset={dataset} rows={filteredRows} totalCount={dataset.rows.length} />
         </main>
 
-        <aside className="bg-surface-subtle/40 p-4 overflow-auto">
+        <aside data-tour="stats" className="bg-surface-subtle/40 p-4 overflow-auto">
           <StatsPanel dataset={dataset} rows={filteredRows} />
         </aside>
       </div>
@@ -270,6 +328,8 @@ export default function ExplorerPage() {
       <footer className="border-t border-surface-line bg-surface-raised py-3 text-center text-xs text-ink-muted">
         Prototype · {dataset.source}
       </footer>
+
+      {tourActive && <ExplorerTour steps={tourSteps} onClose={closeTour} />}
     </div>
   );
 }

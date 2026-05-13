@@ -654,6 +654,19 @@ export function chapterAnchorId(entry: Pick<ChapterEntry, 'course' | 'topic'>): 
 
 export const BUILT_COUNT = CHAPTERS.filter((c) => c.route).length;
 
+/** Which chapter-flow page applies to this chapter.
+ *  Reimagined = our dataset-native activity is the star (built + uses real data).
+ *  Augment    = the existing enVision 3-Act video stays the centerpiece. */
+export type ChapterFlow = 'augment' | 'reimagined';
+export function chapterFlow(entry: ChapterEntry): ChapterFlow {
+  return entry.route && entry.datasets.length > 0 ? 'reimagined' : 'augment';
+}
+
+/** Inverse of chapterAnchorId — find a chapter by its URL slug. */
+export function chapterById(id: string): ChapterEntry | null {
+  return CHAPTERS.find((c) => chapterAnchorId(c) === id) ?? null;
+}
+
 // Savvas enVision 3-Act Math video for the chapter, extracted from QR codes
 // in the official textbook (May 2026). URL pattern is deterministic per course
 // and zero-padded topic number — see docs/archive/qr_codes_extracted.md.
