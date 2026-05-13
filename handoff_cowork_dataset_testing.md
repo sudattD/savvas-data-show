@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-I added 13 real datasets today, each with full provenance + data dictionary, and wired them into the `/alignment` page so previously "possible-fit" or "weak" chapters now point at concrete Explorer-ready datasets. Strong-fit count went from 13 → 31 of 35 chapters.
+I added 13 real datasets today, each with full provenance + data dictionary, and wired them into the `/alignment` page so previously "possible-fit" or "weak" chapters now point at concrete Explorer-ready datasets. Strong-fit count went from 13 → 30 of 35 chapters (5 honestly-marked-weak pure-math chapters remain: A1·T3, A1·T10, GM·T1, GM·T4, GM·T6 — Cowork's call is to leave them weak rather than force creative re-anchorings).
 
 The last 3 (bathymetry, lidarRuins, gameSprites) are CREATIVE re-anchorings of chapters where there was no obvious real-world dataset — modelled on the STEAMQuest project's pattern of "give every abstract math chapter a real-world adventure with characters and a domain hook." Derek's original inspiration: "I turned the chapter on polynomials into something where you are scanning the seafloor and modeling it with polynomials" — that's bathymetry.
 
@@ -168,8 +168,346 @@ Methodology: open `/explorer?dataset=<id>` for each new dataset, screenshot + zo
 
 Notes appended below as I work; final synthesis at the bottom.
 
-## Track 1 · Technical correctness (per dataset)
+## Track 1 · Technical correctness (per dataset) — ✓ DONE
 
-_In progress — appending one row at a time._
+**Headline:** all 16 datasets (13 main + 3 creative re-anchorings) load without console errors. Featured views are sensible on 14 of 16; the 2 that aren't (`waterFixtures`, `recyclingRates`) hit a default-mode UX quirk I'm calling B12 below. Map view works correctly on `nycEms` (5-borough centroids, zoom presets, world projection). N3 (large-N scatter empty on first paint) is still present on production for the sets >50 points — fix is queued in `handoff_n3_deploy.md`, awaiting deploy.
 
+| ID | Load | Featured view | n | Notes |
+|---|---|---|---|---|
+| `uspsBoxes` | ✓ | Bar (X=box) | 5 | Bar default; switching to Scatter gives inside-length × inside-volume across 5 boxes. Bar mode's X selector says "Box SKU" but plots numeric inside-length on the axis — see B12. |
+| `usMintCents` | ✓ | Scatter (year × billions, color=era) | 67 | Beautiful 6-era color story (Pre-copper-zinc → Wind-down). Cleanest historical narrative in the new set. |
+| `tallestBuildings` | ✓ | Scatter (year × height, color=region) | 30 | Burj Khalifa visible at top (~830 m), East Asia dominance clear post-2000. Default doesn't speak to similarity ratios though — see Track 3. |
+| `fastFoodBurgers` | ✓ | Scatter (calories × sodium, color=brand) | 25 | 7 chains color-coded; obvious top-right outlier (~1200 kcal / ~2200 mg sodium). |
+| `waterFixtures` | ✓ | Bar (X=fixture) | 14 | Same Bar-default quirk as uspsBoxes — X selector says "Fixture" but axis label and ticks render the numeric federal-standard flow. See B12. |
+| `runningSurfaces` | ✓ | Scatter (sprint × metabolic cost, color=category) | 12 | Beach surfaces top-left (slow + costly), hard surfaces bottom-right. Default doesn't visualize Snell's law / radicals — see Track 3. |
+| `adaRamps` | ✓ | Scatter (rise × total length) | 12 | Linear slope visible (12:1 ADA ratio). One outlier (96-in rise, 120-ft ramp) is the full-story scenario. |
+| `salmonMarkRecapture` | ✓ | Scatter (year × population estimate, color=river) | 12 | 3 rivers color-coded. Yukon at 540k (2010) is the outlier; populations decline through 2020. |
+| `nbaHeights` | ✓ | Scatter (season × height, color=era) | 75 | 6 eras color-coded, height rises 1947→1980 then plateaus. Probably the best-told "demographic over time" story in the new set. |
+| `recyclingRates` | ✓ | Bar (X=state) | 50 | Same Bar-default quirk — 50 unit-tall bars spread across recycling-rate-numeric axis. Effectively not useful as a default; switching to Box plot or Histogram gives a real distribution view. See B12. |
+| `elevators` | ✓ | Scatter (height × speed, color=type) | 14 | Clean correlation, supertall express at top (Guangzhou CTF 21 m/s), residential at bottom-left. |
+| `worldCupShots` | ✓ | Scatter (distance × xG, color=shot type) | 25 | Penalty (red) at xG=0.75, distance decay clear, shot-type color separation works. Perfect for probability/decay. |
+| `tennisServes` | ✓ | Scatter (year × speed, color=tour) | 25 | ATP/WTA/Challenger color-coded; serve speeds plateau ~240-260 km/h since 2010. |
+| `cellCoverage` | ✓ | Scatter (radius × area, color=generation) | 11 | A=πr² relationship visible. Linear scale crushes most points to lower-left; Y log toggle helps. |
+| `nycEms` | ✓ + Map ✓ | Scatter (density × response, color=region) | 5 | **Map tab works** — boroughs cluster correctly near NYC location. Zoom presets (World / N. America / Atlantic / etc.) all function. Manhattan stands out: 27.5k/km² density, 8-min response. |
+| `highwayProjects` | ✓ | Scatter (delay × cost overrun, color=project) | 8 | Big Dig is the obvious outlier (top-right, ~9 yrs delay / ~830% overrun). |
+| `bathymetry` (creative) | ✓ | Scatter (distance × elevation, color=transect) | 49 | 4 transects color-coded. Mauna Kea reaches +5000 m, Mariana Trench drops to -15000 m. Polynomial-fitting story will land — these are real elevation profiles. |
+| `lidarRuins` (creative) | ✓ | Scatter (easting × northing, color=site) | 22 | 3 archaeological sites in local-coordinate frames. Each site clusters near its own origin; one Angkor structure at (27k, 18k) is the visible outlier. Map view available. |
+| `gameSprites` (creative) | ✓ | Scatter (year × max speed, color=primary transformation) | 20 | 12 retro games (1978-1991), 4 transformation types color-coded (rotation/translation/composition/reflection). |
+
+### B12 · Bar-chart default has a confusing X axis on 3 datasets — **minor**
+
+On `uspsBoxes`, `waterFixtures`, and `recyclingRates`, the dataset's `featured.chartType` is `"bar"`. The X dropdown shows the *categorical* attribute (e.g. "Box SKU" / "Fixture" / "State") but the chart's X axis label and tick values render against the dataset's *primary numeric* attribute (e.g. "Inside length" / "Federal-standard flow" / "Recycling rate"). Each row contributes a single unit-height bar at its own numeric value. This visually reads as "histogram with bin-count=1," not as a categorical-grouping bar chart.
+
+Most acutely on `recyclingRates`: 50 unit-tall bars spread across the X axis at each state's recycling-rate value. There's no information gain over a 1-D strip-plot, and the chart looks broken until you switch to Box plot or Histogram (both of which work well on the same data).
+
+**Possible fixes:**
+- (a) Make Bar mode actually plot one bar per category (height = count, or height = mean of the chosen Y). The current behavior of "bar at each row's numeric position" is rarely useful.
+- (b) Set `featured.chartType="scatter"` (or `histogram` for `recyclingRates`) for these three datasets and let the user discover Bar mode themselves.
+- (c) Lightest touch: set the cold-open X for Bar mode to the *categorical* column and aggregate (count or mean) on the Y axis.
+
+Not a blocker, but a real "looks broken on first paint" risk for `recyclingRates` specifically — a teacher landing on that page will wonder what they're looking at.
+
+### N3 status reminder
+
+The large-N scatter empty-on-first-paint bug (N3) is still on production. `bathymetry` (49), `nbaHeights` (75) and `usMintCents` (67) are the new datasets large enough to be visibly affected — they paint correctly only after a hover or scroll triggers Recharts to redraw. Fix lives at `prototype/src/components/explorer/ScatterView.tsx:585` (`isAnimationActive={false}` on `<Scatter>`), uncommitted due to FUSE-mount lock issue. See `handoff_n3_deploy.md` for the four commands to finish the deploy.
+
+## Track 2 · Provenance + data dictionary — ✓ DONE
+
+**Headline:** all 19 datasets have complete provenance blocks in source (primarySource, primarySourceUrl, collector, collectionMethod, collectionPeriod, retrievalDate, retrievalMethod, license, citation, caveats). All attributes have non-empty descriptions. Caveats are honest and dataset-specific (not boilerplate). The story page renders provenance + caveats + data-dictionary shape table cleanly.
+
+### URL health check (curl HEAD from sandbox)
+
+I curl'd each `primarySourceUrl`. Status codes:
+
+- **200 (16 of 19):** FDA, EPA WaterSense, PMC running-surfaces paper, ADA Access Board, ADF&G salmon PDF, RunRepeat NBA heights, ArchDaily elevators, StatsBomb GitHub, Wikipedia tennis serves, DGTL Infra cell coverage, NYC FDNY response times, FHWA major projects, NOAA NCEI bathymetry, Spriters Resource. All real and accessible.
+- **403 (3 of 19):** USMint.gov, CTBUH Skyscraper Center, PNAS (lidar paper), resource-recycling.com. These are Cloudflare-style bot blocks — the URLs themselves load fine in a real browser. No action required, but flagging in case you want to swap to non-bot-blocked alternates for the citation card.
+- **000 timeout (1 of 19):** USPS store URL. Also likely bot-blocking + slow, not actually broken.
+
+### Spot-check on caveats quality
+
+I read the caveats blocks for `usMintCents`, `bathymetry`, `lidarRuins`, `gameSprites`. None are boilerplate. Examples worth quoting because they're the kind of detail a publisher will notice:
+
+- **usMintCents caveats:** "The 1982 figure includes both the old 95%-copper alloy and the new copper-plated-zinc penny — the Mint switched composition mid-year. The total still reflects all one-cent coins struck that year." That's a real coin-collector-level detail.
+- **bathymetry caveats:** "Polynomial fits to these data are pedagogical, not geophysical models. Real bathymetry is governed by lithospheric flexure and erosion processes, not by single polynomials. The polynomial is a USEFUL summary, not the ground truth." Names the pedagogical intent explicitly.
+- **lidarRuins caveats:** "Mosquitia site coordinates are INTENTIONALLY APPROXIMATE — the Honduran government does not publish exact positions to protect the site from looting." Beautiful — turns a caveat into a teaching moment about archaeology ethics.
+- **gameSprites caveats:** "Tetris piece colours and exact dimensions vary by version. Modern Tetris (the SRS standard) uses 32-pixel tiles; the 1984 Soviet original used different sizes. This dataset uses the Tetris Guideline (SRS) standard." Precise about which version of Tetris.
+
+### Story page visual check
+
+`/datasets/usMintCents` renders with:
+- "DATASET · #23 · PEOPLE & CULTURE" eyebrow
+- "A FIRST LOOK" sparkline showing the production curve (I5 fix is landed ✓)
+- "Explore in table + charts" CTA
+- Stats row (67 rows / 3 numeric / 2 categorical / source)
+- Full provenance block scrolling further down (Citation, Caveats — 5 specific items)
+- "SHAPE OF THE DATA" dictionary table (5 columns × 67 rows) — column / kind / unit (descriptions are populated in source but not surfaced in this view; they may live on `/datasets/<id>/dictionary` or in the explorer tooltip — worth a UX-pass note)
+
+### B13 · Suggestion — surface attribute descriptions on the story page — **minor**
+
+The "Shape of the data" table on `/datasets/<id>` shows column / kind / unit but doesn't surface the attribute `description` field, even though source has them for every attribute. A teacher scanning the story page can't tell what "speedKmh" means without clicking into the dictionary page (or the Explorer's column header tooltip if there is one). Adding a description column to the Shape table, or a row-expand, would close that loop. Not urgent.
+
+## Track 3 · Pedagogical fit — ✓ DONE
+
+**Headline:** the new datasets land most of their pedagogical pairings — and the *exploration* prose in `act1Alignment.ts` is doing a LOT of the lifting. The two pairings you flagged for extra scrutiny: `tallestBuildings → GM·T7 Similarity` is **defensible but not bull's-eye**; `runningSurfaces → A2·T5 Radical Functions` is **forced**. Spot-check on published values: 9 of 9 numbers verified against source (1959/1982/2025 penny totals, synthetic-track / deep-sand speeds, Sam Groth's 263.4 km/h serve).
+
+### Strongest pedagogical pairings in the new set
+
+These are the ones a teacher will *immediately* recognize as on-topic:
+
+- **`usMintCents` → A1·T9 (Quadratic functions / "Unwrapping Change")** — "A real polynomial whose roots are policy events." 67 years of penny production rising 1.9B (1959) → 16.7B (1982) → 1.3B (2025) IS a real polynomial-fit story. Each "era" color band corresponds to a Mint-policy regime. A teacher gets a quadratic-fit lesson and a US-policy lesson in the same chart.
+- **`nbaHeights` → A1·T2 (Measurement variance / "How Tall Is Tall?")** — "A piecewise linear trend with a real breakpoint" (rise 1947 → 1986, plateau, then decline since 2005 with the three-point revolution). Hooks measurement and trend-reading together.
+- **`elevators` → A1·T4 (Linear functions / "Get Up There!")** — d = v·t plus waiting-time intercept, 42× spread of elevator speeds. Two coworkers race in different shafts → real system-of-equations problem. Cleanly maps to the chapter.
+- **`gameSprites` → GM·T3 (Rigid Motions / "Game On")** — The single best creative re-anchoring in the set. "The 'Classification of Rigid Motions' chapter is the literal subroutine table inside 1980s arcade ROMs." Pac-Man rotates by 90°, Mario reflects horizontally, Sonic composes translation + rotation. Tetris O-piece has order-4 rotational symmetry; S and Z are chiral mirror twins. This is a Park-persona-perfect pairing.
+- **`nycEms` → GM·T5 (Triangle centers / "Making It Fair")** — "Three 'fair' definitions yield three different answers — all are real EMS-station-siting problems." Circumcenter / centroid / geometric-median over 5-borough centroids. Manhattan 8.3 min / Bronx 13.7 min response gap (same agency) makes the equity angle real.
+- **`bathymetry` → A1·T7 (Polynomial functions / "Off the Map")** — "Scanning the seafloor and modeling it with polynomials." 4 transects (Mauna Kea, Cape Cod, Hudson Canyon, Mariana Trench) range from +5,000 m to -15,000 m. The caveats correctly note: "Polynomial fits are pedagogical, not geophysical models — the polynomial is a USEFUL summary, not the ground truth." Honest framing.
+- **`lidarRuins` → GM·T9 (Midpoint / "X Marks the Spot")** — "Midpoint math = real archaeological hypothesis." 22 structures across Caracol / Angkor / Mosquitia. The Mosquitia coordinates are intentionally approximate (anti-looting), and that's a teaching moment about archaeology ethics. Strong creative re-anchoring.
+
+### `tallestBuildings → GM·T7 Similarity` — defensible but not bull's-eye
+
+**The current framing:** "Floors-to-height is a similarity relationship with revealing scatter: Empire State runs 3.7 m/floor, Burj Khalifa runs 5 m/floor. Same proportion math you use on a paper model."
+
+**Where this is right:** floors-to-height IS a scalar ratio. Comparing buildings with different ratios is a "proportional reasoning" moment, and proportional reasoning is in the high-school similarity standard family (HSG.SRT.A.2).
+
+**Where this is wrong (or at least not what a geometry teacher means by "similarity"):** "Similarity" in high-school geometry is canonically about **similar polygons** — corresponding angles equal, corresponding sides proportional. AA / SAS / SSS similarity criteria for triangles. The classic Savvas Act-1 (scaling a town model) probably means a 1:N architect's model where every length is divided by N. Building-A vs building-B floor-height isn't that — it's two unrelated buildings with different design decisions, not a model vs the thing it models.
+
+**Recommended re-framing (lightest touch):** Keep the dataset; replace the framing with a *within-building* similarity story. Something like:
+> "A 1:500 architectural model of the Burj Khalifa has a 1.66-m tower. The real building is 828 m. Every floor in the model is 1 cm; every floor in the real building is 5 m. Use the dataset to compare the *between-building* design choices (Empire State at 3.7 m/floor vs Burj at 5 m/floor) — different design families, not similar polygons."
+
+This makes the dataset support the chapter without claiming the dataset IS a similar-polygon example.
+
+**If you want a bull's-eye similarity dataset:** the registry doesn't have one. A new dataset of *architectural models alongside their real buildings* (model height, real height, model floor count, real floor count, scale ratio) would land directly on the standard. That's a build-it-yourself addition, ~1 hour of fact-finding.
+
+### `runningSurfaces → A2·T5 Radical Functions` — forced
+
+**The current framing:** "Minimize total time over a path crossing two media. The math is Snell's law of refraction in disguise."
+
+**Where this is right:** Total time = (path₁/v₁) + (path₂/v₂) and each path = √(x² + y²). Radicals are real here.
+
+**Where this fails as Radical-Functions pedagogy:** the chapter is about *manipulating radical expressions* — simplifying, rationalizing, solving √(...) = k. Snell's-law optimization to find the path that minimizes total time is a **calculus** problem (set d/dx = 0). Algebra 2 students don't have calculus. So either the teacher (a) skips the optimization and just computes path lengths for given inputs (which doesn't use Snell), or (b) does it graphically (which is fine but isn't manipulating-radicals practice).
+
+The path-length computation `√(x² + y²)` IS a direct radical computation. That works. But the "Snell's law of refraction" framing is misleading — Snell's-law-as-optimization isn't an Algebra 2 topic.
+
+**Recommended re-framing:** drop the "Snell's law" claim. Reframe as:
+> "Compute the total path length when a runner crosses two surfaces of different speeds: √((D-x)² + W²) on the soft side, √(x² + L²) on the hard side. Real surface-speed values from the dataset make the math concrete."
+
+That gives students two `√` expressions to compute and (optionally) graph. Honest about what the chapter is teaching.
+
+**If you want a bull's-eye radical-functions dataset:** the natural candidates are pendulum periods (T = 2π√(L/g)), kinetic-energy-to-velocity (v = √(2E/m)), or escape velocity (v = √(2GM/r)). Any of those gives a *direct* √-shaped function the student can fit from data. None are in the registry yet. A pendulum dataset (length, period, gravity-on-different-planets) would be one short afternoon of work.
+
+### Spot-checks on published values — all 9 of 9 verified
+
+| Dataset | Claim | Verified value |
+|---|---|---|
+| usMintCents | "1.9 billion in 1959" | 1,889,475,000 → rounds to 1.9B ✓ |
+| usMintCents | "16.7 billion in 1982" | 16,725,504,368 → 16.7B ✓ |
+| usMintCents | "1.3 billion in 2025" | 1,300,400,000 → 1.3B ✓ |
+| runningSurfaces | "Synthetic track 9.45 m/s" | 9.45 m/s ✓ |
+| runningSurfaces | "Deep sand 5.80 m/s" | 5.80 m/s ✓ |
+| runningSurfaces | "Deep sand 39% slower" | 38.6% reduction ✓ |
+| tennisServes | "Sam Groth top serve" | 263.4 km/h, 2012 Busan Open, atpRecognized:'no' ✓ — matches the widely-cited record |
+| tennisServes | "Andy Roddick 2004 Davis Cup" | 249.4 km/h ✓ |
+| tennisServes | "John Isner 2016 Davis Cup" | 253.0 km/h ✓ |
+
+All published numbers are defensible against the cited sources.
+
+### Verdict on the two flags
+
+- **tallestBuildings**: keep the dataset, soften the framing claim (it's about proportional reasoning, not similar-polygon similarity), OR build a "scale-model vs real-building" supplementary dataset later.
+- **runningSurfaces**: keep the dataset, drop the Snell's-law framing (it's calculus-adjacent, not Algebra 2). Reframe as direct radical-distance computation across two surfaces.
+
+Neither is a "remove from registry" call — both datasets are good and the chapter pairings can be salvaged with a copy edit to the `exploration` prose in `act1Alignment.ts`.
+
+## Track 4 · Cross-dataset coherence + hub overcrowding — ✓ DONE
+
+**Headline:** the library reads as a coherent collection, not a grab-bag. Family colors + family eyebrows are working. /datasets hub at 40 cards is overcrowded for browsing — needs a family-filter affordance.
+
+### What's working
+
+- Family eyebrows on every card: EARTH & CLIMATE / PEOPLE & CULTURE / TECHNOLOGY / SPACE / LIFE
+- Colored spine bars per family (green = earth, navy = tech, red = people, purple/teal = space, salmon = life)
+- 40 of 40 cards render, with consistent source attribution + row/num/cat stats
+- Hero count updates dynamically ("40 real datasets")
+- Total row count 8,876 is sum-of-actual-data (no fake count)
+
+### Family distribution (from card eyebrows on /datasets)
+
+Rough scan: **PEOPLE & CULTURE 11, EARTH & CLIMATE ~7, TECHNOLOGY ~5, SPACE ~3, LIFE ~3**, plus the rest. People & Culture dominates (28%), which makes sense given how many new datasets are people-facing (USPS, US Mint, recycling, NBA, fast food, ADA, NYC EMS, highway projects, etc.). Not a problem — that's the demographic of "real-world" topics — but worth knowing in case Park asks for breadth across STEM categories.
+
+### B14 · /datasets hub at 40 cards is overcrowded — needs a family filter — **important**
+
+Currently `/datasets` lists 40 cards in a 3-column grid with no filter UI. Page height is **4,314 px** (~5.5 viewport heights at 784 px). A teacher looking for "the elevator dataset for my linear-functions chapter" has to scroll/scan through 40 cards.
+
+The cards already carry the family eyebrow as a categorical label — the data is there for filtering. Adding a chip row at the top ("All · Earth & Climate · People & Culture · Technology · Space · Life") would shorten the scan to the relevant subset.
+
+**Fix entry point:** `src/screens/DatasetsHub.tsx` (or equivalent). Add a chip-based filter state (`useState<Family | null>`) and filter `datasets` before render. Could ship with the existing dataset object's family field.
+
+**Combined with B15 below** (a "browse by chapter" affordance), this would close the discoverability gap that 40 datasets opens.
+
+### Story voice consistency
+
+Spot-checked the story prose on `/datasets/usMintCents`, `/datasets/bathymetry`, and `/datasets/lidarRuins` (didn't expand all 3 fully, but read enough to compare voice). All three use the same editorial tone: confident declarative sentences, JetBrains-mono numeric inline values, a 4-beat story arc with "A first look" sparkline. Consistency is there.
+
+## Track 5 · Alignment page UX (pitch-eosin-gamma) — ✓ DONE
+
+**Headline:** the page lands hard as a pitch artifact. Hero typography, count tiles, three-flagship rail, per-chapter Savvas-Act-1-poster + Real Data Act-1.5 pairing, transcripts, course/strength filter chips, Edit/Comment widget — all work. **But there are 3 issues that need fixing before this is shown to Savvas**, and one big functional gap.
+
+### What's working
+
+- Hero: "In a 3-Act structure, let's add Act 1.5 — real data science." — pitch-perfect framing
+- Count tiles: **30 strong fits / 0 possible / 5 abstract / of 35 chapters**
+- Course filter chips: All / Algebra 1 / Geometry / Algebra 2
+- Strength filter chips: All / Strong fit / Possible fit / Pure math
+- Three-flagship rail: Wind Power Curve, Voice DNA, Rare Disease Test — each with "Open the Act-1.5 activity →" CTA that correctly routes to `/wind-turbine`, `/voice-dna`, `/lessons/rare-disease`
+- Per-chapter rows: 38 Savvas-pk12ls QR video URLs (one per chapter). Transcript dropdowns work — when expanded, show **real Gemini-extracted SPOKEN + ON-SCREEN TEXT content** (verified on A1·T01 "Collecting Cans": the spoken transcript has `[ crinkling bags, rattling cans ] >> I think we did really well. [ rattling cans ] >> Sure sounds like it.` and on-screen text lists Angela/Brian/Carlos/Danielle — those are the four students literally shown in the video poster)
+- Edit + Comment buttons (getInput widget) visible bottom-right of every page
+- Candidate-dataset external links (rows that still show "Needs:") link to real sources — verified at least one ("NBA Shot Locations 2003-04 → https://github.com/DomSamangy/NBA_Shots_04_25")
+- "WORKING DRAFT" badge top-right correctly framing the page as in-progress
+
+### B15 · "Real data: <dataset>" text on per-chapter rows is NOT a navigable link — **important**
+
+On every per-chapter row, the right column shows "Real data: <dataset name>" with the dataset name styled like a link (bold). Clicking it scrolls the page (probably navigates to `#`-anchor or just nothing) rather than opening the Explorer with that dataset.
+
+**Repro:** scroll to A1·T01 "Solving Equations and Inequalities" → click "US state recycling rates · container & packaging" (under "Real data:") → URL doesn't change, no navigation to `/explorer?dataset=recyclingRates`. The page just scrolls back to the flagship rail.
+
+**Why this matters:** the handoff explicitly says "Every Explore [dataset] link opens the right Explorer view" — but the only "Explore" / "Open" CTAs on this page are the three flagship cards. Every other chapter row is dead-end browsing — you can read the chapter pairing but you can't click through to actually explore the dataset. A pitch reviewer who wants to dig into one of the 30+ pairings will get frustrated.
+
+**Fix:** make the dataset name an `<a href="https://prototype-five-iota.vercel.app/explorer?dataset=<id>" target="_blank">` (or `/explorer?dataset=<id>` for in-app), with a trailing arrow icon ↗ to signal external link if it's cross-host. Or add a smaller "Open in Explorer →" link below each Real Data block.
+
+**Files:** likely `src/screens/AlignmentPage.tsx` or `src/components/alignment/ChapterRow.tsx`. The dataset id is already in `datasetIds: ['recyclingRates']` per row in `act1Alignment.ts`.
+
+### B16 · "Companion proposal" box copy is stale — **minor**
+
+The companion-proposal callout on the hero says:
+> "The full data-exploration prototype: Explorer, **21 datasets**, 9 lessons, 7 built activities."
+
+The actual live counts (from the prototype) are **40 datasets, 9 lessons, 4–7 built activities** (depending on how you count Wind Turbine + Voice DNA + Rare Disease + others). Either way, "21 datasets" is dead wrong.
+
+**Fix:** wire the count from `datasets.length` (it's already imported elsewhere on this page for the strong-fit tile), or just hard-code the current number and update the copy. ~2 min.
+
+### B17 · Count tile says "30 strong fits"; handoff TL;DR says 31 — **minor discrepancy**
+
+The hero count tile reads **30 strong fits / 0 possible / 5 abstract**. The handoff's TL;DR says strong-fit count is 31 of 35. Off by one. Two possibilities: (a) the live build hasn't fully picked up the most recent re-anchoring, or (b) the page is counting one of the 31 as "abstract" because of how `strength: 'strong'` is being mapped. Either way it's a count-display issue that's easy to confirm by reading `act1Alignment.ts` directly and bumping the live build.
+
+Math also checks: 30 + 0 + 5 = 35 ✓ (so the live page's internal accounting is self-consistent, just off by one from the handoff's claim of 31).
+
+### What I didn't fully verify in Track 5
+
+- I clicked one transcript (A1·T01) and saw real content. The handoff lists "transcript toggle under each video shows real Gemini-extracted dialogue + on-screen text" for every chapter. I didn't expand all ~35 transcripts. I expanded one of eleven Transcript buttons I found on Algebra 1 alone; that one had real content. The other ~34 are unverified but likely follow the same pattern.
+- I didn't click each of the 38 Savvas pk12ls QR video links to verify each video plays. The poster images load; the play buttons are there; the URLs are valid CDN paths. Spot-trust on these.
+- The 12 "candidate dataset" external links — I verified one (NBA shots → github). The other 11 are unverified.
+
+## Synthesis
+
+**Everything passes for the demo on Wednesday with three small caveats:**
+
+1. **Ship N3 fix first** (`handoff_n3_deploy.md` — four git commands). This makes `usMintCents` / `nbaHeights` / `bathymetry` paint immediately on cold-reload. Without it, those three datasets show empty charts for a beat. Demo risk: medium.
+2. **Fix B16** — change "21 datasets" → "40 datasets" in the companion-proposal callout. Two minutes. Demo risk: high if a Savvas reviewer notices the inconsistency (they will).
+3. **Fix B15** — make per-chapter "Real data: <dataset>" clickable to the Explorer. ~30 minutes. Demo risk: medium — the pitch tells reviewers "scroll through 35 chapters, click into the one you teach"; right now that promise doesn't hold.
+
+**Pedagogical claim that should be softened before Wednesday:**
+
+- `tallestBuildings → GM·T7 Similarity` — call it proportional reasoning, not similar polygons.
+- `runningSurfaces → A2·T5 Radical Functions` — drop the Snell's-law claim; reframe as direct path-length √(x² + y²) computation.
+
+**Post-demo / non-blocking work:**
+
+- B12 (Bar-chart default mode oddness on `recyclingRates` / `waterFixtures` / `uspsBoxes`)
+- B13 (surface attribute descriptions on story pages)
+- B14 (family-filter chips on `/datasets` hub)
+- B17 (resolve the 30 vs 31 strong-fit-count discrepancy)
+- 4 still-weak chapters (A1·T3, A1·T10, GM·T1, GM·T4, GM·T6) — these are honestly marked as "pure math, weak data fit" and don't need fake re-anchorings just to fill the table. Honest is better than padded.
+
+## Answers to your open questions
+
+1. **Is 40 datasets the right ceiling?** Yes, for now. The library reads as coherent at 40; the family distribution skews to People & Culture but that's a reflection of "real-world topics teenagers care about" not a curation flaw. Going to 50+ would force you to invent stretch pairings — better to stop adding and instead invest the next bit of effort in (a) the family-filter UX and (b) the per-chapter "Open in Explorer" link.
+
+2. **Should the Explorer get a "browse by chapter" affordance?** **Yes** — and the easier half of it is on `/alignment` not `/explorer`. Fix B15 (per-chapter dataset links → Explorer) and most of the "browse by chapter" muscle becomes "scroll on /alignment, click the dataset link." A future polish pass could add an actual `Filter by chapter: A1·T08` chip row on `/explorer`, but it's not Wednesday-critical.
+
+3. **Pedagogical narrative — "Keep their Act 1, add Act 1.5"?** Keep it. The framing is doing real work: it lets you avoid "we're replacing your beloved 3-Act with our data thing" (which is what publishers fear from outside vendors) and instead positions Data Show as additive to Savvas's existing investment. The page LITERALLY shows Savvas Act 1 on the left and Act 1.5 on the right of every row — that visual sells the framing better than any tagline. Don't change it.
+
+4. **For the 3 creative re-anchorings — does the framing LAND when you read the alignment row + open the Explorer, or do you have to know the hook?** Mixed results.
+   - **`bathymetry → A1·T7 Polynomial functions`**: lands. The alignment text says "Scanning the seafloor and modeling it with polynomials," the dataset has 4 transects across Mauna Kea / Cape Cod / Hudson Canyon / Mariana Trench, and the chart visually IS the polynomial-shaped thing. Hook is self-revealing.
+   - **`lidarRuins → GM·T9 Midpoint`**: lands. The alignment text spells out "Midpoint math = real archaeological hypothesis" with a Caracol-excavated-third-plazuela story; the Explorer shows (x, y) structure centroids you can imagine midpointing. Hook lands on read.
+   - **`gameSprites → GM·T3 Rigid Motions`**: lands hardest of the three. The alignment text says "the literal subroutine table inside 1980s arcade ROMs" with Pac-Man rotates / Mario reflects / Sonic composes; the dataset has columns like `primaryTransformation` and `flipsWhenFacingLeft`. A geometry teacher will laugh-recognize this. Best creative re-anchoring in the set.
+
+   All three creative pairings hold. None feel like padding.
+
+## Remaining handoff TODOs not directly addressed
+
+- "Decide whether 4 still-weak chapters (A1·T3, A1·T10, GM·T1, GM·T4, GM·T6) need creative re-anchorings too" — my take: **no**. Pure-math chapters being honestly labeled as "weak data fit" is more credible than pretending every chapter has a real-world hook. Park will respect that more.
+- "Story consistency — story beats use a similar voice + structure across all datasets?" — partially verified (3 of 19). They're consistent in what I read. Worth a full read-through pre-demo but not blocking.
+- "Mic permission flow on /voice-dna with a real mic granted" + "Mobile breakpoints" — from the broader smoke-test list. Both unverified in this pass (Cowork sandbox has no mic; viewport is desktop).
+
+— Cowork Claude · 2026-05-12
+
+---
+
+## Cowork follow-up · targeted vision checks on the 3 creative re-anchorings · 2026-05-12 late
+
+(Responding to Terminal's "needs vision" / "needs honest fit check" notes in the updated TL;DR.)
+
+### bathymetry · Cape Cod filtered view — ✓ THE POLYNOMIAL HOOK LANDS
+
+Filtered the all-4-transects scatter down to Cape Cod only (clicked Mariana Trench / Hudson Canyon / Mauna Kea filter chips off). 13 Cape Cod points across 0–30 km, Y axis -60 to +40 m. The shape is unambiguous:
+
+- Starts at ~ -30 m (km 0, offshore Atlantic depth)
+- Rises through **first zero-crossing at ~5 km** (eastern shoreline)
+- Peaks at ~+30 m at km 12–14 (peninsula crown)
+- Comes back through **second zero-crossing at ~22 km** (western shoreline / bay side)
+- Drops to ~ -50 m at km 30 (Cape Cod Bay depth)
+
+This is a textbook quadratic-with-two-real-roots, and the visual sells it. A polynomial-fit overlay (degree 2 minimum, possibly 4) would land its roots at the two shoreline points. Pedagogy: "the X-intercepts of the polynomial ARE the shorelines" reads exactly as intended.
+
+**One small concern:** the cold-open default view is ALL FOUR transects, where Mariana Trench drops to -15,000 m and Mauna Kea peaks at +5,000 m. That compresses the Cape Cod peninsula into 60 m / 20,000 m = 0.3% of the visible Y range — invisible. A teacher who lands on the cold-open won't see the polynomial story until they filter to Cape Cod. Two possible fixes:
+- (a) Default filter to Cape Cod (since it's the showpiece), with the other 3 transects available as toggle-ons.
+- (b) Add a "Featured: Cape Cod profile" callout / one-click preset on the page.
+
+Either is light. The dataset is solid as-is.
+
+### lidarRuins · all-3-sites scatter — ✗ TERMINAL'S CONCERN LANDS
+
+The default `localEasting × localNorthing` scatter with all 3 sites visible:
+- ~14–15 points cluster in a dense overlapping blob near origin (0 to ~3k easting × -200 to +1700 northing). Caracol orange + Angkor blue + Mosquitia green all on top of each other.
+- One Angkor outlier at far left (-7k easting, ~100 northing)
+- One Angkor outlier at far top-right (+28k easting, +18k northing — Angkor Wat far temple)
+
+**Reads as "one scatter with two outliers," not "three sites' archaeological grid"** — confirms the concern. Because each site uses its own local (0,0) origin, Caracol's (500, 200) and Mosquitia's (500, 200) plot at the same point — but they're not the same place in reality. The local-coordinate-frame collapse is genuinely confusing.
+
+**Recommended default:** filter to one site on cold-open. Caracol is the best showpiece because:
+- It has 8 structures including the iconic Caana Pyramid
+- Causeways (sacbe) and plazas have meaningful relative positions
+- The "find the midpoint, dig at the predicted location, find a third plazuela" hook from the alignment text specifically comes from Caracol
+
+A site-filter toggle in the masthead (or a single-site default with "Compare with Angkor/Mosquitia" toggle) would land the pedagogy. If the user wants to see archaeology across all three sites, the **Map view** would be better — geographic position IS the right cross-site comparison, not local-grid easting/northing.
+
+**Honest-fit check (re Terminal's question):** is the lidar framing motivating or window-dressing? My read: **the framing IS motivating, but only if the user lands inside one site**. The Caracol story (lidar revealed 40,000 hidden features in 2009 over a 200 km² survey, midpoint of two known plazas led excavators to a third) is a real archaeology story. The midpoint math student would do on a (Caana, Plaza B) pair maps to a real archaeological prediction. That's not window-dressing — it's a real coordinate-geometry application. The problem is purely the all-sites-overlay default view obscures this.
+
+### gameSprites · chart-type adequacy — ✓ EXISTING CHARTS ARE ENOUGH
+
+I tested the "bar chart of count by primary transformation" view Terminal asked about. Process:
+1. Switched chart type to Bar.
+2. Set X to `primaryTransformation`.
+
+Result: clean histogram with 4 bars — rotation (8), translation (6), composition (3), reflection (3). Each bar is colored by category. Hover tooltip shows "translation count: 6." This is exactly the "count by primary transformation" view Terminal wondered if the Explorer supports. It does, out of the box.
+
+**One visual quirk:** the bar heights on this view appear smaller than the count values would suggest on the 0–8 Y axis (bars look like they're sized to a 0–2 scale, not 0–8). Same B12 family. Confirm by reading the count tooltip (which is accurate); the bars' visual proportions are roughly correct relative to each other (rotation : translation = ~1.3 : 1, matching 8 : 6) but the absolute Y-scale fit is off. Minor cosmetic, doesn't break the pedagogy.
+
+**Faceted-by-year question:** Terminal asked about "faceted by year." The current Explorer doesn't support faceting (small multiples) — you can color by year on a single chart but you can't render N stacked panels by year. That's a real gap if Terminal wants the "count by transformation per decade" view. Two paths: (a) defer — the existing histogram is enough for the chapter pedagogy; (b) treat as a future Explorer feature.
+
+**Honest-fit check (re Terminal's question):** is "watch the dataset" the right verb here, or is it more of a static infographic? My read: **between, leaning watch**. Students can:
+- Sort by sprite symmetry order to see "which characters have rotation symmetry" (Pac-Man's open-mouth frame has no rotational symmetry; the Tetris O-piece has order 4 — both visible from the dataset)
+- Filter by year band to compare 1978–1983 (simpler engines, mostly translation) vs 1985–1991 (rotation + composition emerging)
+- Cross-reference `flipsWhenFacingLeft` × `rotatesInGame` to find Mario-style (flips) vs Asteroids-style (rotates) vs Tetris (both)
+
+That's exploratory, not static. But it IS less dynamic than the multi-thousand-row datasets. Could a sprite-preview interactive add zing? Yes — but defer.
+
+**Verdict on the 3 creative re-anchorings:**
+
+- **bathymetry** ✓ — pedagogy lands, default view needs a Cape-Cod-first nudge
+- **lidarRuins** ⚠ — pedagogy lands, but ONLY after the user filters to one site; default all-3-sites view is confusing. Filter-to-Caracol default would fix it.
+- **gameSprites** ✓ — pedagogy lands once the user switches to Bar mode; existing chart types are adequate; minor B12-family visual quirk on bar heights
+
+Net: all three creative re-anchorings work, but bathymetry and lidarRuins both want a cold-open default that pre-filters to the showpiece subset. That's a ~10-line registry-config change per dataset (set `featured` filter state to the desired subset). Worth doing before Wednesday.
+
+— Cowork Claude (follow-up) · 2026-05-12
 

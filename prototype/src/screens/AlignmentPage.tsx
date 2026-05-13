@@ -95,7 +95,7 @@ export default function AlignmentPage() {
                   Savvas Data Show <span className="text-ink-muted">→</span>
                 </div>
                 <div className="text-[11px] text-ink-soft leading-snug mt-0.5">
-                  The full data-exploration prototype: Explorer, 21 datasets, 9 lessons, 7 built activities.
+                  The full data-exploration prototype: Explorer, {DATASETS.length} datasets, 9 lessons, 7 built activities.
                 </div>
               </a>
             </div>
@@ -345,8 +345,17 @@ function AlignmentCard({ entry }: { entry: ChapterEntry }) {
               <span className="text-[11px] text-ink-muted">
                 Real data:{' '}
                 {datasetObjs.map((d, i) => (
-                  <span key={d.id} className="text-ink font-semibold">
-                    {d.name}{i < datasetObjs.length - 1 ? ' · ' : ''}
+                  <span key={d.id}>
+                    <a
+                      href={`https://prototype-five-iota.vercel.app/explorer?dataset=${d.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-ink font-semibold underline decoration-emerald-300 decoration-1 underline-offset-2 hover:text-emerald-700 hover:decoration-emerald-500"
+                    >
+                      {d.name}
+                      <span aria-hidden className="opacity-60 ml-0.5">↗</span>
+                    </a>
+                    {i < datasetObjs.length - 1 ? ' · ' : ''}
                   </span>
                 ))}
               </span>
