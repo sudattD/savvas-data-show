@@ -1,46 +1,53 @@
-import { useState } from 'react';
-import ProgressDots from '../components/ProgressDots';
-import Act1Identify from './Act1Identify';
-import Act2Model from './Act2Model';
-import Act3Interpret from './Act3Interpret';
+import { useCallback, useState } from 'react';
 import Masthead from '../components/Masthead';
 import SeeAllDataLink from '../components/SeeAllDataLink';
 import EnvisionVideoLink from '../components/EnvisionVideoLink';
+import ProgressDots from '../components/ProgressDots';
+import WindWonder from './wind/WindWonder';
+import WindInvestigate from './wind/WindInvestigate';
+import WindReveal, { WindClosingContext } from './wind/WindReveal';
+import type { ClassWonderings } from './wind/WindWonder';
+import type { WindSummary } from './wind/WindInvestigate';
+import NextRow from './wind/NextRow';
+import type { AdvanceState } from './wind/NextRow';
+import ActRail from './wind/ActRail';
 import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { getDataset } from '../data/registry';
 
-interface RunState {
-  conjecture: string;
-  low: number;
-  high: number;
-  a: number;
-  b: number;
-  c: number;
-  r2: number;
-  predicted10: number;
-}
-
-const INITIAL: RunState = {
-  conjecture: '',
-  low: 0,
-  high: 0,
-  a: 5,
-  b: 0,
-  c: 0,
-  r2: 0,
-  predicted10: 0,
-};
-
 export default function WindTurbinePage() {
   useDocumentTitle('Wind Power Curve');
   const [act, setAct] = useState<1 | 2 | 3>(1);
-  const [state, setState] = useState<RunState>(INITIAL);
+  const [wonderings, setWonderings] = useState<ClassWonderings | null>(null);
+  const [summary, setSummary] = useState<WindSummary | null>(null);
+  const [advance, setAdvance] = useState<AdvanceState | null>(null);
 
-  const handleRestart = () => {
-    setState(INITIAL);
+  const restart = () => {
     setAct(1);
+    setWonderings(null);
+    setSummary(null);
+    setAdvance(null);
   };
+
+  // The advance handler each Act publishes captures internal state via
+  // closure; useCallback gives the child a stable setter so its useEffect
+  // doesn't refire every render.
+  const handleAdvanceStateChange = useCallback((next: AdvanceState) => {
+    setAdvance(next);
+  }, []);
+
+  // Cross-Act Back fallback: used only when the current Act is on its first
+  // step (and so publishes no internal back).
+  const fallbackBack =
+    act === 2 ? () => {
+      setAct(1);
+      setAdvance(null);
+    } : act === 3 ? () => {
+      setAct(2);
+      setAdvance(null);
+    } : undefined;
+  const fallbackBackLabel =
+    act === 2 ? 'Back to notice & wonder' : act === 3 ? 'Back to investigate' : undefined;
 
   return (
     <div className="min-h-screen">
@@ -55,34 +62,61 @@ export default function WindTurbinePage() {
           </div>
         }
       />
-
+      <ActRail current={act} step={advance?.step} stepLabels={advance?.stepLabels} />
       <main className="max-w-5xl mx-auto px-6 py-8">
         {act === 1 && (
-          <Act1Identify
-            onNext={(d) => {
-              setState((s) => ({ ...s, ...d }));
+          <WindWonder
+            initialWonderings={wonderings}
+            onStart={(w) => {
+              setWonderings(w);
               setAct(2);
+              setAdvance(null);
             }}
+            onAdvanceStateChange={handleAdvanceStateChange}
           />
         )}
         {act === 2 && (
-          <Act2Model
-            onNext={(d) => {
-              setState((s) => ({ ...s, ...d }));
+          <WindInvestigate
+            wonderings={wonderings}
+            onNext={(s) => {
+              setSummary(s);
               setAct(3);
+              setAdvance(null);
             }}
+            initialState={summary?.state}
+            onAdvanceStateChange={handleAdvanceStateChange}
           />
         )}
-        {act === 3 && <Act3Interpret state={state} onRestart={handleRestart} />}
+        {act === 3 && summary && (
+          <WindReveal
+            summary={summary}
+            wonderings={wonderings}
+            onRestart={restart}
+            onAdvanceStateChange={handleAdvanceStateChange}
+          />
+        )}
+
+        <div className="mt-8">
+          <NextRow
+            advance={advance}
+            fallbackBack={fallbackBack}
+            fallbackBackLabel={fallbackBackLabel}
+          />
+        </div>
+
+        {act === 3 && summary && (
+          <div className="mt-12">
+            <WindClosingContext summary={summary} wonderings={wonderings} />
+          </div>
+        )}
 
         <div className="mt-12">
           <ChapterFitsSection dataset={getDataset('wind')} pin={{ course: 'algebra1', topic: 8 }} />
         </div>
       </main>
-
       <footer className="border-t border-surface-line mt-16 py-6">
         <div className="max-w-5xl mx-auto px-6 flex flex-wrap items-baseline justify-between gap-3 text-xs text-ink-muted">
-          <div>Prototype · real SCADA data · 3-act format aligned with enVision Mathematical Modeling.</div>
+          <div>Prototype · SCADA log from a 1.5 MW operating wind turbine · ~12 hours, one reading per minute.</div>
           <SeeAllDataLink datasetId="wind" compact />
         </div>
       </footer>
