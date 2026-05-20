@@ -1,317 +1,477 @@
-import { useEffect, useMemo, useState } from 'react';
-import HostBubble from '../../components/HostBubble';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { NarratorSays } from './Narrator';
+import type { AdvanceState } from './NextRow';
+import LensPicker from './lenses/LensPicker';
+import MapLens from './lenses/MapLens';
+import HistogramLens from './lenses/HistogramLens';
+import ScatterLens from './lenses/ScatterLens';
+import ChipPicker from './chips/ChipPicker';
 import { getDataset } from '../../data/registry';
-import { WORLD_LAND_PATH, WORLD_W, WORLD_H } from '../../components/explorer/worldLand';
+import {
+  MAP_CLAIM_CHIPS,
+  histogramClaimChipsFor,
+  scatterClaimChipsFor,
+  SYNTHESIS_CHIPS,
+  WONDER_CHIPS,
+  NOTICE_CHIPS,
+  renderStaticChips,
+  renderDerivedChips,
+} from './chips/catalog';
+import type {
+  MapClaimContext,
+  HistogramClaimContext,
+  ScatterClaimContext,
+} from './chips/catalog';
+import type { ClassWonderings } from './QuakeWonder';
+import type {
+  Act2State,
+  HistogramLensState,
+  LensId,
+  MapLensState,
+  ScatterLensState,
+} from './lenses/types';
+import { defaultAct2State, HISTOGRAM_VAR_LABELS, SCATTER_VAR_LABELS } from './lenses/types';
+import type { MapLensDerived } from './lenses/MapLens';
+import ActFrame from './ActFrame';
 
 interface QuakeMapProps {
   onNext: (summary: QuakeSummary) => void;
+  initialState?: Act2State;
+  wonderings?: ClassWonderings | null;
+  onAdvanceStateChange?: (state: AdvanceState) => void;
+}
+
+export interface LensSummary {
+  used: boolean;
+  claimChipIds: string[];
+  claims: string[]; // pre-rendered for Act 3 display
+  detail?: string;
 }
 
 export interface QuakeSummary {
+  state: Act2State;
+  synthesisChipIds: string[];
+  synthesisLines: string[]; // pre-rendered
+  lenses: {
+    map: LensSummary;
+    histogram: LensSummary;
+    scatter: LensSummary;
+  };
   totalCount: number;
   shownCount: number;
   minMag: number;
-  description: string;
   ringOfFireCount: number;
 }
 
-interface QuakePoint {
-  lat: number;
-  lon: number;
-  magnitude: number;
-  depthKm: number;
-  place: string;
-  region: string;
-}
+type Step = 1 | 2 | 3;
 
-function project(lat: number, lon: number): [number, number] {
-  const x = ((lon + 180) / 360) * WORLD_W;
-  const y = ((90 - lat) / 180) * WORLD_H;
-  return [x, y];
-}
+const STEP_LABELS: Record<Step, string> = {
+  1: 'Pick your lenses',
+  2: 'Investigate',
+  3: 'Synthesize',
+};
+const STEP_LABEL_LIST = [STEP_LABELS[1], STEP_LABELS[2], STEP_LABELS[3]];
 
-// The Pacific Ring of Fire — coarse bounding regions used to count how many
-// of the student's visible quakes fall along it.
-function isRingOfFire(lat: number, lon: number): boolean {
-  // Western Pacific (Japan, Philippines, Indonesia, Tonga)
-  if (lon >= 90 && lon <= 180 && lat >= -45 && lat <= 60) return true;
-  // Eastern Pacific (Aleutians, US West Coast, Central + South America)
-  if (lon >= -180 && lon <= -65 && lat >= -55 && lat <= 65) return true;
-  return false;
-}
+export default function QuakeMap({
+  onNext,
+  initialState,
+  wonderings = null,
+  onAdvanceStateChange,
+}: QuakeMapProps) {
+  const [state, setState] = useState<Act2State>(initialState ?? defaultAct2State());
+  const [mapDerived, setMapDerived] = useState<MapLensDerived>({
+    totalCount: 0,
+    shownCount: 0,
+    ringOfFireCount: 0,
+  });
+  // Returning visitors land at the synthesis step (their latest work);
+  // first-timers start at the lens picker.
+  const [step, setStep] = useState<Step>(initialState ? 3 : 1);
 
-const SAMPLE_TICKS = 24; // animation steps for the drop-in
-const DROP_MS = 1100;
-
-export default function QuakeMap({ onNext }: QuakeMapProps) {
+  // Derive context for data-derived chips. Histogram + scatter need stats
+  // about the underlying dataset; map needs the live filter result.
   const dataset = getDataset('earthquakes');
-  const allPoints = useMemo<QuakePoint[]>(() => {
-    return dataset.rows.map((r) => ({
-      lat: Number(r.lat),
-      lon: Number(r.lon),
-      magnitude: Number(r.magnitude),
-      depthKm: Number(r.depthKm),
-      place: String(r.place ?? ''),
-      region: String(r.region ?? ''),
-    }));
-  }, [dataset]);
 
-  const [minMag, setMinMag] = useState(2.5);
-  const [description, setDescription] = useState('');
-  const [hoverPoint, setHoverPoint] = useState<QuakePoint | null>(null);
-  // Reveal animation: count of dots currently visible
-  const [revealed, setRevealed] = useState(0);
-  const [plateLines, setPlateLines] = useState(false);
+  const histogramCtx = useMemo<HistogramClaimContext>(() => {
+    let mags = 0;
+    let depths = 0;
+    let maxMag = 0;
+    let maxDepth = 0;
+    let smallCount = 0; // mag < 4
+    let shallowCount = 0; // depth < 70
+    const total = dataset.rows.length;
+    for (const r of dataset.rows) {
+      const m = Number(r.magnitude);
+      const d = Number(r.depthKm);
+      if (Number.isFinite(m)) {
+        mags++;
+        if (m > maxMag) maxMag = m;
+        if (m < 4) smallCount++;
+      }
+      if (Number.isFinite(d)) {
+        depths++;
+        if (d > maxDepth) maxDepth = d;
+        if (d < 70) shallowCount++;
+      }
+    }
+    return {
+      variable: state.histogram.variable,
+      shallowPct: depths === 0 ? 0 : Math.round((shallowCount / depths) * 100),
+      smallPct: mags === 0 ? 0 : Math.round((smallCount / mags) * 100),
+      maxMag,
+      maxDepth,
+      totalCount: total,
+    };
+  }, [dataset, state.histogram.variable]);
 
-  const filteredPoints = useMemo(
-    () => allPoints.filter((p) => p.magnitude >= minMag),
-    [allPoints, minMag],
+  const mapCtx = useMemo<MapClaimContext>(
+    () => ({
+      totalCount: mapDerived.totalCount,
+      shownCount: mapDerived.shownCount,
+      ringOfFireCount: mapDerived.ringOfFireCount,
+      ringPct:
+        mapDerived.shownCount === 0
+          ? 0
+          : Math.round((mapDerived.ringOfFireCount / mapDerived.shownCount) * 100),
+      minMag: state.map.minMag,
+    }),
+    [mapDerived, state.map.minMag],
   );
 
-  // Drop-in animation when component mounts
+  const scatterCtx = useMemo<ScatterClaimContext>(
+    () => ({ xKey: state.scatter.xKey, yKey: state.scatter.yKey }),
+    [state.scatter.xKey, state.scatter.yKey],
+  );
+
+  const enabled = {
+    map: state.map.enabled,
+    histogram: state.histogram.enabled,
+    scatter: state.scatter.enabled,
+  };
+  const anyEnabled = enabled.map || enabled.histogram || enabled.scatter;
+
+  const toggleLens = (lens: LensId) => {
+    setState((s) => ({ ...s, [lens]: { ...s[lens], enabled: !s[lens].enabled } }));
+  };
+
+  const updateMap = (next: MapLensState) => setState((s) => ({ ...s, map: next }));
+  const updateHistogram = (next: HistogramLensState) =>
+    setState((s) => ({ ...s, histogram: next }));
+  const updateScatter = (next: ScatterLensState) =>
+    setState((s) => ({ ...s, scatter: next }));
+
+  const toggleChipFor = (
+    lens: 'map' | 'histogram' | 'scatter',
+    id: string,
+  ) => {
+    setState((s) => {
+      const cur = s[lens].claimChipIds;
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+      // Cap each lens at 3 selections.
+      const capped = next.slice(0, 3);
+      return { ...s, [lens]: { ...s[lens], claimChipIds: capped } };
+    });
+  };
+
+  const toggleSynthesis = (id: string) => {
+    setState((s) => {
+      const cur = s.synthesisChipIds;
+      const next = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+      const capped = next.slice(0, 3);
+      return { ...s, synthesisChipIds: capped };
+    });
+  };
+
+  // Did the student actually engage each enabled lens — i.e., pick a chip?
+  const usedClaimCount =
+    (state.map.enabled && state.map.claimChipIds.length > 0 ? 1 : 0) +
+    (state.histogram.enabled && state.histogram.claimChipIds.length > 0 ? 1 : 0) +
+    (state.scatter.enabled && state.scatter.claimChipIds.length > 0 ? 1 : 0);
+
+  const finalCanAdvance =
+    anyEnabled && usedClaimCount >= 1 && state.synthesisChipIds.length >= 1;
+
+  // Step-aware readiness, label, hint, advance, back.
+  const canAdvance =
+    step === 1 ? anyEnabled :
+    step === 2 ? usedClaimCount >= 1 :
+    /* step === 3 */ finalCanAdvance;
+
+  const hint =
+    step === 1 && !anyEnabled ? 'Turn on at least one lens (Map / Histogram / Scatter).' :
+    step === 2 && usedClaimCount === 0 ? 'Pick a chip in at least one lens.' :
+    step === 3 && state.synthesisChipIds.length === 0 ? 'Pick a synthesis chip.' :
+    '';
+
+  const nextLabel =
+    step === 1 ? 'Next: Investigate →' :
+    step === 2 ? 'Next: Synthesize →' :
+    /* step === 3 */ 'Next: Make a claim →';
+
+  const backLabel =
+    step === 2 ? 'Back to lens picker' :
+    step === 3 ? 'Back to investigate' :
+    undefined;
+
+  const handleFinalAdvance = () => {
+    const summary: QuakeSummary = {
+      state,
+      synthesisChipIds: state.synthesisChipIds,
+      synthesisLines: renderStaticChips(SYNTHESIS_CHIPS, state.synthesisChipIds),
+      lenses: {
+        map: {
+          used: state.map.enabled,
+          claimChipIds: state.map.claimChipIds,
+          claims: renderDerivedChips(MAP_CLAIM_CHIPS, state.map.claimChipIds, mapCtx),
+        },
+        histogram: {
+          used: state.histogram.enabled,
+          claimChipIds: state.histogram.claimChipIds,
+          claims: renderDerivedChips(
+            histogramClaimChipsFor(histogramCtx),
+            state.histogram.claimChipIds,
+            histogramCtx,
+          ),
+          detail: `Variable: ${HISTOGRAM_VAR_LABELS[state.histogram.variable]}`,
+        },
+        scatter: {
+          used: state.scatter.enabled,
+          claimChipIds: state.scatter.claimChipIds,
+          claims: renderDerivedChips(
+            scatterClaimChipsFor(scatterCtx),
+            state.scatter.claimChipIds,
+            scatterCtx,
+          ),
+          detail: `${SCATTER_VAR_LABELS[state.scatter.xKey]} × ${SCATTER_VAR_LABELS[state.scatter.yKey]}`,
+        },
+      },
+      totalCount: mapDerived.totalCount,
+      shownCount: mapDerived.shownCount,
+      minMag: state.map.minMag,
+      ringOfFireCount: mapDerived.ringOfFireCount,
+    };
+    onNext(summary);
+  };
+
+  const handleAdvance = () => {
+    if (step < 3) {
+      setStep((s) => (s + 1) as Step);
+    } else {
+      handleFinalAdvance();
+    }
+  };
+
+  const advanceRef = useRef(handleAdvance);
+  advanceRef.current = handleAdvance;
+
   useEffect(() => {
-    if (filteredPoints.length === 0) return;
-    const tickMs = DROP_MS / SAMPLE_TICKS;
-    let tick = 0;
-    const id = window.setInterval(() => {
-      tick++;
-      const visibleCount = Math.min(
-        filteredPoints.length,
-        Math.floor((tick / SAMPLE_TICKS) * filteredPoints.length),
-      );
-      setRevealed(visibleCount);
-      if (tick >= SAMPLE_TICKS) {
-        setRevealed(filteredPoints.length);
-        window.clearInterval(id);
-      }
-    }, tickMs);
-    return () => window.clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    onAdvanceStateChange?.({
+      canAdvance,
+      hint,
+      advance: () => advanceRef.current(),
+      nextLabel,
+      back: step > 1 ? () => setStep((s) => (s - 1) as Step) : undefined,
+      backLabel,
+      step,
+      stepLabels: STEP_LABEL_LIST,
+    });
+  }, [step, canAdvance, hint, nextLabel, backLabel, onAdvanceStateChange]);
 
-  // When the user changes the mag filter, snap to fully revealed.
-  useEffect(() => {
-    setRevealed(filteredPoints.length);
-  }, [filteredPoints.length]);
+  // Render-time chip option lists (apply ctx for derived chips).
+  const mapClaimOptions = MAP_CLAIM_CHIPS.map((c) => ({ id: c.id, label: c.render(mapCtx) }));
+  const histogramClaimOptions = histogramClaimChipsFor(histogramCtx).map((c) => ({
+    id: c.id,
+    label: c.render(histogramCtx),
+  }));
+  const scatterClaimOptions = scatterClaimChipsFor(scatterCtx).map((c) => ({
+    id: c.id,
+    label: c.render(scatterCtx),
+  }));
+  const synthesisOptions = SYNTHESIS_CHIPS.map((c) => ({ id: c.id, label: c.text }));
 
-  const shown = filteredPoints.slice(0, revealed);
-  const ringOfFireCount = filteredPoints.filter((p) => isRingOfFire(p.lat, p.lon)).length;
-
-  const canAdvance = description.trim().length >= 4;
+  const stepSubhead =
+    step === 1
+      ? 'Choose which lenses your class will use to investigate the data.'
+      : step === 2
+      ? 'Work each lens — pick chips that match what you see.'
+      : 'Across the lenses, pick what pulls it all together.';
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="grid place-items-center w-12 h-12 rounded-xl bg-gradient-to-br from-rose-600 to-amber-600 text-white shadow-lg font-display text-base font-bold tracking-tight">
-          A2
-        </div>
-        <div>
-          <div className="text-[10px] font-semibold tracking-widest text-rose-700">
-            ACT 2 · PLOT
-          </div>
-          <h1 className="font-display text-2xl md:text-3xl font-bold text-ink leading-tight">
-            One week of earthquakes.
-          </h1>
-          <p className="text-sm text-slate-600">
-            Each dot is a real event. Size is magnitude. Drag the slider to filter strong ones.
-          </p>
-        </div>
-      </div>
-
-      <HostBubble accent="rose">
-        Coordinates are about to do a lot of work. Latitude is the Y axis,
-        longitude is the X — exactly like your math class. The faint
-        outline is continents. Every dot is a real place where the ground
-        moved this past week.
-      </HostBubble>
-
-      {/* Map */}
-      <div className="bg-[#0c0c1e] rounded-xl border border-slate-800 overflow-hidden">
-        <svg
-          viewBox={`0 0 ${WORLD_W} ${WORLD_H}`}
-          className="w-full block"
-          onMouseLeave={() => setHoverPoint(null)}
-        >
-          {/* Lat/lon grid */}
-          {[-60, -30, 0, 30, 60].map((lat) => (
-            <line
-              key={`lat-${lat}`}
-              x1={0}
-              x2={WORLD_W}
-              y1={project(lat, 0)[1]}
-              y2={project(lat, 0)[1]}
-              stroke="#1f2240"
-              strokeWidth={0.4}
-            />
-          ))}
-          {[-120, -60, 0, 60, 120].map((lon) => (
-            <line
-              key={`lon-${lon}`}
-              x1={project(0, lon)[0]}
-              x2={project(0, lon)[0]}
-              y1={0}
-              y2={WORLD_H}
-              stroke="#1f2240"
-              strokeWidth={0.4}
-            />
-          ))}
-          {/* Equator */}
-          <line
-            x1={0}
-            x2={WORLD_W}
-            y1={WORLD_H / 2}
-            y2={WORLD_H / 2}
-            stroke="#2c2c4a"
-            strokeWidth={0.8}
-          />
-
-          {/* World land outline */}
-          <path d={WORLD_LAND_PATH} fill="#1a1a30" stroke="#2c2c4a" strokeWidth={0.4} />
-
-          {/* Optional plate-boundary curves (Ring of Fire emphasis) */}
-          {plateLines && (
-            <g stroke="#f59e0b" strokeWidth={1.2} strokeDasharray="3 3" fill="none" opacity={0.85}>
-              {/* Eastern Pacific arc — rough sketch */}
-              <path d="M 100,40 Q 110,90 130,140 T 150,260 T 170,330" />
-              {/* Western Pacific arc */}
-              <path d="M 555,80 Q 585,110 605,150 T 625,220 T 605,290 T 575,330" />
-            </g>
+    <ActFrame
+      actNumber={2}
+      eyebrow="ACT 2 · INVESTIGATE"
+      title="Pick your lens. Find what's there."
+      step={step}
+      stepTotal={3}
+      stepLabel={STEP_LABELS[step]}
+      stepSubhead={stepSubhead}
+    >
+      {step === 1 && (
+        <>
+          {wonderings && wonderings.groups.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+              <div className="text-[10px] font-semibold tracking-widest text-amber-700">
+                FROM ACT 1 · {wonderings.groups.length} GROUP{wonderings.groups.length === 1 ? '' : 'S'}
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {wonderings.groups.map((g) => {
+                  const notices = renderStaticChips(NOTICE_CHIPS, g.noticeChipIds);
+                  const wonders = renderStaticChips(WONDER_CHIPS, g.wonderChipIds);
+                  return (
+                    <div key={g.id} className="bg-white/70 border border-amber-200/70 rounded-lg p-3 space-y-1.5">
+                      <div className="text-[11px] font-bold text-amber-800">{g.name}</div>
+                      {notices.length > 0 && (
+                        <div>
+                          <div className="text-[9px] font-semibold tracking-widest text-amber-700/70">NOTICED</div>
+                          <ul className="text-amber-900 text-xs leading-snug list-disc list-inside">
+                            {notices.map((n, i) => <li key={i} className="italic">{n}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {wonders.length > 0 && (
+                        <div>
+                          <div className="text-[9px] font-semibold tracking-widest text-amber-700/70">WONDERED</div>
+                          <ul className="text-amber-900 text-xs leading-snug list-disc list-inside">
+                            {wonders.map((w, i) => <li key={i} className="italic">{w}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
-          {/* Quake dots */}
-          {shown.map((p, i) => {
-            const [x, y] = project(p.lat, p.lon);
-            const r = Math.max(1.2, (p.magnitude - 2) * 0.9);
-            return (
-              <circle
-                key={i}
-                cx={x}
-                cy={y}
-                r={r}
-                fill="#fb7185"
-                fillOpacity={0.75}
-                stroke="#fef2f2"
-                strokeWidth={0.2}
-                onMouseEnter={() => setHoverPoint(p)}
-              />
-            );
-          })}
+          <NarratorSays lineKey="act2Picker" />
 
-          {/* Tooltip for hovered point — flips left/below near the edges so the
-              210×26 box never extends outside the viewBox. */}
-          {hoverPoint && (() => {
-            const [px, py] = project(hoverPoint.lat, hoverPoint.lon);
-            const W = 210;
-            const H = 26;
-            const placeRight = px + 6 + W <= WORLD_W;
-            const placeAbove = py - 6 - H >= 0;
-            const rectX = placeRight ? px + 6 : px - 6 - W;
-            const rectY = placeAbove ? py - 6 - H : py + 6;
-            const textX = rectX + 5;
-            const textY1 = rectY + 12;
-            const textY2 = rectY + 21;
-            return (
-              <g pointerEvents="none">
-                <rect
-                  x={rectX}
-                  y={rectY}
-                  width={W}
-                  height={H}
-                  fill="#0c0c1e"
-                  stroke="#f59e0b"
-                  strokeWidth={0.4}
-                  rx={3}
+          <LensPicker enabled={enabled} onToggle={toggleLens} />
+        </>
+      )}
+
+      {step === 2 && (
+        <>
+          {!anyEnabled && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
+              No lenses enabled. Go back and pick at least one.
+            </div>
+          )}
+          {state.map.enabled && (
+            <LensPanel
+              index={1}
+              title="Map"
+              subtitle="Plot every quake on a coordinate grid. Filter, hover, toggle the Ring of Fire arcs."
+            >
+              <MapLens state={state.map} onChange={updateMap} onDerivedChange={setMapDerived} />
+              <div className="bg-white border border-slate-200 rounded-xl p-4">
+                <ChipPicker
+                  label="WHAT DID THE MAP SHOW? · TAP UP TO 3"
+                  hint="Numbers update as you move the magnitude slider — pick chips that match what you see now."
+                  options={mapClaimOptions}
+                  selected={state.map.claimChipIds}
+                  onToggle={(id) => toggleChipFor('map', id)}
+                  max={3}
                 />
-                <text x={textX} y={textY1} fontSize={7} fill="#fef3c7" fontFamily="monospace">
-                  M{hoverPoint.magnitude.toFixed(1)} · {hoverPoint.depthKm.toFixed(0)}km deep
-                </text>
-                <text x={textX} y={textY2} fontSize={6.5} fill="#e2e8f0" fontFamily="monospace">
-                  {hoverPoint.place.slice(0, 38)}
-                </text>
-              </g>
-            );
-          })()}
-        </svg>
-      </div>
+              </div>
+            </LensPanel>
+          )}
 
-      {/* Controls */}
-      <div className="grid md:grid-cols-2 gap-3">
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="flex items-baseline justify-between mb-2">
-            <div className="text-[10px] font-semibold tracking-widest text-rose-700">MIN MAGNITUDE</div>
-            <div className="font-display text-xl font-bold text-rose-700 tabular-nums">M{minMag.toFixed(1)}+</div>
+          {state.histogram.enabled && (
+            <LensPanel
+              index={state.map.enabled ? 2 : 1}
+              title="Histogram"
+              subtitle="Pick a variable. See how the values are distributed across all events."
+            >
+              <HistogramLens state={state.histogram} onChange={updateHistogram} />
+              <div className="bg-white border border-slate-200 rounded-xl p-4">
+                <ChipPicker
+                  label={`WHAT DID THE ${HISTOGRAM_VAR_LABELS[state.histogram.variable].toUpperCase()} HISTOGRAM SHOW? · TAP UP TO 3`}
+                  hint="The chips change when you switch variables."
+                  options={histogramClaimOptions}
+                  selected={state.histogram.claimChipIds}
+                  onToggle={(id) => toggleChipFor('histogram', id)}
+                  max={3}
+                />
+              </div>
+            </LensPanel>
+          )}
+
+          {state.scatter.enabled && (
+            <LensPanel
+              index={[state.map.enabled, state.histogram.enabled].filter(Boolean).length + 1}
+              title="Scatter"
+              subtitle="Pick two variables. Try the 'fit a line' toggle inside the chart — what R² do you get?"
+            >
+              <ScatterLens state={state.scatter} onChange={updateScatter} />
+              <div className="bg-white border border-slate-200 rounded-xl p-4">
+                <ChipPicker
+                  label={`WHAT DID THE ${SCATTER_VAR_LABELS[state.scatter.xKey].toUpperCase()} × ${SCATTER_VAR_LABELS[state.scatter.yKey].toUpperCase()} SCATTER SHOW? · TAP UP TO 3`}
+                  hint="The chips change when you swap axes."
+                  options={scatterClaimOptions}
+                  selected={state.scatter.claimChipIds}
+                  onToggle={(id) => toggleChipFor('scatter', id)}
+                  max={3}
+                />
+              </div>
+            </LensPanel>
+          )}
+
+          <div className="text-xs text-slate-500">
+            {usedClaimCount > 0
+              ? `${usedClaimCount} lens${usedClaimCount === 1 ? '' : 'es'} with picks so far.`
+              : null}
           </div>
-          <input
-            type="range"
-            min={2.5}
-            max={6}
-            step={0.1}
-            value={minMag}
-            onChange={(e) => setMinMag(Number(e.target.value))}
-            className="w-full accent-rose-600"
-          />
-          <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
-            <span>2.5 · felt</span>
-            <span>4.5 · damaging</span>
-            <span>6.0 · destructive</span>
+        </>
+      )}
+
+      {step === 3 && (
+        <>
+          <div className="bg-rose-50 border-2 border-rose-200 rounded-xl p-5">
+            <ChipPicker
+              label="SYNTHESIS · TAP UP TO 3"
+              hint="Across the lenses, pick what pulls it together."
+              options={synthesisOptions}
+              selected={state.synthesisChipIds}
+              onToggle={toggleSynthesis}
+              max={3}
+              tone="amber"
+            />
           </div>
-          <div className="text-xs text-slate-600 mt-2">
-            <strong className="tabular-nums">{filteredPoints.length}</strong> of{' '}
-            <strong className="tabular-nums">{allPoints.length}</strong> quakes this week.
+
+          <div className="bg-white border border-slate-200 rounded-xl p-4 text-xs text-slate-600 leading-relaxed">
+            <span className="font-semibold text-slate-700">From your investigation: </span>
+            {usedClaimCount} lens{usedClaimCount === 1 ? '' : 'es'} with picks ·{' '}
+            {state.synthesisChipIds.length} synthesis chip{state.synthesisChipIds.length === 1 ? '' : 's'} so far.
           </div>
+        </>
+      )}
+    </ActFrame>
+  );
+}
+
+function LensPanel({
+  index,
+  title,
+  subtitle,
+  children,
+}: {
+  index: number;
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="grid place-items-center w-9 h-9 rounded-lg bg-rose-600 text-white font-display font-bold text-sm">
+          {index}
         </div>
-
-        <div className="bg-white border border-slate-200 rounded-xl p-4">
-          <div className="text-[10px] font-semibold tracking-widest text-rose-700 mb-2">OVERLAY</div>
-          <button
-            onClick={() => setPlateLines((p) => !p)}
-            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
-              plateLines
-                ? 'bg-amber-500 text-white shadow'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            {plateLines ? 'Hide plate-boundary arcs' : 'Show plate-boundary arcs'}
-          </button>
-          <div className="text-xs text-slate-600 mt-2 leading-snug">
-            The arcs are the Pacific Ring of Fire — where plates push under each other.
-            Toggle them on and see whether your dots match.
-          </div>
+        <div>
+          <div className="font-display text-lg font-bold text-ink leading-tight">{title}</div>
+          <div className="text-xs text-slate-600 leading-snug">{subtitle}</div>
         </div>
       </div>
-
-      {/* Describe-the-pattern */}
-      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3">
-        <div className="text-[10px] font-semibold tracking-widest text-rose-700">YOUR OBSERVATION</div>
-        <label className="text-sm font-semibold text-ink">
-          Describe the pattern in one sentence.
-        </label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="e.g. Most quakes line the edges of the Pacific. Hardly any in the middle of oceans or continents."
-          className="w-full px-3 py-2 rounded-md border border-slate-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-100 outline-none text-sm resize-none"
-          rows={2}
-        />
-      </div>
-
-      <div className="flex justify-end">
-        <button
-          onClick={() =>
-            onNext({
-              totalCount: allPoints.length,
-              shownCount: filteredPoints.length,
-              minMag,
-              description: description.trim(),
-              ringOfFireCount,
-            })
-          }
-          disabled={!canAdvance}
-          className="px-6 py-3 rounded-xl bg-gradient-to-r from-rose-600 to-amber-600 text-white font-semibold shadow-md hover:shadow-lg disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed transition"
-        >
-          {canAdvance ? 'See what you found →' : 'Write one sentence to continue'}
-        </button>
-      </div>
+      {children}
     </div>
   );
 }

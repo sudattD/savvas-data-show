@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Masthead from '../components/Masthead';
 import SeeAllDataLink from '../components/SeeAllDataLink';
 import EnvisionVideoLink from '../components/EnvisionVideoLink';
 import ProgressDots from '../components/ProgressDots';
 import QuakeWonder from './quakes/QuakeWonder';
 import QuakeMap from './quakes/QuakeMap';
-import QuakeClaim from './quakes/QuakeClaim';
-import type { PredictionShape } from './quakes/QuakeWonder';
+import QuakeClaim, { QuakeClosingContext } from './quakes/QuakeClaim';
+import type { ClassWonderings } from './quakes/QuakeWonder';
 import type { QuakeSummary } from './quakes/QuakeMap';
+import NextRow from './quakes/NextRow';
+import type { AdvanceState } from './quakes/NextRow';
+import ActRail from './quakes/ActRail';
 import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { getDataset } from '../data/registry';
@@ -15,14 +18,36 @@ import { getDataset } from '../data/registry';
 export default function MapEarthsAngerPage() {
   useDocumentTitle("Map Earth's Anger");
   const [act, setAct] = useState<1 | 2 | 3>(1);
-  const [prediction, setPrediction] = useState<PredictionShape | null>(null);
+  const [wonderings, setWonderings] = useState<ClassWonderings | null>(null);
   const [summary, setSummary] = useState<QuakeSummary | null>(null);
+  const [advance, setAdvance] = useState<AdvanceState | null>(null);
 
   const restart = () => {
     setAct(1);
-    setPrediction(null);
+    setWonderings(null);
     setSummary(null);
+    setAdvance(null);
   };
+
+  // The advance handler each Act publishes captures internal state via
+  // closure; useCallback gives the child a stable setter so its useEffect
+  // doesn't refire every render.
+  const handleAdvanceStateChange = useCallback((next: AdvanceState) => {
+    setAdvance(next);
+  }, []);
+
+  // Cross-Act Back fallback: used only when the current Act is on its first
+  // step (and so publishes no internal back).
+  const fallbackBack =
+    act === 2 ? () => {
+      setAct(1);
+      setAdvance(null);
+    } : act === 3 ? () => {
+      setAct(2);
+      setAdvance(null);
+    } : undefined;
+  const fallbackBackLabel =
+    act === 2 ? 'Back to notice & wonder' : act === 3 ? 'Back to investigate' : undefined;
 
   return (
     <div className="min-h-screen">
@@ -37,25 +62,52 @@ export default function MapEarthsAngerPage() {
           </div>
         }
       />
+      <ActRail current={act} step={advance?.step} stepLabels={advance?.stepLabels} />
       <main className="max-w-5xl mx-auto px-6 py-8">
         {act === 1 && (
           <QuakeWonder
-            onStart={(pred) => {
-              setPrediction(pred);
+            initialWonderings={wonderings}
+            onStart={(w) => {
+              setWonderings(w);
               setAct(2);
+              setAdvance(null);
             }}
+            onAdvanceStateChange={handleAdvanceStateChange}
           />
         )}
         {act === 2 && (
           <QuakeMap
+            wonderings={wonderings}
             onNext={(s) => {
               setSummary(s);
               setAct(3);
+              setAdvance(null);
             }}
+            initialState={summary?.state}
+            onAdvanceStateChange={handleAdvanceStateChange}
           />
         )}
         {act === 3 && summary && (
-          <QuakeClaim summary={summary} prediction={prediction} onRestart={restart} />
+          <QuakeClaim
+            summary={summary}
+            wonderings={wonderings}
+            onRestart={restart}
+            onAdvanceStateChange={handleAdvanceStateChange}
+          />
+        )}
+
+        <div className="mt-8">
+          <NextRow
+            advance={advance}
+            fallbackBack={fallbackBack}
+            fallbackBackLabel={fallbackBackLabel}
+          />
+        </div>
+
+        {act === 3 && summary && (
+          <div className="mt-12">
+            <QuakeClosingContext summary={summary} wonderings={wonderings} />
+          </div>
         )}
 
         <div className="mt-12">
@@ -64,7 +116,7 @@ export default function MapEarthsAngerPage() {
       </main>
       <footer className="border-t border-surface-line mt-16 py-6">
         <div className="max-w-5xl mx-auto px-6 flex flex-wrap items-baseline justify-between gap-3 text-xs text-ink-muted">
-          <div>Prototype · USGS Earthquake Hazards Program · past-week M2.5+ feed.</div>
+          <div>Prototype · USGS Earthquake Hazards Program · M6+ catalog (Act 1) · past-week M2.5+ feed (Acts 2–3).</div>
           <SeeAllDataLink datasetId="earthquakes" compact />
         </div>
       </footer>
