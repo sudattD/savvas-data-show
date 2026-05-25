@@ -238,6 +238,7 @@ export function SceneFrame({
   backLabel = 'Back',
   nextDisabled = false,
   nextHint,
+  crispBackdrop = false,
 }: {
   act: number;
   step: number;
@@ -251,6 +252,9 @@ export function SceneFrame({
   backLabel?: string;
   nextDisabled?: boolean;
   nextHint?: string;
+  /** Keep the backdrop crisp (unblurred) after the between-scene pause.
+   *  Used when the backdrop is the primary visual, not just atmosphere. */
+  crispBackdrop?: boolean;
 }) {
   const actMeta = ACTS[act - 1];
 
@@ -266,17 +270,18 @@ export function SceneFrame({
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Backdrop — crisp during the pause, blurred behind the scene */}
+      {/* Backdrop — crisp during the pause, blurred behind the scene.
+          `crispBackdrop` keeps it sharp when the backdrop is the visual. */}
       <div
         className={`fixed inset-0 -z-10 transition-all duration-[900ms] ease-out ${
-          paused ? 'scale-100 blur-0' : 'scale-105 blur-[6px]'
+          paused || crispBackdrop ? 'scale-100 blur-0' : 'scale-101 blur-[2px]'
         }`}
       >
         <SceneBackdrop variant={variant} />
       </div>
       <div
         className={`fixed inset-0 -z-10 bg-slate-950 transition-opacity duration-[900ms] ${
-          paused ? 'opacity-[0.06]' : 'opacity-30'
+          paused ? 'opacity-[0.06]' : 'opacity-15'
         }`}
       />
 
@@ -303,6 +308,7 @@ export function SceneFrame({
         className={`relative z-10 mx-auto flex min-h-screen max-w-[1680px] flex-col px-8 pt-6 pb-28 transition-all duration-700 ${
           paused ? 'pointer-events-none translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
         }`}
+        style={paused ? undefined : { background: 'radial-gradient(ellipse at center, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.15) 70%, transparent 100%)' }}
         aria-hidden={paused}
       >
         {/* Act rail — the spine */}
@@ -327,7 +333,7 @@ export function SceneFrame({
               );
             })}
           </div>
-          <span className="rounded-full bg-amber-400/90 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-950">
+          <span className="rounded-full bg-amber-500/90 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-950">
             Prototype
           </span>
         </div>
@@ -351,6 +357,7 @@ export function SceneFrame({
           <button
             onClick={onBack}
             disabled={!onBack || paused}
+            aria-label={`Back to ${backLabel.toLowerCase()}`}
             className="rounded-full border border-white/40 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-700 backdrop-blur transition hover:bg-white disabled:text-slate-400 disabled:hover:bg-white/70"
           >
             ← {backLabel}
@@ -361,6 +368,7 @@ export function SceneFrame({
           <button
             onClick={onNext}
             disabled={!onNext || nextDisabled || paused}
+            aria-label={onNext ? `Next: ${nextLabel}` : 'Next'}
             className="rounded-full bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-sky-500 disabled:bg-slate-400/70 disabled:shadow-none"
           >
             {nextLabel} →

@@ -6,12 +6,15 @@
 // inside an Act; the Act rail is always visible.
 //
 //   ACT 1 · Notice & Wonder   ACT 2 · Investigate        ACT 3 · Reveal
-//   1 Welcome                 5 Pick Your Lens           8 Look Back
-//   2 Meet Dr. Vela           6 Investigate              9 The Reveal
-//   3 Watch It Work           7 Synthesize               10 Make It Yours
-//   4 Notice & Wonder
+//   1 Welcome                 8 Pick Your Lens           11 Look Back
+//   2 Meet Dr. Vela           9 Investigate              12 The Reveal
+//   3 Catching the Wind       10 Synthesize              13 Make It Yours
+//   4 Inside the Nacelle
+//   5 From Turbine to Grid
+//   6 Watch the Data
+//   7 Notice & Wonder
 //
-// One global `step` (1–10) walks the whole quest; the Act number, scene
+// One global `step` (1–13) walks the whole quest; the Act number, scene
 // number, and backdrop are derived from it.
 
 import { useEffect, useMemo, useState } from 'react';
@@ -46,8 +49,9 @@ import RevealCard from '../reveals/RevealCard';
 import { listRevealsFor, RAMP_UP_FIT_INFO } from '../reveals/revealCatalog';
 import LINES from '../narratorLines.json';
 import { SceneFrame, NarratorBubble, ScaffoldButtons, Term } from './sceneKit';
+import { BladeCrossSection, GearTrain, PowerFlowPath } from './explainerComponents';
 
-const TOTAL_STEPS = 10;
+const TOTAL_STEPS = 13;
 
 // Reveal animation tuning, ported from WindWonder.
 const REVEAL_MS = 3500;
@@ -119,6 +123,9 @@ export default function WindScenePrototype() {
   const [finalClaims, setFinalClaims] = useState<string[]>([]);
   const [headlines, setHeadlines] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
+  // Interactive sliders for scene 3 (Catching the Wind explainer)
+  const [explWindSpeed, setExplWindSpeed] = useState(6);
+  const [explBladeLength, setExplBladeLength] = useState(40);
 
   useEffect(() => {
     if (phase !== 'revealing') return;
@@ -216,9 +223,9 @@ export default function WindScenePrototype() {
   };
 
   // Act / scene-within-act derived from the global step.
-  const act = step <= 4 ? 1 : step <= 7 ? 2 : 3;
-  const localStep = step <= 4 ? step : step <= 7 ? step - 4 : step - 7;
-  const localTotal = act === 1 ? 4 : 3;
+  const act = step <= 7 ? 1 : step <= 10 ? 2 : 3;
+  const localStep = step <= 7 ? step : step <= 10 ? step - 7 : step - 10;
+  const localTotal = act === 1 ? 7 : 3;
   const frame = { act, step: localStep, stepTotal: localTotal, onBack: back };
 
   // --- Act 3 recap + reveal data ------------------------------------------
@@ -284,7 +291,7 @@ export default function WindScenePrototype() {
         variant="day"
         sceneTitle="Meet Your Guide"
         onNext={next}
-        nextLabel="See the turbine's data"
+        nextLabel="Catching the wind"
         backLabel="Welcome"
       >
         <div className="flex flex-1 items-center justify-center">
@@ -304,15 +311,283 @@ export default function WindScenePrototype() {
     );
   }
 
+  // ======================================================================
+  // NEW — Three-part explainer: Catching the Wind
+  // ======================================================================
+
   if (step === 3) {
+    // Simple physics model: power ∝ bladeLength² × windSpeed³, RPM ∝ windSpeed
+    const rpm = Math.round(Math.min(25, Math.max(0, explWindSpeed * 2.5)));
+    const powerKw = Math.round(Math.min(1500, Math.max(0, explBladeLength * explBladeLength * explWindSpeed * explWindSpeed * explWindSpeed * 0.00026)));
+    const torque = Math.round(powerKw / Math.max(1, rpm) * 9.55);
+
+    return (
+      <SceneFrame
+        {...frame}
+        variant="cutawayBlades"
+        crispBackdrop
+        sceneTitle="Catching the Wind"
+        onNext={next}
+        nextLabel="Inside the nacelle"
+        backLabel="Meet your guide"
+      >
+        <div className="grid flex-1 items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
+          {/* LEFT — blade cross-section diagram + interactive controls */}
+          <div className="flex flex-col gap-4">
+            <div className="overflow-hidden rounded-2xl border border-white/30 bg-white/85 shadow-xl backdrop-blur">
+              <div className="aspect-[16/9] w-full">
+                <BladeCrossSection className="h-full w-full" windSpeed={explWindSpeed} bladeLength={explBladeLength} />
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/30 bg-white/90 p-4 shadow-lg backdrop-blur">
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-sky-700">
+                  ⚡ Play with the Specs
+                </div>
+                <span className="text-[10px] font-semibold text-sky-600">Drag to explore</span>
+              </div>
+
+              <div className="space-y-5">
+                {/* Wind speed slider */}
+                <div className="group rounded-xl border border-sky-100 bg-gradient-to-r from-sky-50/80 to-blue-50/80 p-3 transition hover:border-sky-300 hover:shadow-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">💨</span>
+                      <span className="text-sm font-bold text-ink">Wind speed</span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sky-600 px-3 py-0.5 font-mono text-xs font-bold text-white shadow-sm">
+                      {explWindSpeed} <span className="text-sky-200 text-[10px]">m/s</span>
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={2}
+                    max={18}
+                    step={0.5}
+                    value={explWindSpeed}
+                    onChange={(e) => setExplWindSpeed(parseFloat(e.target.value))}
+                    className="w-full accent-sky-600 mt-1"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500 mt-0.5">
+                    <span>🌬️ Light breeze</span>
+                    <span>🌀 Strong wind</span>
+                    <span>🌪️ Storm</span>
+                  </div>
+                </div>
+
+                {/* Blade length slider */}
+                <div className="group rounded-xl border border-sky-100 bg-gradient-to-r from-sky-50/80 to-blue-50/80 p-3 transition hover:border-sky-300 hover:shadow-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">📏</span>
+                      <span className="text-sm font-bold text-ink">Blade length</span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sky-600 px-3 py-0.5 font-mono text-xs font-bold text-white shadow-sm">
+                      {explBladeLength} <span className="text-sky-200 text-[10px]">m</span>
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={20}
+                    max={60}
+                    step={1}
+                    value={explBladeLength}
+                    onChange={(e) => setExplBladeLength(parseInt(e.target.value))}
+                    className="w-full accent-sky-600 mt-1"
+                  />
+                  <div className="flex justify-between text-[10px] text-slate-500 mt-0.5">
+                    <span>🏠 Small turbine</span>
+                    <span>🏭 Modern turbine</span>
+                    <span>⚓ Large offshore</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live readout */}
+              <div className="mt-4 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-800 to-slate-900 p-3 shadow-inner">
+                <div className="text-[9px] font-bold uppercase tracking-widest text-sky-400 mb-2">
+                  Live readout
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-lg border border-slate-700 bg-slate-800/80 px-1 py-2">
+                    <div className="font-mono text-lg font-bold text-white tabular-nums">{rpm}</div>
+                    <div className="text-[10px] text-slate-400">RPM</div>
+                  </div>
+                  <div className="rounded-lg border border-emerald-800/60 bg-emerald-900/30 px-1 py-2">
+                    <div className="font-mono text-lg font-bold text-emerald-400 tabular-nums">{powerKw}</div>
+                    <div className="text-[10px] text-emerald-500/70">Power (kW)</div>
+                  </div>
+                  <div className="rounded-lg border border-amber-800/60 bg-amber-900/30 px-1 py-2">
+                    <div className="font-mono text-lg font-bold text-amber-400 tabular-nums">{torque.toLocaleString()}</div>
+                    <div className="text-[10px] text-amber-500/70">Torque (kN·m)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT — narrator + key idea */}
+          <div className="flex flex-col gap-4">
+            <NarratorBubble line={LINES.howItWorksWind} audioSrc="/audio/wind-narrator/howItWorksWind.mp3" avatarSize={72} />
+            <div className="rounded-2xl border border-white/30 bg-white/80 p-4 text-sm leading-relaxed text-slate-700 shadow-lg backdrop-blur">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-sky-700">
+                The key idea
+              </div>
+              <p className="mt-1">
+                A wind turbine blade is an aerofoil — like an airplane wing. When wind
+                flows over the curved top, it creates <strong className="text-emerald-600">lift</strong> that
+                pulls the blade around. The rotor converts the wind's straight-line motion
+                into rotational motion: slow but with enormous torque.
+              </p>
+            </div>
+          </div>
+        </div>
+      </SceneFrame>
+    );
+  }
+
+  // ======================================================================
+  // Inside the Nacelle
+  // ======================================================================
+
+  if (step === 4) {
+    return (
+      <SceneFrame
+        {...frame}
+        variant="cutawayNacelle"
+        crispBackdrop
+        sceneTitle="Inside the Nacelle"
+        onNext={next}
+        nextLabel="From turbine to grid"
+        backLabel="Catching the wind"
+      >
+        <div className="grid flex-1 items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
+          {/* LEFT — real nacelle cutaway image + animated gear train */}
+          <div className="flex flex-col gap-4">
+            <div className="overflow-hidden rounded-2xl border border-white/30 bg-white/85 shadow-xl backdrop-blur">
+              <div className="aspect-[16/9] w-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                <img
+                  src="/images/wind-nacelle-cutaway.jpg"
+                  alt="Wind turbine nacelle cutaway diagram showing gearbox, generator, and internal components"
+                  className="h-full w-full object-contain"
+                />
+              </div>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-white/30 bg-white/85 shadow-xl backdrop-blur">
+              <div className="aspect-[16/9] w-full">
+                <GearTrain className="h-full w-full" />
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/30 bg-white/80 p-4 shadow-lg backdrop-blur">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-sky-700">
+                Speed Progression
+              </div>
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                <div className="rounded-lg border border-sky-100 bg-sky-50/60 px-2 py-2 text-center">
+                  <div className="font-bold text-ink">20 RPM</div>
+                  <div className="text-slate-500">Rotor shaft</div>
+                </div>
+                <span className="text-sky-500 font-bold text-lg">→</span>
+                <div className="rounded-lg border border-amber-100 bg-amber-50/60 px-2 py-2 text-center">
+                  <div className="font-bold text-ink">10:1 ratio</div>
+                  <div className="text-slate-500">Gearbox</div>
+                </div>
+                <span className="text-sky-500 font-bold text-lg">→</span>
+                <div className="rounded-lg border border-emerald-100 bg-emerald-50/60 px-2 py-2 text-center">
+                  <div className="font-bold text-ink">1200+ RPM</div>
+                  <div className="text-slate-500">Generator shaft</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT — narrator + key idea */}
+          <div className="flex flex-col gap-4">
+            <NarratorBubble line={LINES.howItWorksNacelle} audioSrc="/audio/wind-narrator/howItWorksNacelle.mp3" avatarSize={72} />
+            <div className="rounded-2xl border border-white/30 bg-white/80 p-4 text-sm leading-relaxed text-slate-700 shadow-lg backdrop-blur">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-sky-700">
+                The key idea
+              </div>
+              <p className="mt-1">
+                The gearbox multiplies the slow rotor spin to the fast speed a generator
+                needs. Inside the generator, magnets spinning inside copper coils induce
+                an electric current — this is where the turbine's power is actually made.
+              </p>
+            </div>
+          </div>
+        </div>
+      </SceneFrame>
+    );
+  }
+
+  // ======================================================================
+  // From Turbine to Grid
+  // ======================================================================
+
+  if (step === 5) {
+    return (
+      <SceneFrame
+        {...frame}
+        variant="cutawayGrid"
+        crispBackdrop
+        sceneTitle="From Turbine to Grid"
+        onNext={next}
+        nextLabel="Watch the data"
+        backLabel="Inside the nacelle"
+      >
+        <div className="grid flex-1 items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
+          {/* LEFT — power flow diagram */}
+          <div className="flex flex-col gap-4">
+            <div className="overflow-hidden rounded-2xl border border-white/30 bg-white/85 shadow-xl backdrop-blur">
+              <div className="aspect-[16/9] w-full">
+                <PowerFlowPath className="h-full w-full" />
+              </div>
+            </div>
+            <div className="rounded-2xl border border-white/30 bg-white/80 p-4 shadow-lg backdrop-blur">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-sky-700">
+                The Path to Your Home
+              </div>
+              <ol className="mt-2 space-y-1.5 text-sm leading-relaxed text-slate-700">
+                <li><strong className="text-sky-700">Generator</strong> — makes electricity at medium voltage</li>
+                <li><strong className="text-sky-700">Tower cable</strong> — carries power down to ground level</li>
+                <li><strong className="text-sky-700">Transformer</strong> — steps up voltage for long-distance travel</li>
+                <li><strong className="text-sky-700">The grid</strong> — delivers it to homes, schools, and factories</li>
+              </ol>
+            </div>
+          </div>
+
+          {/* RIGHT — narrator + bridge to the data */}
+          <div className="flex flex-col gap-4">
+            <NarratorBubble line={LINES.howItWorksBridge} audioSrc="/audio/wind-narrator/howItWorksBridge.mp3" avatarSize={72} />
+            <div className="rounded-2xl border-2 border-amber-300/40 bg-amber-50/90 p-4 text-sm leading-relaxed text-slate-700 shadow-lg backdrop-blur">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-amber-700">
+                🔗 Connecting to the Data
+              </div>
+              <p className="mt-1 font-semibold">
+                Every dot on the power curve is one real minute from this machine.
+                The wind speed was measured by an anemometer on the nacelle.
+                The power output was measured by sensors on the generator.
+              </p>
+              <p className="mt-2 text-slate-600">
+                The shape that data draws is the signature of everything you just
+                walked through — from the wind in the blades to the electrons on the grid.
+              </p>
+            </div>
+          </div>
+        </div>
+      </SceneFrame>
+    );
+  }
+
+  if (step === 6) {
     return (
       <SceneFrame
         {...frame}
         variant="windy"
-        sceneTitle="Watch the Turbine Work"
+        sceneTitle="Watch the Data"
         onNext={next}
         nextLabel="Notice & wonder"
-        backLabel="Meet your guide"
+        backLabel="From turbine to grid"
         nextDisabled={phase !== 'post'}
         nextHint="Play the reveal to continue."
       >
@@ -410,7 +685,7 @@ export default function WindScenePrototype() {
     );
   }
 
-  if (step === 4) {
+  if (step === 7) {
     const captured = notices.length + wonders.length;
     return (
       <SceneFrame
@@ -419,7 +694,7 @@ export default function WindScenePrototype() {
         sceneTitle="Notice & Wonder"
         onNext={next}
         nextLabel="Act 2: Investigate"
-        backLabel="The reveal"
+        backLabel="Watch the data"
         nextDisabled={captured === 0}
         nextHint="Pick at least one chip to continue."
       >
@@ -488,7 +763,7 @@ export default function WindScenePrototype() {
   // ACT 2 · Investigate — Act-wide "blueprint" backdrop
   // ======================================================================
 
-  if (step === 5) {
+  if (step === 8) {
     return (
       <SceneFrame
         {...frame}
@@ -519,11 +794,12 @@ export default function WindScenePrototype() {
     );
   }
 
-  if (step === 6) {
+  if (step === 9) {
     // Split layout: the interactive model on the left, dialogue + details on
     // the right. Tabs switch which enabled lens is on the left.
     const enabledList = LENS_ORDER.filter((l) => lensEnabled[l]);
-    const shown: LensId = enabledList.includes(activeLens) ? activeLens : enabledList[0] ?? 'fit';
+    // If no lenses enabled (user went back and turned them off), default to first lens
+    const shown: LensId = enabledList.length === 0 ? 'fit' : enabledList.includes(activeLens) ? activeLens : enabledList[0];
 
     const claim: Record<LensId, { label: string; options: { id: string; label: string }[]; selected: string[] }> = {
       fit: { label: 'WHAT DID THE FIT SHOW? · TAP UP TO 3', options: fitClaimOptions, selected: act2.fit.claimChipIds },
@@ -546,23 +822,23 @@ export default function WindScenePrototype() {
         sceneTitle="Investigate"
         onNext={next}
         nextLabel="Synthesize"
-        backLabel="Pick your lens"
-        nextDisabled={claimedCount === 0}
-        nextHint="Pick a claim chip in at least one lens."
+        backLabel="Pick Your Lens"
+        nextDisabled={claimedCount < enabledList.length}
+        nextHint={enabledList.length > 1 ? `Tap a claim chip on each lens (${claimedCount} of ${enabledList.length} done).` : "Claim chips required to continue."}
       >
         <div className="grid flex-1 items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
           {/* LEFT — the interactive model */}
           <div className="flex flex-col gap-3">
-            {enabledList.length > 1 && (
-              <div className="flex flex-wrap gap-2">
+            {enabledList.length > 1 ? (
+              <div className="flex items-center gap-1 rounded-xl border border-white/30 bg-white/70 p-1 shadow-sm backdrop-blur">
                 {enabledList.map((l) => (
                   <button
                     key={l}
                     onClick={() => setActiveLens(l)}
-                    className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                    className={`flex-1 rounded-lg px-4 py-2 text-xs font-bold transition ${
                       l === shown
                         ? 'bg-sky-600 text-white shadow'
-                        : 'bg-white/80 text-slate-600 backdrop-blur hover:bg-white'
+                        : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'
                     }`}
                   >
                     {LENS_TAB_LABEL[l]}
@@ -570,7 +846,36 @@ export default function WindScenePrototype() {
                   </button>
                 ))}
               </div>
-            )}
+            ) : enabledList.length === 1 ? (
+              <div className="rounded-xl border border-white/30 bg-white/70 px-4 py-2 text-xs font-bold text-sky-700 shadow-sm backdrop-blur">
+                Active lens: {LENS_TAB_LABEL[enabledList[0]]}
+              </div>
+            ) : null}
+            {/* Prev / Next lens navigation — visible when multiple lenses enabled */}
+            {enabledList.length > 1 && (() => {
+              const idx = enabledList.indexOf(shown);
+              const prev = idx > 0 ? enabledList[idx - 1] : enabledList[enabledList.length - 1];
+              const next = idx < enabledList.length - 1 ? enabledList[idx + 1] : enabledList[0];
+              return (
+                <div className="flex items-center justify-between gap-2 rounded-xl border border-white/20 bg-white/50 px-3 py-1.5 text-xs backdrop-blur">
+                  <button
+                    onClick={() => setActiveLens(prev)}
+                    className="flex items-center gap-1 font-semibold text-slate-500 hover:text-sky-700 transition"
+                  >
+                    ← {LENS_TAB_LABEL[prev]}
+                  </button>
+                  <span className="text-slate-400">
+                    {idx + 1} of {enabledList.length}
+                  </span>
+                  <button
+                    onClick={() => setActiveLens(next)}
+                    className="flex items-center gap-1 font-semibold text-slate-500 hover:text-sky-700 transition"
+                  >
+                    {LENS_TAB_LABEL[next]} →
+                  </button>
+                </div>
+              );
+            })()}
             <div className="rounded-2xl border border-white/30 bg-white/85 p-5 shadow-xl backdrop-blur">
               <h2 className="font-display text-lg font-bold text-ink">{LENS_TAB_LABEL[shown]}</h2>
               <p className="mb-3 text-sm text-slate-600">{LENS_SUBTITLE[shown]}</p>
@@ -651,7 +956,7 @@ export default function WindScenePrototype() {
     );
   }
 
-  if (step === 7) {
+  if (step === 10) {
     return (
       <SceneFrame
         {...frame}
@@ -685,7 +990,7 @@ export default function WindScenePrototype() {
           </div>
 
           <div className="flex flex-col gap-4">
-            <NarratorBubble line="Step back. Across every lens, what pulls it together? Pick the statements your class is ready to defend — that's the claim you carry into the reveal." />
+            <NarratorBubble line={LINES.synthesize} audioSrc="/audio/wind-narrator/synthesize.mp3" />
             <div className="rounded-2xl border border-white/30 bg-white/80 p-4 text-sm leading-relaxed text-slate-700 shadow-lg backdrop-blur">
               <div className="text-[10px] font-bold uppercase tracking-widest text-sky-700">
                 From your investigation
@@ -708,7 +1013,7 @@ export default function WindScenePrototype() {
   // commits to a claim.
   // ======================================================================
 
-  if (step === 8) {
+  if (step === 11) {
     return (
       <SceneFrame
         {...frame}
@@ -817,7 +1122,7 @@ export default function WindScenePrototype() {
     );
   }
 
-  if (step === 9) {
+  if (step === 12) {
     return (
       <SceneFrame
         {...frame}
@@ -870,7 +1175,7 @@ export default function WindScenePrototype() {
     );
   }
 
-  // step === 10 · Make It Yours
+  // step === 13 · Make It Yours
   return (
     <SceneFrame
       {...frame}

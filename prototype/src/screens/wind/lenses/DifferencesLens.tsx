@@ -50,10 +50,10 @@ export default function DifferencesLens({ state, onChange }: DifferencesLensProp
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 text-[10px] font-semibold tracking-widest text-slate-500">
-              <th className="text-left px-4 py-2">WIND ≈ (m/s)</th>
-              <th className="text-right px-4 py-2">MEAN POWER (kW)</th>
-              <th className="text-right px-4 py-2">1ST DIFF (Δ)</th>
-              <th className="text-right px-4 py-2 bg-sky-50 text-sky-700">2ND DIFF (ΔΔ)</th>
+              <th scope="col" className="text-left px-4 py-2">WIND ≈ (m/s)</th>
+              <th scope="col" className="text-right px-4 py-2">MEAN POWER (kW)</th>
+              <th scope="col" className="text-right px-4 py-2">1ST DIFF (Δ)</th>
+              <th scope="col" className="text-right px-4 py-2 bg-sky-50 text-sky-700">2ND DIFF (ΔΔ)</th>
             </tr>
           </thead>
           <tbody className="tabular-nums">
