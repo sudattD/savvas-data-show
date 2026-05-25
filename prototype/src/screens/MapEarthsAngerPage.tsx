@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Masthead from '../components/Masthead';
 import SeeAllDataLink from '../components/SeeAllDataLink';
 import EnvisionVideoLink from '../components/EnvisionVideoLink';
@@ -14,9 +14,15 @@ import ActRail from './quakes/ActRail';
 import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { getDataset } from '../data/registry';
+import { stopNarrator } from './quakes/Narrator';
 
 export default function MapEarthsAngerPage() {
   useDocumentTitle("Map Earth's Anger");
+
+  // Stop the narrator when this screen is closed. The audio player is a
+  // module-level singleton, so without this it keeps playing after the
+  // user navigates away from the activity.
+  useEffect(() => stopNarrator, []);
   const [act, setAct] = useState<1 | 2 | 3>(1);
   const [wonderings, setWonderings] = useState<ClassWonderings | null>(null);
   const [summary, setSummary] = useState<QuakeSummary | null>(null);

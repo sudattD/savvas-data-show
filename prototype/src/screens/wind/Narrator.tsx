@@ -218,9 +218,9 @@ function useAutoplayOnMount(key: NarratorLineKey) {
 }
 
 // The intro card. Big avatar + introduction. Shown once at the very top of
-// Act 1, before the play button.
+// Act 1. Deliberately does NOT autoplay on launch — Marcus stays quiet until
+// the student taps "Hear it".
 export function NarratorIntro() {
-  useAutoplayOnMount('intro');
   return (
     <div className="bg-gradient-to-br from-sky-50 to-blue-50 border border-sky-200 rounded-2xl p-5 sm:p-6 shadow-sm">
       <div className="flex items-start gap-4 sm:gap-5">

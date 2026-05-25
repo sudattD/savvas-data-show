@@ -91,6 +91,15 @@ function startLine(key: NarratorLineKey) {
   });
 }
 
+// Silence whatever line is playing. Exported so a screen can stop the
+// narrator when it unmounts — the audio player is a module-level singleton,
+// so without this Maya keeps talking after the user navigates away.
+export function stopNarrator() {
+  if (currentKey === null && currentAudio === null) return;
+  stopCurrent();
+  notify();
+}
+
 function useNarratorPlayer(key: NarratorLineKey) {
   const current = useSyncExternalStore(
     (fn) => {

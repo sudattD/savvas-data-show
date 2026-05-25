@@ -2,7 +2,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import InputWidget from './components/InputWidget';
 import FeedbackPage from './screens/FeedbackPage';
 import HomePage from './screens/HomePage';
+import WindTurbineHub from './screens/WindTurbineHub';
 import WindTurbinePage from './screens/WindTurbinePage';
+import WindScenePrototype from './screens/wind/prototype/WindScenePrototype';
 import VoiceDNAPage from './screens/VoiceDNAPage';
 import ReactionTimePage from './screens/ReactionTimePage';
 import CensusPyramidPage from './screens/CensusPyramidPage';
@@ -63,7 +65,9 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/wind-turbine" element={<WindTurbinePage />} />
+        <Route path="/wind-turbine" element={<WindTurbineHub />} />
+        <Route path="/wind-turbine/classic" element={<WindTurbinePage />} />
+        <Route path="/wind-turbine/prototype" element={<WindScenePrototype />} />
         <Route path="/voice-dna" element={<VoiceDNAPage />} />
         <Route path="/reaction-time" element={<ReactionTimePage />} />
         <Route path="/census-pyramid" element={<CensusPyramidPage />} />
