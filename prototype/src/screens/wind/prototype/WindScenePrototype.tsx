@@ -342,7 +342,7 @@ export default function WindScenePrototype() {
             <div className="rounded-2xl border border-white/30 bg-white/90 p-4 shadow-lg backdrop-blur">
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div className="text-[10px] font-bold uppercase tracking-widest text-sky-700">
-                  ⚡ Play with the Specs
+                  Play with the Specs
                 </div>
                 <span className="text-[10px] font-semibold text-sky-600">Drag to explore</span>
               </div>
@@ -352,26 +352,30 @@ export default function WindScenePrototype() {
                 <div className="group rounded-xl border border-sky-100 bg-gradient-to-r from-sky-50/80 to-blue-50/80 p-3 transition hover:border-sky-300 hover:shadow-sm">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">💨</span>
                       <span className="text-sm font-bold text-ink">Wind speed</span>
                     </div>
                     <span className="inline-flex items-center gap-1 rounded-full bg-sky-600 px-3 py-0.5 font-mono text-xs font-bold text-white shadow-sm">
                       {explWindSpeed} <span className="text-sky-200 text-[10px]">m/s</span>
                     </span>
                   </div>
-                  <input
-                    type="range"
-                    min={2}
-                    max={18}
-                    step={0.5}
-                    value={explWindSpeed}
-                    onChange={(e) => setExplWindSpeed(parseFloat(e.target.value))}
-                    className="w-full accent-sky-600 mt-1"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-500 mt-0.5">
-                    <span>🌬️ Light breeze</span>
-                    <span>🌀 Strong wind</span>
-                    <span>🌪️ Storm</span>
+                  <div className="relative mt-2">
+                    <input
+                      type="range"
+                      min={2}
+                      max={18}
+                      step={0.5}
+                      value={explWindSpeed}
+                      onChange={(e) => setExplWindSpeed(parseFloat(e.target.value))}
+                      className="slider-custom w-full h-2 rounded-full appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 ${((explWindSpeed - 2) / 16) * 100}%, #e2e8f0 ${((explWindSpeed - 2) / 16) * 100}%)`,
+                      }}
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500 mt-1.5">
+                      <span>Light breeze</span>
+                      <span>Strong wind</span>
+                      <span>Storm</span>
+                    </div>
                   </div>
                 </div>
 
@@ -379,26 +383,30 @@ export default function WindScenePrototype() {
                 <div className="group rounded-xl border border-sky-100 bg-gradient-to-r from-sky-50/80 to-blue-50/80 p-3 transition hover:border-sky-300 hover:shadow-sm">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">📏</span>
                       <span className="text-sm font-bold text-ink">Blade length</span>
                     </div>
                     <span className="inline-flex items-center gap-1 rounded-full bg-sky-600 px-3 py-0.5 font-mono text-xs font-bold text-white shadow-sm">
                       {explBladeLength} <span className="text-sky-200 text-[10px]">m</span>
                     </span>
                   </div>
-                  <input
-                    type="range"
-                    min={20}
-                    max={60}
-                    step={1}
-                    value={explBladeLength}
-                    onChange={(e) => setExplBladeLength(parseInt(e.target.value))}
-                    className="w-full accent-sky-600 mt-1"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-500 mt-0.5">
-                    <span>🏠 Small turbine</span>
-                    <span>🏭 Modern turbine</span>
-                    <span>⚓ Large offshore</span>
+                  <div className="relative mt-2">
+                    <input
+                      type="range"
+                      min={20}
+                      max={60}
+                      step={1}
+                      value={explBladeLength}
+                      onChange={(e) => setExplBladeLength(parseInt(e.target.value))}
+                      className="slider-custom w-full h-2 rounded-full appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3b82f6 ${((explBladeLength - 20) / 40) * 100}%, #e2e8f0 ${((explBladeLength - 20) / 40) * 100}%)`,
+                      }}
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500 mt-1.5">
+                      <span>🏠 Small turbine</span>
+                      <span>🏭 Modern turbine</span>
+                      <span>⚓ Large offshore</span>
+                    </div>
                   </div>
                 </div>
               </div>

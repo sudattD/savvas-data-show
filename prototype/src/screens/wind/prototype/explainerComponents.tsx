@@ -104,15 +104,15 @@ export function BladeCrossSection({
       {/* Labels */}
       <rect x={10} y={6} width={160} height={26} rx={4} fill="#1e293b" opacity={0.7} />
       <text x={16} y={23} fill="#93c5fd" fontSize={12} fontFamily="monospace" fontWeight="bold">
-        💨 {windSpeed.toFixed(1)} m/s
+        {windSpeed.toFixed(1)} m/s
       </text>
       <rect x={630} y={6} width={160} height={26} rx={4} fill="#1e293b" opacity={0.7} />
       <text x={636} y={23} fill="#cbd5e1" fontSize={12} fontFamily="monospace" fontWeight="bold">
-        📏 {bladeLength}m blades
+        {bladeLength}m blades
       </text>
       <rect x={320} y={490} width={160} height={22} rx={4} fill="#1e293b" opacity={0.55} />
       <text x={400} y={505} textAnchor="middle" fill="#e0e8f0" fontSize={10} fontFamily="monospace" fontWeight="bold">
-        ⏱ {spinDur.toFixed(1)}s per rotation
+        {spinDur.toFixed(1)}s per rotation
       </text>
     </svg>
   );

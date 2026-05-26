@@ -334,7 +334,7 @@ export function SceneBackdrop({ variant }: { variant: BackdropVariant }) {
             ))}
           </g>
           <text x={660} y={760} textAnchor="middle" fill="#e0e8f0" fontSize={12} fontFamily="sans-serif" fontWeight="bold" opacity={0.6}>
-            THE ELECTRICAL GRID ⚡
+            THE ELECTRICAL GRID
           </text>
         </>
       )}
