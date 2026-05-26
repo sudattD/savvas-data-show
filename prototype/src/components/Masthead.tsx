@@ -34,7 +34,11 @@ export default function Masthead({ section, eyebrow, right }: MastheadProps) {
 
         {(section || eyebrow) && !isHome && (
           <div className="hidden md:block shrink min-w-[12rem] basis-[14rem] border-l border-surface-line pl-6">
-            {eyebrow && <div className="eyebrow text-ink-muted whitespace-nowrap overflow-hidden text-ellipsis">{eyebrow}</div>}
+            {eyebrow && (
+              <div className="eyebrow text-ink-muted whitespace-nowrap overflow-hidden relative" style={{ maskImage: 'linear-gradient(90deg, transparent 0, #000 2rem, #000 85%, transparent 100%)', WebkitMaskImage: 'linear-gradient(90deg, transparent 0, #000 2rem, #000 85%, transparent 100%)' }}>
+                <span className="inline-block animate-marquee">{eyebrow}&nbsp;&nbsp;·&nbsp;&nbsp;{eyebrow}&nbsp;&nbsp;·&nbsp;&nbsp;{eyebrow}</span>
+              </div>
+            )}
             {section && <div className="font-display font-medium text-ink text-sm leading-tight whitespace-nowrap overflow-hidden text-ellipsis">{section}</div>}
           </div>
         )}

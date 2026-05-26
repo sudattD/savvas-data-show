@@ -61,6 +61,9 @@ export default {
         editorial: '0 1px 0 rgba(10, 21, 48, 0.04), 0 6px 14px -8px rgba(10, 21, 48, 0.10)',
         masthead: '0 1px 0 rgba(10, 21, 48, 0.06)',
       },
+      animation: {
+        marquee: 'marquee 18s linear infinite',
+      },
       maxWidth: {
         prose: '65ch',
         article: '40rem',
