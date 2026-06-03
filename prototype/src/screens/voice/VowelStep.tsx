@@ -11,6 +11,8 @@ export interface VowelCapture {
   userSnapshot: string;
   peakHz: number;
   peakNote: string;
+  /** Optional recorded audio blob URL for playback */
+  audioUrl?: string;
 }
 
 interface Props {
@@ -45,6 +47,8 @@ export default function VowelStep({
   const userFramesRef = useRef<Uint8Array[]>([]);
   const [livePitch, setLivePitch] = useState(0);
   const peakRef = useRef<{ hz: number; val: number }>({ hz: 0, val: 0 });
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
 
   // Reset everything when the step changes
   useEffect(() => {
@@ -93,11 +97,32 @@ export default function VowelStep({
     peakRef.current = { hz: 0, val: 0 };
     setUserSnapshot(null);
     setRecording(true);
+    chunksRef.current = [];
+
+    // Record audio via MediaRecorder
+    let recorder: MediaRecorder | null = null;
+    try {
+      recorder = new MediaRecorder(mic.stream, { mimeType: 'audio/webm;codecs=opus' });
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.start(100); // timeslice — fire dataavailable every 100ms
+      recorderRef.current = recorder;
+    } catch { /* audio recording not supported */ }
+
     setTimeout(() => {
+      recorder?.stop();
+      recorderRef.current = null;
+
       const frames = userFramesRef.current;
       const snap = renderSnapshot(frames);
       setUserSnapshot(snap);
       setRecording(false);
+
+      // Create blob URL from recorded chunks
+      let audioUrl: string | undefined;
+      if (chunksRef.current.length > 0) {
+        const blob = new Blob(chunksRef.current, { type: recorder?.mimeType || 'audio/webm' });
+        audioUrl = URL.createObjectURL(blob);
+      }
 
       const peakHz = peakRef.current.hz;
       const peakNote = hzToNote(peakHz);
@@ -108,6 +133,7 @@ export default function VowelStep({
         userSnapshot: snap,
         peakHz,
         peakNote,
+        audioUrl,
       });
     }, RECORD_MS);
   };

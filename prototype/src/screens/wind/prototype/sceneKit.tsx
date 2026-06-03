@@ -22,9 +22,6 @@ export const ACTS = [
   { id: 3, name: 'Reveal', short: 'Reveal' },
 ] as const;
 
-// How long the crisp backdrop is held between scenes before content fades in.
-const PAUSE_MS = 1700;
-
 // --------------------------------------------------------------------------
 // Glossary — inline definitions surfaced on hover/tap, virus-stage style.
 // --------------------------------------------------------------------------
@@ -133,8 +130,18 @@ export function NarratorBubble({
                     : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700'
                 }`}
               >
-                <span aria-hidden="true">{playing ? '⏸' : '🔊'}</span>
-                {playing ? 'Playing…' : 'Hear it'}
+                <span aria-hidden="true" className="w-4 h-4">
+                  {playing ? (
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  )}
+                </span>
               </button>
             )}
           </div>
@@ -238,7 +245,6 @@ export function SceneFrame({
   backLabel = 'Back',
   nextDisabled = false,
   nextHint,
-  crispBackdrop = false,
 }: {
   act: number;
   step: number;
@@ -252,43 +258,37 @@ export function SceneFrame({
   backLabel?: string;
   nextDisabled?: boolean;
   nextHint?: string;
-  /** Keep the backdrop crisp (unblurred) after the between-scene pause.
-   *  Used when the backdrop is the primary visual, not just atmosphere. */
-  crispBackdrop?: boolean;
 }) {
   const actMeta = ACTS[act - 1];
 
-  // 'pause' — crisp backdrop + title card held for a beat on every scene
-  // change. 'scene' — backdrop blurred behind the faded-in content.
-  const [stage, setStage] = useState<'pause' | 'scene'>('pause');
+  // Three-stage transition on step change:
+  // 1. crisp backdrop + title card (holds 1.2s)
+  // 2. backdrop fades out + title fades out (0.4s)
+  // 3. scene content fades in (0.4s)
+  const [stage, setStage] = useState<'backdrop' | 'fade' | 'scene'>('backdrop');
   useEffect(() => {
-    setStage('pause');
-    const t = window.setTimeout(() => setStage('scene'), PAUSE_MS);
-    return () => window.clearTimeout(t);
+    setStage('backdrop');
+    const t1 = window.setTimeout(() => setStage('fade'), 1200);
+    const t2 = window.setTimeout(() => setStage('scene'), 1600);
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
   }, [step]);
-  const paused = stage === 'pause';
+  const showing = stage;
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Backdrop — crisp during the pause, blurred behind the scene.
-          `crispBackdrop` keeps it sharp when the backdrop is the visual. */}
+      {/* Backdrop — crisp during backdrop stage, blurred after */}
       <div
-        className={`fixed inset-0 -z-10 transition-all duration-[900ms] ease-out ${
-          paused || crispBackdrop ? 'scale-100 blur-0' : 'scale-101 blur-[2px]'
+        className={`fixed inset-0 -z-10 transition-all duration-[400ms] ease-out ${
+          showing === 'backdrop' ? 'scale-100 blur-0' : 'scale-101 blur-[2px]'
         }`}
       >
         <SceneBackdrop variant={variant} />
       </div>
-      <div
-        className={`fixed inset-0 -z-10 bg-slate-950 transition-opacity duration-[900ms] ${
-          paused ? 'opacity-[0.06]' : 'opacity-15'
-        }`}
-      />
 
-      {/* Between-scene title card — fades in during the pause, out into the scene */}
+      {/* Between-scene title card — shown during backdrop stage, fades out */}
       <div
-        className={`pointer-events-none fixed inset-0 z-20 flex flex-col items-center justify-center text-center transition-opacity duration-500 ${
-          paused ? 'opacity-100' : 'opacity-0'
+        className={`pointer-events-none fixed inset-0 z-20 flex flex-col items-center justify-center text-center transition-opacity duration-[400ms] ${
+          showing === 'scene' ? 'opacity-0' : 'opacity-100'
         }`}
       >
         <div className="text-xs font-bold uppercase tracking-[0.35em] text-white/85 drop-shadow">
@@ -303,13 +303,12 @@ export function SceneFrame({
         </div>
       </div>
 
-      {/* Scene content */}
+      {/* Scene content — fades in after backdrop+fade stages */}
       <div
-        className={`relative z-10 mx-auto flex min-h-screen max-w-[1680px] flex-col px-8 pt-6 pb-28 transition-all duration-700 ${
-          paused ? 'pointer-events-none translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
+        className={`relative z-10 mx-auto flex min-h-screen max-w-[1680px] flex-col px-8 pt-6 pb-28 transition-all duration-[400ms] ${
+          showing === 'scene' ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
         }`}
-        style={paused ? undefined : { background: 'radial-gradient(ellipse at center, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.15) 70%, transparent 100%)' }}
-        aria-hidden={paused}
+        aria-hidden={showing !== 'scene'}
       >
         {/* Act rail — the spine */}
         <div className="flex items-center justify-between gap-3">
@@ -333,9 +332,23 @@ export function SceneFrame({
               );
             })}
           </div>
-          <span className="rounded-full bg-amber-500/90 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-950">
-            Prototype
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-amber-500/90 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-950">
+              Prototype
+            </span>
+            <a
+              href="/explorer?datasetId=wind"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/80 backdrop-blur transition hover:bg-white/20 hover:text-white"
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-3 w-3" aria-hidden="true">
+                <circle cx={6.5} cy={6.5} r={4.5} />
+                <path d="M10 10l4 4" strokeLinecap="round" />
+              </svg>
+              Explore the data
+            </a>
+          </div>
         </div>
 
         {/* Scene title — named as a step within its Act */}
@@ -356,7 +369,7 @@ export function SceneFrame({
         <div className="mt-5 flex items-center justify-between gap-4">
           <button
             onClick={onBack}
-            disabled={!onBack || paused}
+            disabled={!onBack || showing !== 'scene'}
             aria-label={`Back to ${backLabel.toLowerCase()}`}
             className="rounded-full border border-white/40 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-700 backdrop-blur transition hover:bg-white disabled:text-slate-400 disabled:hover:bg-white/70"
           >
@@ -367,7 +380,7 @@ export function SceneFrame({
           </span>
           <button
             onClick={onNext}
-            disabled={!onNext || nextDisabled || paused}
+            disabled={!onNext || nextDisabled || showing !== 'scene'}
             aria-label={onNext ? `Next: ${nextLabel}` : 'Next'}
             className="rounded-full bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-sky-500 disabled:bg-slate-400/70 disabled:shadow-none"
           >

@@ -262,14 +262,15 @@ function ChapterRow({ entry, viewMode }: { entry: ChapterEntry; viewMode: ViewMo
       id={chapterAnchorId(entry)}
       className={`group bg-surface-raised border ${isBuilt ? 'border-surface-line hover:border-brand-300' : 'border-surface-line/70'} rounded-lg overflow-hidden transition scroll-mt-24`}
     >
-      <div className="grid md:grid-cols-[120px_1fr_220px] gap-0 items-stretch">
+      <div className={`flex ${isBuilt && entry.flagship ? 'border-l-4 border-accent-500' : ''}`}>
+      <div className="grid md:grid-cols-[120px_1fr_220px] gap-0 items-stretch flex-1">
         {/* Topic label */}
         <div className={`px-4 py-4 md:py-5 border-b md:border-b-0 md:border-r border-surface-line ${accent.chip} flex md:flex-col md:items-start items-baseline gap-2 md:gap-1`}>
           <div className="eyebrow text-[10px] opacity-70">Topic</div>
           <div className="font-display text-2xl font-bold leading-none tabular-nums">{entry.topic}</div>
           {entry.flagship && (
             <div className="ml-auto md:ml-0 text-[9px] eyebrow bg-accent-500 text-white px-1.5 py-0.5 rounded">
-              flagship
+              POC
             </div>
           )}
         </div>
@@ -375,6 +376,7 @@ function ChapterRow({ entry, viewMode }: { entry: ChapterEntry; viewMode: ViewMo
             </span>
           )}
         </div>
+      </div>
       </div>
     </article>
   );

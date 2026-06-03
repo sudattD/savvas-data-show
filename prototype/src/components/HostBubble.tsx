@@ -17,6 +17,7 @@ const HUES: Record<string, [string, string, string, string]> = {
   amber: ['from-amber-100', 'to-orange-50', 'border-amber-200', 'text-amber-600'],
   slate: ['from-slate-100', 'to-slate-50', 'border-slate-200', 'text-slate-600'],
   rose: ['from-rose-100', 'to-rose-50', 'border-rose-200', 'text-rose-600'],
+  pink: ['from-pink-100', 'to-pink-50', 'border-pink-200', 'text-pink-600'],
 };
 
 export default function HostBubble({ children, accent = 'sky' }: HostBubbleProps) {

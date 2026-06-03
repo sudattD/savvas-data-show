@@ -21,16 +21,22 @@ const WONDER_OPTIONS = [
   'Does coffee or sleep change it?',
 ];
 
+const GUESS_OPTIONS = [
+  { label: '100 ms', value: 100 },
+  { label: '250 ms', value: 250 },
+  { label: '400 ms', value: 400 },
+  { label: "I'm not sure", value: 0 },
+];
+
 export default function ReactionIdentify({ onNext }: IdentifyProps) {
   const [notice, setNotice] = useState('');
-  const [conjecture, setConjecture] = useState('');
+  const [conjecture, setConjecture] = useState<number | null>(null);
 
   const finish = () => {
-    const c = parseFloat(conjecture);
     onNext({
       firstQuestion: notice,
       mainQuestion: 'How fast can I react?',
-      conjecture: Number.isFinite(c) ? c : 0,
+      conjecture: conjecture ?? 0,
       reasoning: '',
       tooLow: 0,
       tooHigh: 0,
@@ -93,17 +99,26 @@ export default function ReactionIdentify({ onNext }: IdentifyProps) {
             How fast is your reaction time, in milliseconds?
           </div>
           <label className="text-xs font-semibold text-ink-soft block mb-1.5">
-            Predict before you test <span className="text-[10px] text-ink-muted italic font-normal">(optional)</span>
+            Predict before you test
           </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              value={conjecture}
-              onChange={(e) => setConjecture(e.target.value)}
-              placeholder="e.g. 250"
-              className="w-32 px-3 py-2 rounded-md border border-surface-line focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none font-mono tabular-nums"
-            />
-            <span className="text-sm text-ink-muted">ms</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {GUESS_OPTIONS.map((opt) => {
+              const selected = conjecture === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setConjecture(conjecture === opt.value ? null : opt.value)}
+                  className={`text-sm px-3 py-2 rounded-md border font-mono tabular-nums transition ${
+                    selected
+                      ? 'border-violet-500 bg-violet-50 text-violet-900 ring-2 ring-violet-100'
+                      : 'border-surface-line text-ink hover:border-violet-300 hover:bg-violet-50/40'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>

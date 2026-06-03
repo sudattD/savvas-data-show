@@ -198,62 +198,146 @@ export function GearTrain({ className }: { className?: string }) {
 
 export function PowerFlowPath({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 600 280" className={className} preserveAspectRatio="xMidYMid meet">
-      {/* Turbine silhouette */}
-      <g transform="translate(80 60)">
+    <svg viewBox="0 0 700 240" className={className} preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <marker id="pfArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 Z" fill="#f59e0b" />
+        </marker>
+        <style>{`@keyframes pfpSpin { to { transform: rotate(360deg); } }`}</style>
+      </defs>
+
+      {/* Background */}
+      <rect x={0} y={0} width={700} height={240} rx={10} fill="#f8fafc" />
+      <rect x={0} y={0} width={700} height={240} rx={10} fill="none" stroke="#e2e8f0" strokeWidth={1} />
+
+      {/* ===== Ground line ===== */}
+      <line x1={0} y1={170} x2={700} y2={170} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="4 3" />
+
+      {/* ===== 1. Turbine (generator + tower cable combined) ===== */}
+      <g transform="translate(90 94)">
         {/* Tower */}
-        <rect x={-4} y={0} width={8} height={120} fill="#475569" />
+        <rect x={-5} y={0} width={10} height={76} fill="#94a3b8" rx={1} />
         {/* Nacelle */}
-        <rect x={-16} y={-12} width={40} height={24} rx={4} fill="#64748b" />
+        <rect x={-18} y={-14} width={44} height={24} rx={4} fill="#475569" />
         {/* Blades */}
-        <g style={{ transformOrigin: '4px 0px', animation: 'windspin 4s linear infinite' }}>
+        <g style={{ transformOrigin: '4px 0px', animation: 'pfpSpin 4s linear infinite' }}>
           {[0, 120, 240].map((d) => (
-            <rect key={d} x={1} y={-40} width={6} height={42} rx={2} fill="#475569" transform={`rotate(${d} 4 0)`} />
+            <rect key={d} x={1} y={-36} width={6} height={38} rx={2} fill="#64748b" transform={`rotate(${d} 4 0)`} />
           ))}
-          <circle cx={4} cy={0} r={5} fill="#64748b" />
+          <circle cx={4} cy={0} r={5} fill="#475569" />
         </g>
+        {/* Generator label inside nacelle */}
+        <text x={4} y={3} textAnchor="middle" fill="#f59e0b" fontSize={10} fontFamily="monospace" fontWeight="bold">G</text>
         {/* Amber power line down tower */}
-        <rect x={-1} y={24} width={2} height={96} fill="#f59e0b" opacity={0.8}>
+        <rect x={-1.5} y={16} width={3} height={56} rx={1.5} fill="#f59e0b" opacity={0.85}>
           <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" repeatCount="indefinite" />
         </rect>
+        {/* Label below */}
+        <text x={4} y={92} textAnchor="middle" fill="#334155" fontSize={10} fontFamily="sans-serif" fontWeight={700}>Generator</text>
+        <text x={4} y={104} textAnchor="middle" fill="#64748b" fontSize={8} fontFamily="sans-serif">medium voltage</text>
       </g>
 
-      {/* Arrow from nacelle */}
-      <path d="M116,72 L160,72" fill="none" stroke="#f59e0b" strokeWidth={3} strokeDasharray="6 6">
-        <animate attributeName="stroke-dashoffset" from="24" to="0" dur="0.8s" repeatCount="indefinite" />
-      </path>
-
-      {/* Transformer box */}
-      <g transform="translate(200 50)">
-        <rect x={-16} y={-14} width={32} height={28} rx={3} fill="#1e293b" stroke="#f59e0b" strokeWidth={2} />
-        <text x={0} y={4} textAnchor="middle" fill="#f59e0b" fontSize={12} fontFamily="monospace" fontWeight="bold">⇢</text>
-        <text x={0} y={24} textAnchor="middle" fill="#94a3b8" fontSize={8} fontFamily="sans-serif">TRANSFORMER</text>
+      {/* ===== Arrow 1→2 ===== */}
+      <g transform="translate(135 94)">
+        <path d="M0,0 L32,0" fill="none" stroke="#f59e0b" strokeWidth={2.5} markerEnd="url(#pfArrow)" />
+        <text x={16} y={-8} textAnchor="middle" fill="#94a3b8" fontSize={7} fontFamily="sans-serif">cable</text>
       </g>
 
-      {/* Transmission lines */}
-      <g fill="none" stroke="#64748b" strokeWidth={2} opacity={0.6}>
-        {[-8, 0, 8].map((offset) => (
-          <path key={offset} d={`M232,64 Q300,64 360,72 T460,80`} transform={`translate(0 ${offset})`} />
+      {/* ===== 2. Tower ===== */}
+      <g transform="translate(210 94)">
+        {/* Tower cross-section */}
+        <path d="M-12,0 L-8,-70 L8,-70 L12,0 Z" fill="#e2e8f0" stroke="#94a3b8" strokeWidth={1} />
+        <path d="M-12,0 L-8,-70 L8,-70 L12,0 Z" fill="none" stroke="#cbd5e1" strokeWidth={0.5} />
+        {/* Internal cable */}
+        <rect x={-2} y={-66} width={4} height={62} rx={2} fill="#f59e0b" opacity={0.85}>
+          <animate attributeName="opacity" values="0.4;1;0.4" dur="0.8s" repeatCount="indefinite" />
+        </rect>
+        <text x={0} y={92} textAnchor="middle" fill="#334155" fontSize={10} fontFamily="sans-serif" fontWeight={700}>Tower cable</text>
+        <text x={0} y={104} textAnchor="middle" fill="#64748b" fontSize={8} fontFamily="sans-serif">carries power down</text>
+      </g>
+
+      {/* ===== Arrow 2→3 ===== */}
+      <path d="M225,94 L255,94" fill="none" stroke="#f59e0b" strokeWidth={2.5} markerEnd="url(#pfArrow)" />
+
+      {/* ===== 3. Transformer ===== */}
+      <g transform="translate(320 94)">
+        <rect x={-22} y={-28} width={44} height={40} rx={4} fill="#334155" stroke="#1e293b" strokeWidth={1.5} />
+        {/* Cooling fins */}
+        {[-26, 26].map((sx) =>
+          [0, 8, 16, 24].map((dy) => (
+            <rect key={`${sx}-${dy}`} x={sx} y={-24 + dy} width={4} height={6} rx={0.8} fill="#475569" />
+          ))
+        )}
+        {/* Bushings */}
+        {[-8, 0, 8].map((x) => (
+          <rect key={x} x={x - 1.5} y={-34} width={3} height={6} rx={1} fill="#64748b" />
         ))}
-      </g>
-      {/* Pulses along line */}
-      <circle cx={300} cy={68} r={4} fill="#fbbf24">
-        <animate attributeName="cx" values="232;460" dur="2s" repeatCount="indefinite" />
-        <animate attributeName="opacity" values="1;0.2;1" dur="2s" repeatCount="indefinite" />
-      </circle>
-
-      {/* City/homes at the end */}
-      <g transform="translate(490 50)" fill="#334155">
-        {[0, 20, 45, 65, 90].map((x, i) => (
-          <rect key={i} x={x} y={-12 - i * 8} width={16} height={12 + i * 8} rx={1} />
-        ))}
-        {[[5, -6], [24, -10], [48, -12], [68, -8], [94, -14]].map(([wx, wy], j) => (
-          <rect key={j} x={wx} y={wy} width={3} height={3} fill="#fbbf24" opacity={0.8} />
-        ))}
+        {/* Step-up arrow */}
+        <path d="M-6,4 L0,-8 L6,4" fill="none" stroke="#f59e0b" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <line x1={-10} y1={8} x2={10} y2={8} stroke="#f59e0b" strokeWidth={2} strokeLinecap="round" />
+        <text x={0} y={54} textAnchor="middle" fill="#334155" fontSize={10} fontFamily="sans-serif" fontWeight={700}>Transformer</text>
+        <text x={0} y={66} textAnchor="middle" fill="#64748b" fontSize={8} fontFamily="sans-serif">steps up voltage</text>
       </g>
 
-      {/* Ground */}
-      <line x1={0} y1={200} x2={600} y2={200} stroke="#334155" strokeWidth={2} opacity={0.5} />
+      {/* ===== Arrow 3→4 ===== */}
+      <path d="M345,94 L375,94" fill="none" stroke="#f59e0b" strokeWidth={2.5} markerEnd="url(#pfArrow)" />
+
+      {/* ===== 4. Transmission ===== */}
+      <g transform="translate(450 94)">
+        {/* Pylon */}
+        <path d="M0,-36 L-12,-14 L-8,-14 L-10,4 L-6,4 L-6,-8 L0,0 L6,-8 L6,4 L10,4 L8,-14 L12,-14 Z" fill="#60a5fa" opacity={0.7} stroke="#3b82f6" strokeWidth={0.8} />
+        <line x1={-16} y1={-20} x2={16} y2={-20} stroke="#60a5fa" strokeWidth={1.5} />
+        <line x1={-12} y1={-8} x2={12} y2={-8} stroke="#60a5fa" strokeWidth={1.5} />
+        {/* Lines */}
+        <g fill="none" stroke="#94a3b8" strokeWidth={1.2} opacity={0.6}>
+          <path d="M16,-26 L45,-22" />
+          <path d="M16,-14 L45,-10" />
+          <path d="M16,-2 L45,2" />
+        </g>
+        {/* Pulse */}
+        <circle cx={28} cy={-20} r={2.5} fill="#f59e0b">
+          <animate attributeName="cx" values="16;46" dur="1.5s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="1;0" dur="1.5s" repeatCount="indefinite" />
+        </circle>
+        <text x={2} y={54} textAnchor="middle" fill="#334155" fontSize={10} fontFamily="sans-serif" fontWeight={700}>The grid</text>
+        <text x={2} y={66} textAnchor="middle" fill="#64748b" fontSize={8} fontFamily="sans-serif">transmission lines</text>
+      </g>
+
+      {/* ===== Arrow 4→5 ===== */}
+      <path d="M465,94 L500,94" fill="none" stroke="#f59e0b" strokeWidth={2.5} markerEnd="url(#pfArrow)" />
+
+      {/* ===== 5. Homes ===== */}
+      <g transform="translate(580 94)">
+        {/* House 1 */}
+        <g transform="translate(-18 0)">
+          <rect x={-9} y={-8} width={18} height={18} rx={1.5} fill="#e2e8f0" stroke="#94a3b8" strokeWidth={1} />
+          <path d="M-11,-8 L0,-22 L11,-8" fill="none" stroke="#94a3b8" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+          <rect x={-4} y={0} width={8} height={5} rx={1} fill="#f59e0b" opacity={0.5}>
+            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
+          </rect>
+        </g>
+        {/* House 2 */}
+        <g transform="translate(8 0)">
+          <rect x={-8} y={-2} width={16} height={12} rx={1.5} fill="#e2e8f0" stroke="#94a3b8" strokeWidth={1} />
+          <path d="M-10,-2 L0,-14 L10,-2" fill="none" stroke="#94a3b8" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+          <rect x={-3} y={3} width={6} height={4} rx={1} fill="#f59e0b" opacity={0.5}>
+            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.5s" repeatCount="indefinite" />
+          </rect>
+        </g>
+        {/* Building */}
+        <g transform="translate(30 0)">
+          <rect x={-8} y={-4} width={16} height={14} rx={1.5} fill="#f1f5f9" stroke="#94a3b8" strokeWidth={1} />
+          <rect x={-5} y={-1} width={4} height={3} fill="#93c5fd" opacity={0.6} />
+          <rect x={1} y={-1} width={4} height={3} fill="#93c5fd" opacity={0.6} />
+          <rect x={-5} y={4} width={4} height={3} fill="#93c5fd" opacity={0.6} />
+          <rect x={1} y={4} width={4} height={3} fill="#93c5fd" opacity={0.6} />
+        </g>
+        <text x={4} y={32} textAnchor="middle" fill="#334155" fontSize={10} fontFamily="sans-serif" fontWeight={700}>Homes</text>
+        <text x={4} y={44} textAnchor="middle" fill="#64748b" fontSize={8} fontFamily="sans-serif">schools &amp; factories</text>
+      </g>
+
+      {/* ===== Title ===== */}
+      <text x={350} y={188} textAnchor="middle" fill="#94a3b8" fontSize={9} fontFamily="sans-serif">The Path to Your Home</text>
     </svg>
   );
 }

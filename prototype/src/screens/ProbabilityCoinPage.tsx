@@ -3,11 +3,10 @@ import Masthead from '../components/Masthead';
 import SeeAllDataLink from '../components/SeeAllDataLink';
 import EnvisionVideoLink from '../components/EnvisionVideoLink';
 import ProgressDots from '../components/ProgressDots';
-import WindWonder from './wind/WindWonder';
-import WindInvestigate from './wind/WindInvestigate';
-import WindReveal, { WindClosingContext } from './wind/WindReveal';
-import type { ClassWonderings } from './wind/WindWonder';
-import type { WindSummary } from './wind/WindInvestigate';
+import SpotifyWonder from './hurricane/SpotifyWonder';
+import SpotifyCount from './hurricane/SpotifyCount';
+import SpotifyClaim from './hurricane/SpotifyClaim';
+import type { SpotifyTally } from './hurricane/SpotifyCount';
 import NextRow from './wind/NextRow';
 import type { AdvanceState } from './wind/NextRow';
 import ActRail from './wind/ActRail';
@@ -15,29 +14,23 @@ import ChapterFitsSection from '../components/ChapterFitsSection';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 import { getDataset } from '../data/registry';
 
-export default function WindTurbinePage() {
-  useDocumentTitle('Wind Power Curve');
+export default function ProbabilityCoinPage() {
+  useDocumentTitle('The Genre Bet · Probability');
   const [act, setAct] = useState<1 | 2 | 3>(1);
-  const [wonderings, setWonderings] = useState<ClassWonderings | null>(null);
-  const [summary, setSummary] = useState<WindSummary | null>(null);
+  const [tally, setTally] = useState<SpotifyTally | null>(null);
   const [advance, setAdvance] = useState<AdvanceState | null>(null);
 
   const restart = () => {
     setAct(1);
-    setWonderings(null);
-    setSummary(null);
+    setTally(null);
     setAdvance(null);
   };
 
-  // The advance handler each Act publishes captures internal state via
-  // closure; useCallback gives the child a stable setter so its useEffect
-  // doesn't refire every render.
   const handleAdvanceStateChange = useCallback((next: AdvanceState) => {
     setAdvance(next);
   }, []);
 
-  // Cross-Act Back fallback: used only when the current Act is on its first
-  // step (and so publishes no internal back).
+  // Cross-Act Back fallback
   const fallbackBack =
     act === 2 ? () => {
       setAct(1);
@@ -52,12 +45,12 @@ export default function WindTurbinePage() {
   return (
     <div className="min-h-screen">
       <Masthead
-        section="Wind Power Curve"
-        eyebrow="Algebra 1 · Topic 8 · Quadratic Functions"
+        section="The Genre Bet"
+        eyebrow="Geometry · Topic 12 · Probability"
         right={
           <div className="flex items-center gap-4">
-            <EnvisionVideoLink course="algebra1" topic={8} />
-            <SeeAllDataLink datasetId="wind" label="Explore the data" compact />
+            <EnvisionVideoLink course="geometry" topic={12} />
+            <SeeAllDataLink datasetId="spotify" label="Explore the data" compact />
             <ProgressDots current={act} />
           </div>
         }
@@ -65,10 +58,8 @@ export default function WindTurbinePage() {
       <ActRail current={act} step={advance?.step} stepLabels={advance?.stepLabels} />
       <main className="max-w-5xl mx-auto px-6 py-8 xl:ml-80">
         {act === 1 && (
-          <WindWonder
-            initialWonderings={wonderings}
-            onStart={(w) => {
-              setWonderings(w);
+          <SpotifyWonder
+            onStart={() => {
               setAct(2);
               setAdvance(null);
             }}
@@ -76,21 +67,18 @@ export default function WindTurbinePage() {
           />
         )}
         {act === 2 && (
-          <WindInvestigate
-            wonderings={wonderings}
-            onNext={(s) => {
-              setSummary(s);
+          <SpotifyCount
+            onNext={(t) => {
+              setTally(t);
               setAct(3);
               setAdvance(null);
             }}
-            initialState={summary?.state}
             onAdvanceStateChange={handleAdvanceStateChange}
           />
         )}
-        {act === 3 && summary && (
-          <WindReveal
-            summary={summary}
-            wonderings={wonderings}
+        {act === 3 && tally && (
+          <SpotifyClaim
+            tally={tally}
             onRestart={restart}
             onAdvanceStateChange={handleAdvanceStateChange}
           />
@@ -104,20 +92,14 @@ export default function WindTurbinePage() {
           />
         </div>
 
-        {act === 3 && summary && (
-          <div className="mt-12">
-            <WindClosingContext summary={summary} wonderings={wonderings} />
-          </div>
-        )}
-
         <div className="mt-12">
-          <ChapterFitsSection dataset={getDataset('wind')} pin={{ course: 'algebra1', topic: 8 }} />
+          <ChapterFitsSection dataset={getDataset('spotify')} pin={{ course: 'geometry', topic: 12 }} />
         </div>
       </main>
       <footer className="border-t border-surface-line mt-16 py-6">
         <div className="max-w-5xl mx-auto px-6 flex flex-wrap items-baseline justify-between gap-3 text-xs text-ink-muted">
-          <div>Prototype · SCADA log from a 1.5 MW operating wind turbine · ~12 hours, one reading per minute.</div>
-          <SeeAllDataLink datasetId="wind" compact />
+          <div>Prototype · 600 songs · Spotify Audio Features · 6 genres, 100 songs each.</div>
+          <SeeAllDataLink datasetId="spotify" compact />
         </div>
       </footer>
     </div>

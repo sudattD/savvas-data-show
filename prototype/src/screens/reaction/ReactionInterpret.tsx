@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import HostBubble from '../../components/HostBubble';
+import { NarratorDynamicSays } from './classic/Narrator';
 import type { IdentifyState } from './ReactionIdentify';
 import type { ReactionTrials } from './ReactionPlay';
 
@@ -8,11 +9,14 @@ interface InterpretProps {
   identify: IdentifyState;
   trials: ReactionTrials;
   onRestart: () => void;
+  narrator?: 'sarah';
 }
 
 // Published research: simple visual ~270ms, simple auditory ~160ms (Woods et al 2015).
 const CANONICAL_VISUAL = 270;
 const CANONICAL_AUDIO = 160;
+const DR_REYES_ACT3_RESULT =
+  "Your visual median was 377 milliseconds. Your audio median was 243 milliseconds. That's 134 milliseconds faster with your ears than your eyes — sound takes a shorter path. You guessed 333 milliseconds. Pretty close.";
 
 function summarize(arr: number[]) {
   if (arr.length === 0) return { median: 0, mean: 0, fastest: 0, slowest: 0, stdDev: 0 };
@@ -25,7 +29,247 @@ function summarize(arr: number[]) {
   return { median, mean, fastest, slowest, stdDev };
 }
 
-export default function ReactionInterpret({ identify, trials, onRestart }: InterpretProps) {
+function quantile(sorted: number[], q: number): number {
+  const p = (sorted.length - 1) * q;
+  const b = Math.floor(p);
+  const r = p - b;
+  return sorted[b + 1] !== undefined ? sorted[b] + r * (sorted[b + 1] - sorted[b]) : sorted[b];
+}
+
+const VIS_COLOR = "#7F77DD";
+const VIS_DARK = "#534AB7";
+const AUD_COLOR = "#1D9E75";
+const AUD_DARK = "#0F6E56";
+
+/* ───────────────────────────────────────────────
+   BeeswarmChart — an SVG beeswarm with IQR bands,
+   median lines, and interactive dots.
+   Adapted from the reference design.
+   ─────────────────────────────────────────────── */
+interface BeeswarmProps {
+  visual: number[];
+  audio: number[];
+  visualMedian: number;
+  audioMedian: number;
+  visualQ1: number;
+  visualQ3: number;
+  audioQ1: number;
+  audioQ3: number;
+}
+
+function BeeswarmChart({ visual, audio, visualMedian, audioMedian, visualQ1, visualQ3, audioQ1, audioQ3 }: BeeswarmProps) {
+  const PAD_L = 16, PAD_R = 24;
+  const BASE_W = 680;
+  const VIZ_H = 250;
+  const AXIS_Y = 206;
+  const R = 7;
+
+  // Zoom state
+  const [zoomMin, setZoomMin] = useState<number | null>(null);
+  const [zoomMax, setZoomMax] = useState<number | null>(null);
+  const [hovered, setHovered] = useState<{ v: number; label: string; x: number; y: number } | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
+
+  // Domain
+  const rawD0 = Math.min(...visual, ...audio, 100);
+  const rawD1 = Math.max(...visual, ...audio, 500);
+  const D0 = zoomMin ?? rawD0;
+  const D1 = zoomMax ?? rawD1;
+  const totalSpan = D1 - D0 || 1;
+  const sc = useCallback((ms: number) => PAD_L + ((ms - D0) / totalSpan) * (BASE_W - PAD_L - PAD_R), [D0, D1]);
+
+  function beeswarmPositions(vals: number[], cy: number): { x: number; y: number; v: number }[] {
+    const sorted = vals.map(v => ({ v, x: sc(v) })).sort((a, b) => a.x - b.x);
+    const placed: { x: number; y: number; v: number }[] = [];
+    sorted.forEach(p => {
+      let y = cy;
+      for (let k = 0; k < 60; k++) {
+        const off = k === 0 ? 0 : Math.ceil(k / 2) * (2 * R - 1.5) * (k % 2 ? 1 : -1);
+        y = cy + off;
+        if (!placed.some(o => Math.hypot(o.x - p.x, o.y - y) < 2 * R - 0.5)) break;
+      }
+      placed.push({ x: p.x, y, v: p.v });
+    });
+    return placed;
+  }
+
+  const visualDots = beeswarmPositions(visual, 68);
+  const audioDots = beeswarmPositions(audio, 155);
+
+  function gridLine(ms: number) {
+    const x = sc(ms);
+    if (x < PAD_L || x > BASE_W - PAD_R) return null;
+    return (
+      <g key={`grid-${ms}`}>
+        <line x1={x} y1={28} x2={x} y2={AXIS_Y} stroke="#D1D5DB" strokeWidth={1} />
+        <text x={x} y={AXIS_Y + 16} textAnchor="middle" fontSize={11} fill="#9CA3AF">{ms}</text>
+      </g>
+    );
+  }
+
+  const gridMarks: number[] = [];
+  const step = D1 - D0 <= 200 ? 25 : D1 - D0 <= 400 ? 50 : 100;
+  const gridStart = Math.ceil(D0 / step) * step;
+  for (let m = gridStart; m <= D1; m += step) gridMarks.push(m);
+
+  // Scroll-to-zoom on the SVG wrapper
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 1.15 : 0.85;
+      const mid = (D0 + D1) / 2;
+      const half = ((D1 - D0) / 2) * factor;
+      setZoomMin(Math.round(mid - half));
+      setZoomMax(Math.round(mid + half));
+    }
+  };
+
+  // Double-click to reset zoom
+  const handleDoubleClick = () => { setZoomMin(null); setZoomMax(null); };
+
+  const isZoomed = zoomMin !== null;
+
+  // Cmd+scroll hint
+  const showHint = visualDots.some((d, i, a) => i > 0 && Math.abs(d.x - a[i - 1].x) < R * 2);
+
+  return (
+    <div className="bg-surface-raised border border-surface-line rounded-lg p-5">
+      <div className="flex items-center justify-between mb-3">
+        <div className="eyebrow text-ink-muted">REACTION TIME · {visual.length} VISUAL + {audio.length} AUDIO TRIALS</div>
+        <div className="flex items-center gap-2">
+          {isZoomed && (
+            <button
+              onClick={handleDoubleClick}
+              className="text-[11px] px-2 py-0.5 rounded bg-violet-100 text-violet-800 hover:bg-violet-200 transition font-medium"
+            >
+              Reset zoom
+            </button>
+          )}
+          {showHint && !isZoomed && (
+            <span className="text-[10px] text-ink-muted italic hidden sm:inline">
+              {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl+'}scroll to zoom
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="relative select-none" onWheel={handleWheel}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${BASE_W} ${VIZ_H}`}
+          className="w-full"
+          role="img"
+          aria-label="Beeswarm distribution of visual and audio reaction times in milliseconds"
+          onDoubleClick={handleDoubleClick}
+        >
+          {gridMarks.map(gridLine)}
+          <line x1={sc(D0) - 4} y1={AXIS_Y} x2={sc(D1) + 4} y2={AXIS_Y} stroke="#D1D5DB" strokeWidth={1} />
+          <text x={sc(D1) + 8} y={AXIS_Y + 16} textAnchor="start" fontSize={11} fill="#9CA3AF">ms</text>
+
+          {/* Row labels */}
+          <text x={sc(D0) - 10} y={64} textAnchor="end" fontSize={11} fontWeight="500" fill="#9CA3AF" className="select-none">Visual</text>
+          <text x={sc(D0) - 10} y={151} textAnchor="end" fontSize={11} fontWeight="500" fill="#9CA3AF" className="select-none">Audio</text>
+
+          {/* IQR band — visual */}
+          <rect x={sc(visualQ1)} y={68 - 23} width={Math.max(2, sc(visualQ3) - sc(visualQ1))} height={46} rx={5} fill={VIS_COLOR} opacity={0.14} pointerEvents="none" />
+          {/* IQR band — audio */}
+          <rect x={sc(audioQ1)} y={155 - 23} width={Math.max(2, sc(audioQ3) - sc(audioQ1))} height={46} rx={5} fill={AUD_COLOR} opacity={0.14} pointerEvents="none" />
+
+          {/* Median lines */}
+          <line x1={sc(visualMedian)} y1={68 - 28} x2={sc(visualMedian)} y2={68 + 28} stroke={VIS_DARK} strokeWidth={2.5} strokeLinecap="round" pointerEvents="none" />
+          {sc(visualMedian) > PAD_L + 10 && sc(visualMedian) < BASE_W - PAD_R - 10 && (
+            <text x={sc(visualMedian)} y={68 - 30} textAnchor="middle" fontSize={11} fill={VIS_DARK} fontWeight="600" className="select-none">median {visualMedian}</text>
+          )}
+          <line x1={sc(audioMedian)} y1={155 - 28} x2={sc(audioMedian)} y2={155 + 28} stroke={AUD_DARK} strokeWidth={2.5} strokeLinecap="round" pointerEvents="none" />
+          {sc(audioMedian) > PAD_L + 10 && sc(audioMedian) < BASE_W - PAD_R - 10 && (
+            <text x={sc(audioMedian)} y={AXIS_Y + 36} textAnchor="middle" fontSize={11} fill={AUD_DARK} fontWeight="600" className="select-none">median {audioMedian}</text>
+          )}
+
+          {/* Visual dots */}
+          {visualDots.map((p, i) => (
+            <circle
+              key={`v-${i}`}
+              cx={p.x} cy={p.y} r={R}
+              fill={VIS_COLOR} opacity={0.92}
+              style={{ cursor: 'pointer', transition: 'r .1s' }}
+              onMouseEnter={() => setHovered({ v: p.v, label: 'Visual', x: p.x, y: p.y })}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered({ v: p.v, label: 'Visual', x: p.x, y: p.y })}
+              onBlur={() => setHovered(null)}
+              tabIndex={0}
+            />
+          ))}
+          {/* Audio dots */}
+          {audioDots.map((p, i) => (
+            <circle
+              key={`a-${i}`}
+              cx={p.x} cy={p.y} r={R}
+              fill={AUD_COLOR} opacity={0.92}
+              style={{ cursor: 'pointer', transition: 'r .1s' }}
+              onMouseEnter={() => setHovered({ v: p.v, label: 'Audio', x: p.x, y: p.y })}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered({ v: p.v, label: 'Audio', x: p.x, y: p.y })}
+              onBlur={() => setHovered(null)}
+              tabIndex={0}
+            />
+          ))}
+        </svg>
+
+        {/* Tooltip */}
+        {hovered && (
+          <div
+            ref={tipRef}
+            className="absolute pointer-events-none z-10 bg-gray-900 text-white text-xs font-semibold px-2 py-1 rounded shadow-md whitespace-nowrap"
+            style={{
+              left: `${(hovered.x / BASE_W) * 100}%`,
+              top: `calc(${(hovered.y / VIZ_H) * 100}% - 8px)`,
+              transform: 'translate(-50%, -100%)',
+            }}
+          >
+            {hovered.label}: {hovered.v} ms
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────────────────────────────────────
+   BeeswarmCards — four stat cards below the chart
+   ─────────────────────────────────────────────── */
+interface CardsProps {
+  visualMedian: number;
+  audioMedian: number;
+  visualFastest: number;
+  visualSlowest: number;
+  audioFastest: number;
+  audioSlowest: number;
+  audioAdvantage: number;
+}
+
+function BeeswarmCards({ visualMedian, audioMedian, visualFastest, visualSlowest, audioFastest, audioSlowest, audioAdvantage }: CardsProps) {
+  // IQR needs the full sorted arrays — we'll show range instead since it's more intuitive for small N
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <StatCard color={VIS_COLOR} label="Visual median" value={`${visualMedian} ms`} sub={`range ${visualFastest}–${visualSlowest}`} />
+      <StatCard color={AUD_COLOR} label="Audio median" value={`${audioMedian} ms`} sub={`range ${audioFastest}–${audioSlowest}`} />
+      <StatCard color="#D97706" label="Audio advantage" value={audioAdvantage > 0 ? `−${audioAdvantage} ms` : audioAdvantage < 0 ? `+${Math.abs(audioAdvantage)} ms` : "0 ms"} sub={audioAdvantage > 0 ? "faster than visual" : audioAdvantage < 0 ? "slower than visual" : "identical"} />
+      <StatCard color="#6366F1" label="Trials" value={`${visualFastest}–${visualSlowest} / ${audioFastest}–${audioSlowest} ms`} sub="visual / audio range" />
+    </div>
+  );
+}
+
+function StatCard({ color, label, value, sub }: { color: string; label: string; value: string; sub?: string }) {
+  return (
+    <div style={{ borderLeft: `3px solid ${color}` }} className="bg-surface-subtle/40 rounded-md p-4">
+      <div className="eyebrow text-[10px] text-ink-muted mb-0.5">{label}</div>
+      <div className="font-display text-xl font-bold text-brand-900 tabular-nums">{value}</div>
+      {sub && <div className="text-xs text-ink-soft mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+export default function ReactionInterpret({ identify, trials, onRestart, narrator }: InterpretProps) {
   const v = summarize(trials.visual);
   const a = summarize(trials.audio);
   const audioFasterBy = v.median - a.median;
@@ -57,17 +301,21 @@ export default function ReactionInterpret({ identify, trials, onRestart }: Inter
         </div>
       </div>
 
-      <HostBubble accent="emerald">
-        Your visual median was <strong>{v.median} ms</strong>. Your audio median
-        was <strong>{a.median} ms</strong>. {audioFasterBy > 0 ? (
-          <>That's <strong>{audioFasterBy} ms faster</strong> with your ears than your eyes — sound takes a shorter path.</>
-        ) : audioFasterBy < 0 ? (
-          <>That's <strong>{Math.abs(audioFasterBy)} ms faster</strong> with your eyes than your ears — unusual, but possible.</>
-        ) : (
-          <>Your two medians came in identical — very unusual!</>
-        )}
-        {hasGuess && <> You guessed <strong>{identify.conjecture} ms</strong>. {closenessLabel}</>}
-      </HostBubble>
+      {narrator === 'sarah' ? (
+        <NarratorDynamicSays text={DR_REYES_ACT3_RESULT} lineKey="act3Result377" />
+      ) : (
+        <HostBubble accent="emerald">
+          Your visual median was <strong>{v.median} ms</strong>. Your audio median
+          was <strong>{a.median} ms</strong>. {audioFasterBy > 0 ? (
+            <>That's <strong>{audioFasterBy} ms faster</strong> with your ears than your eyes — sound takes a shorter path.</>
+          ) : audioFasterBy < 0 ? (
+            <>That's <strong>{Math.abs(audioFasterBy)} ms faster</strong> with your eyes than your ears — unusual, but possible.</>
+          ) : (
+            <>Your two medians came in identical — very unusual!</>
+          )}
+          {hasGuess && <> You guessed <strong>{identify.conjecture} ms</strong>. {closenessLabel}</>}
+        </HostBubble>
+      )}
 
       {/* Comparison stats */}
       <div className="grid md:grid-cols-3 gap-3">
@@ -94,124 +342,72 @@ export default function ReactionInterpret({ identify, trials, onRestart }: Inter
         />
       </div>
 
-      {/* Distribution viz — both rounds on one axis */}
-      <div className="bg-surface-raised border border-surface-line rounded-lg p-5">
-        <div className="eyebrow text-ink-muted mb-3">DISTRIBUTIONS · {trials.visual.length} VISUAL + {trials.audio.length} AUDIO TRIALS</div>
-        <div className="relative h-56">
-          <svg viewBox="0 0 600 230" preserveAspectRatio="none" className="w-full h-full">
-            {/* Axis */}
-            <line x1={20} x2={580} y1={200} y2={200} stroke="#94A3B8" strokeWidth={1} />
-            {[100, 200, 300, 400, 500, 600].map((ms) => {
-              const x = 20 + ((ms - 50) / 600) * 560;
-              return (
-                <g key={ms}>
-                  <line x1={x} x2={x} y1={200} y2={205} stroke="#94A3B8" strokeWidth={1} />
-                  <text x={x} y={218} textAnchor="middle" fontSize="9" fill="#64748B" fontFamily="monospace">{ms}</text>
-                </g>
-              );
-            })}
-            <text x={580} y={218} textAnchor="end" fontSize="9" fill="#64748B" fontFamily="monospace" fontWeight="700">ms</text>
-
-            {/* Bounds shading (if set) */}
-            {hasBounds && (
-              <rect
-                x={20 + ((identify.tooLow - 50) / 600) * 560}
-                y={20}
-                width={Math.max(2, ((identify.tooHigh - identify.tooLow) / 600) * 560)}
-                height={180}
-                fill="#FBD78A"
-                fillOpacity={0.18}
-                stroke="#E18809"
-                strokeOpacity={0.3}
-                strokeDasharray="4 3"
-              />
-            )}
-
-            {/* Lanes label */}
-            <text x={24} y={86} fontSize="9" fontFamily="monospace" fill="#7C3AED" fontWeight="700">VISUAL</text>
-            <text x={24} y={156} fontSize="9" fontFamily="monospace" fill="#0F766E" fontWeight="700">AUDIO</text>
-
-            {/* Visual trial dots */}
-            {trials.visual.map((t, i) => {
-              const x = 20 + ((t - 50) / 600) * 560;
-              return (
-                <circle key={`v-${i}`} cx={x} cy={75 + (i % 4) * 6} r={4.5} fill="#7C3AED" fillOpacity={0.7} />
-              );
-            })}
-            {/* Audio trial dots */}
-            {trials.audio.map((t, i) => {
-              const x = 20 + ((t - 50) / 600) * 560;
-              return (
-                <circle key={`a-${i}`} cx={x} cy={145 + (i % 4) * 6} r={4.5} fill="#0F766E" fillOpacity={0.7} />
-              );
-            })}
-
-            {/* Medians */}
-            {v.median > 0 && (
-              <>
-                <line x1={20 + ((v.median - 50) / 600) * 560} x2={20 + ((v.median - 50) / 600) * 560} y1={50} y2={110} stroke="#5B21B6" strokeWidth={2.5} />
-                <text x={20 + ((v.median - 50) / 600) * 560} y={44} textAnchor="middle" fontSize="11" fill="#5B21B6" fontWeight="700">visual {v.median}</text>
-              </>
-            )}
-            {a.median > 0 && (
-              <>
-                <line x1={20 + ((a.median - 50) / 600) * 560} x2={20 + ((a.median - 50) / 600) * 560} y1={120} y2={180} stroke="#0F766E" strokeWidth={2.5} />
-                <text x={20 + ((a.median - 50) / 600) * 560} y={194} textAnchor="middle" fontSize="11" fill="#0F766E" fontWeight="700">audio {a.median}</text>
-              </>
-            )}
-          </svg>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 text-xs">
-          <Mini label="Visual median" value={`${v.median} ms`} />
-          <Mini label="Audio median" value={`${a.median} ms`} />
-          <Mini label="Visual range" value={`${v.fastest}–${v.slowest}`} />
-          <Mini label="Audio range" value={`${a.fastest}–${a.slowest}`} />
-        </div>
-        <details className="mt-4 group">
-          <summary className="cursor-pointer text-xs eyebrow text-ink-muted hover:text-violet-700 select-none">
-            <span className="group-open:hidden">Show raw data ▾</span>
-            <span className="hidden group-open:inline">Hide raw data ▴</span>
-          </summary>
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-xs font-mono">
-              <thead>
-                <tr className="border-b border-surface-line text-ink-muted">
-                  <th className="text-left py-2 px-3">Trial</th>
-                  <th className="text-right py-2 px-3 text-violet-700">Visual (ms)</th>
-                  <th className="text-right py-2 px-3 text-emerald-700">Audio (ms)</th>
-                  <th className="text-right py-2 px-3">Diff</th>
-                </tr>
-              </thead>
-              <tbody className="tabular-nums">
-                {Array.from({ length: Math.max(trials.visual.length, trials.audio.length) }).map((_, i) => {
-                  const vt = trials.visual[i];
-                  const at = trials.audio[i];
-                  const diff = vt !== undefined && at !== undefined ? vt - at : null;
-                  return (
-                    <tr key={i} className="border-b border-surface-line last:border-0">
-                      <td className="py-1.5 px-3 text-ink-muted">{i + 1}</td>
-                      <td className="py-1.5 px-3 text-right">{vt ?? '—'}</td>
-                      <td className="py-1.5 px-3 text-right">{at ?? '—'}</td>
-                      <td className={`py-1.5 px-3 text-right ${diff !== null && diff > 0 ? 'text-emerald-700' : diff !== null && diff < 0 ? 'text-rose-700' : ''}`}>
-                        {diff !== null ? (diff > 0 ? `+${diff}` : diff) : '—'}
-                      </td>
-                    </tr>
-                  );
-                })}
-                <tr className="border-t-2 border-ink/20 font-semibold">
-                  <td className="py-1.5 px-3 text-ink-muted">median</td>
-                  <td className="py-1.5 px-3 text-right">{v.median}</td>
-                  <td className="py-1.5 px-3 text-right">{a.median}</td>
-                  <td className="py-1.5 px-3 text-right text-emerald-700">{v.median - a.median > 0 ? `+${v.median - a.median}` : v.median - a.median}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div className="text-[10px] text-ink-muted italic mt-2">
-              Diff = visual − audio. Positive means your audio reaction was faster.
-            </div>
+      {/* Beeswarm distribution viz */}
+      <BeeswarmChart
+        visual={trials.visual}
+        audio={trials.audio}
+        visualMedian={v.median}
+        audioMedian={a.median}
+        visualQ1={quantile([...trials.visual].sort((a, b) => a - b), 0.25)}
+        visualQ3={quantile([...trials.visual].sort((a, b) => a - b), 0.75)}
+        audioQ1={quantile([...trials.audio].sort((a, b) => a - b), 0.25)}
+        audioQ3={quantile([...trials.audio].sort((a, b) => a - b), 0.75)}
+      />
+      {/* Summary stat cards */}
+      <BeeswarmCards
+        visualMedian={v.median}
+        audioMedian={a.median}
+        visualFastest={v.fastest}
+        visualSlowest={v.slowest}
+        audioFastest={a.fastest}
+        audioSlowest={a.slowest}
+        audioAdvantage={audioFasterBy}
+      />
+      {/* Raw data — collapsed by default */}
+      <details className="group bg-surface-raised border border-surface-line rounded-lg p-5">
+        <summary className="cursor-pointer text-xs eyebrow text-ink-muted hover:text-violet-700 select-none">
+          <span className="group-open:hidden">Show raw data ▾</span>
+          <span className="hidden group-open:inline">Hide raw data ▴</span>
+        </summary>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-xs font-mono">
+            <thead>
+              <tr className="border-b border-surface-line text-ink-muted">
+                <th className="text-left py-2 px-3">Trial</th>
+                <th className="text-right py-2 px-3 text-violet-700">Visual (ms)</th>
+                <th className="text-right py-2 px-3 text-emerald-700">Audio (ms)</th>
+                <th className="text-right py-2 px-3">Diff</th>
+              </tr>
+            </thead>
+            <tbody className="tabular-nums">
+              {Array.from({ length: Math.max(trials.visual.length, trials.audio.length) }).map((_, i) => {
+                const vt = trials.visual[i];
+                const at = trials.audio[i];
+                const diff = vt !== undefined && at !== undefined ? vt - at : null;
+                return (
+                  <tr key={i} className="border-b border-surface-line last:border-0">
+                    <td className="py-1.5 px-3 text-ink-muted">{i + 1}</td>
+                    <td className="py-1.5 px-3 text-right">{vt ?? '—'}</td>
+                    <td className="py-1.5 px-3 text-right">{at ?? '—'}</td>
+                    <td className={`py-1.5 px-3 text-right ${diff !== null && diff > 0 ? 'text-emerald-700' : diff !== null && diff < 0 ? 'text-rose-700' : ''}`}>
+                      {diff !== null ? (diff > 0 ? `+${diff}` : diff) : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+              <tr className="border-t-2 border-ink/20 font-semibold">
+                <td className="py-1.5 px-3 text-ink-muted">median</td>
+                <td className="py-1.5 px-3 text-right">{v.median}</td>
+                <td className="py-1.5 px-3 text-right">{a.median}</td>
+                <td className="py-1.5 px-3 text-right text-emerald-700">{v.median - a.median > 0 ? `+${v.median - a.median}` : v.median - a.median}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div className="text-[10px] text-ink-muted italic mt-2">
+            Diff = visual − audio. Positive means your audio reaction was faster.
           </div>
-        </details>
-      </div>
+        </div>
+      </details>
 
       {/* Story */}
       <div className="bg-surface-raised border border-surface-line rounded-lg p-6 space-y-3">
@@ -397,15 +593,6 @@ function Stat({ label, value, unit, tone, sub }: { label: string; value: string;
         {value} <span className="text-base font-medium opacity-60">{unit}</span>
       </div>
       {sub && <div className="text-xs mt-1 opacity-80">{sub}</div>}
-    </div>
-  );
-}
-
-function Mini({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-surface-subtle/40 rounded-md px-3 py-2">
-      <div className="eyebrow text-[9px] text-ink-muted">{label}</div>
-      <div className="font-display text-base font-bold text-ink tabular-nums">{value}</div>
     </div>
   );
 }

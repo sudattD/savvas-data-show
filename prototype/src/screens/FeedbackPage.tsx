@@ -228,11 +228,26 @@ function FeedbackRow({ item }: { item: FeedbackItem }) {
           href={item.path}
           target="_blank"
           rel="noopener noreferrer"
-          className="ml-auto font-mono text-[11px] text-brand-700 hover:text-accent-700 hover:underline truncate max-w-[260px]"
+          className="font-mono text-[11px] text-brand-700 hover:text-accent-700 hover:underline truncate max-w-[260px]"
           title={item.path}
         >
           {item.path}
         </a>
+        <button
+          onClick={() => {
+            const blob = new Blob([JSON.stringify(item, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `feedback-${item.timestamp.replace(/[:.]/g, '-')}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+          className="ml-auto text-[10px] font-semibold px-2 py-1 rounded border border-surface-line bg-surface-raised text-ink-soft hover:bg-surface-subtle transition"
+          title="Download this item as JSON"
+        >
+          ↓ JSON
+        </button>
       </header>
       <div className="px-4 py-3 text-sm">
         {isEdit ? (

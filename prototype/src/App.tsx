@@ -6,14 +6,17 @@ import WindTurbineHub from './screens/WindTurbineHub';
 import WindTurbinePage from './screens/WindTurbinePage';
 import WindScenePrototype from './screens/wind/prototype/WindScenePrototype';
 import VoiceDNAPage from './screens/VoiceDNAPage';
+import VoiceDNAHub from './screens/VoiceDNAHub';
+import ReactionTimeHub from './screens/ReactionTimeHub';
 import ReactionTimePage from './screens/ReactionTimePage';
+import ReactionTimeClassicPage from './screens/ReactionTimeClassicPage';
 import CensusPyramidPage from './screens/CensusPyramidPage';
 import ConstellationDesignerPage from './screens/ConstellationDesignerPage';
 import KeplersLawPage from './screens/KeplersLawPage';
 import MapEarthsAngerPage from './screens/MapEarthsAngerPage';
 import CalibratorsPage from './screens/CalibratorsPage';
 import DoublingTimePage from './screens/DoublingTimePage';
-import HurricaneCoinPage from './screens/HurricaneCoinPage';
+import ProbabilityCoinPage from './screens/ProbabilityCoinPage';
 import InverseSquarePage from './screens/InverseSquarePage';
 import ExplorerPage from './screens/ExplorerPage';
 import DatasetsHub from './screens/datasets/DatasetsHub';
@@ -25,6 +28,8 @@ import AugmentChaptersPage from './screens/AugmentChaptersPage';
 import NewChaptersPage from './screens/NewChaptersPage';
 import ChapterTeeUp from './screens/ChapterTeeUp';
 import AlignmentPage from './screens/AlignmentPage';
+import BodyAsDataHub from './screens/BodyAsDataHub';
+import VoiceDNAClassicPage from './screens/VoiceDNAClassicPage';
 import SliderOfLies from './screens/lessons/SliderOfLies';
 import WalkIntoABar from './screens/lessons/WalkIntoABar';
 import TidyData from './screens/lessons/TidyData';
@@ -68,15 +73,20 @@ export default function App() {
         <Route path="/wind-turbine" element={<WindTurbineHub />} />
         <Route path="/wind-turbine/classic" element={<WindTurbinePage />} />
         <Route path="/wind-turbine/prototype" element={<WindScenePrototype />} />
-        <Route path="/voice-dna" element={<VoiceDNAPage />} />
-        <Route path="/reaction-time" element={<ReactionTimePage />} />
+        <Route path="/voice-dna" element={<VoiceDNAHub />} />
+        <Route path="/voice-dna/quick" element={<VoiceDNAPage />} />
+        <Route path="/voice-dna/classic" element={<VoiceDNAClassicPage />} />
+        <Route path="/body-as-data" element={<BodyAsDataHub />} />
+        <Route path="/reaction-time" element={<ReactionTimeHub />} />
+        <Route path="/reaction-time/quick" element={<ReactionTimePage />} />
+        <Route path="/reaction-time/classic" element={<ReactionTimeClassicPage />} />
         <Route path="/census-pyramid" element={<CensusPyramidPage />} />
         <Route path="/constellation" element={<ConstellationDesignerPage />} />
         <Route path="/kepler" element={<KeplersLawPage />} />
         <Route path="/map-earths-anger" element={<MapEarthsAngerPage />} />
         <Route path="/calibrators" element={<CalibratorsPage />} />
         <Route path="/doubling-time" element={<DoublingTimePage />} />
-        <Route path="/hurricane-coin" element={<HurricaneCoinPage />} />
+        <Route path="/genre-bet" element={<ProbabilityCoinPage />} />
         <Route path="/inverse-square" element={<InverseSquarePage />} />
         <Route path="/explorer" element={<ExplorerPage />} />
         <Route path="/chapters" element={<ChaptersPage />} />

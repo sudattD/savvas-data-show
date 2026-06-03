@@ -187,20 +187,25 @@ export function SceneBackdrop({ variant }: { variant: BackdropVariant }) {
         <>
           <defs>
             <linearGradient id="bg-cutawayBlades" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#6f8298" />
-              <stop offset="40%" stopColor="#8a9baa" />
-              <stop offset="100%" stopColor="#2d3a4a" />
+              <stop offset="0%" stopColor="#4a5a6e" />
+              <stop offset="50%" stopColor="#63748a" />
+              <stop offset="100%" stopColor="#1f2a38" />
             </linearGradient>
+            <radialGradient id="cutaway-vignette" cx="50%" cy="50%" r="70%">
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="100%" stopColor="#0a1020" stopOpacity="0.55" />
+            </radialGradient>
           </defs>
           <rect width="1600" height="800" fill="url(#bg-cutawayBlades)" />
+          <rect width="1600" height="800" fill="url(#cutaway-vignette)" />
           {/* Cloudy sky texture */}
           {[[100, 60], [400, 90], [750, 50], [1100, 110], [1400, 70]].map(([cx, cy], i) => (
-            <ellipse key={i} cx={cx} cy={cy} rx={220} ry={40} fill="#fff" opacity={0.04 + i * 0.01} />
+            <ellipse key={i} cx={cx} cy={cy} rx={220} ry={40} fill="#fff" opacity={0.03 + i * 0.008} />
           ))}
           {/* Large blade shapes — low-angle perspective looking up.
               The entire hub rotates so the blades spin continuously,
               matching Dr. Vela's narration about the turning rotor. */}
-          <g transform="translate(800 400)" fill="#1a2635" opacity={0.7} style={{ transformOrigin: '800px 340px', animation: 'windspin 10s linear infinite' }}>
+          <g transform="translate(800 400)" fill="#1a2635" opacity={0.2} style={{ transformOrigin: '800px 340px', animation: 'windspin 20s linear infinite' }}>
             {/* Blade 1 — curving up-left */}
             <path d="M-20,-100 Q-260,-340 -480,-480 Q-460,-520 -260,-400 Q-60,-260 0,-40 Z" />
             {/* Blade 2 — curving up-right */}
@@ -210,11 +215,11 @@ export function SceneBackdrop({ variant }: { variant: BackdropVariant }) {
             {/* Hub center */}
             <circle cx={0} cy={-60} r={28} fill="#2d3a4a" />
           </g>
-          <path d="M764,420 L778,800 H822 L836,420 Z" fill="#1a2635" opacity={0.6} />
-          <g stroke="#ffffff" strokeLinecap="round" fill="none" opacity={0.2}>
+          <path d="M764,420 L778,800 H822 L836,420 Z" fill="#1a2635" opacity={0.3} />
+          <g stroke="#ffffff" strokeLinecap="round" fill="none" opacity={0.08}>
             {[100, 200, 320, 450, 560, 700, 820, 950].map((y, i) => (
-              <path key={i} d={`M${60 + i * 40},${y} q160,-30 340,0`} strokeWidth={2 + (i % 3)}>
-                <animate attributeName="opacity" values="0.1;0.3;0.1" dur={`${2 + i * 0.3}s`} repeatCount="indefinite" />
+              <path key={i} d={`M${60 + i * 40},${y} q160,-30 340,0`} strokeWidth={1.5 + (i % 2)}>
+                <animate attributeName="opacity" values="0.05;0.12;0.05" dur={`${3 + i * 0.5}s`} repeatCount="indefinite" />
               </path>
             ))}
           </g>

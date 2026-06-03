@@ -325,7 +325,6 @@ export default function WindScenePrototype() {
       <SceneFrame
         {...frame}
         variant="cutawayBlades"
-        crispBackdrop
         sceneTitle="Catching the Wind"
         onNext={next}
         nextLabel="Inside the nacelle"
@@ -403,9 +402,9 @@ export default function WindScenePrototype() {
                       }}
                     />
                     <div className="flex justify-between text-[10px] text-slate-500 mt-1.5">
-                      <span>🏠 Small turbine</span>
-                      <span>🏭 Modern turbine</span>
-                      <span>⚓ Large offshore</span>
+                      <span>Small turbine</span>
+                      <span>Modern turbine</span>
+                      <span>Large offshore</span>
                     </div>
                   </div>
                 </div>
@@ -463,7 +462,6 @@ export default function WindScenePrototype() {
       <SceneFrame
         {...frame}
         variant="cutawayNacelle"
-        crispBackdrop
         sceneTitle="Inside the Nacelle"
         onNext={next}
         nextLabel="From turbine to grid"
@@ -537,7 +535,6 @@ export default function WindScenePrototype() {
       <SceneFrame
         {...frame}
         variant="cutawayGrid"
-        crispBackdrop
         sceneTitle="From Turbine to Grid"
         onNext={next}
         nextLabel="Watch the data"
@@ -547,7 +544,7 @@ export default function WindScenePrototype() {
           {/* LEFT — power flow diagram */}
           <div className="flex flex-col gap-4">
             <div className="overflow-hidden rounded-2xl border border-white/30 bg-white/85 shadow-xl backdrop-blur">
-              <div className="aspect-[16/9] w-full">
+              <div className="aspect-[3/1] w-full">
                 <PowerFlowPath className="h-full w-full" />
               </div>
             </div>
